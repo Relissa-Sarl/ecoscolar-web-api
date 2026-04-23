@@ -1,6 +1,6 @@
 @PrototypeAuthentification_HostAddress = http://localhost:5299
 
-GET {{PrototypeAuthentification_HostAddress}}/weatherforecast/
+GET {{PrototypeAuthentification_HostAddress}}/api/users/
 Accept: application/json
 
 ###
