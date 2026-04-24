@@ -1,25 +1,49 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PrototypeAuthentification.Data;
 using PrototypeAuthentification.Models;
+using PrototypeAuthentification.Models.DTOs;
+
 
 namespace PrototypeAuthentification.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class UsersController : ControllerBase
     {
         private readonly PrototypeAuthentificationContext _context;
+        private readonly UserManager<User> _userManager;
 
-        public UsersController(PrototypeAuthentificationContext context)
+        public UsersController(PrototypeAuthentificationContext context, UserManager<User> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
+
+        // POST /register
+        [HttpPost("custom-register")]
+        [AllowAnonymous]
+        public async Task<IActionResult> RegisterCustom([FromBody] UserDto request)
+        {
+            User newUser = new User
+            {
+                UserName = request.Email,
+                Email = request.Email,
+                Name = request.Name
+            };
+
+            // Ask identity to save the user and hash the password automatically
+            var result = await _userManager.CreateAsync(newUser, request.Password);
+
+            if (result.Succeeded)
+                return Ok(new { message = "User created successfully!" });
+
+            return BadRequest(result.Errors);
+        }
+
 
         // GET: api/Users
         [HttpGet]
