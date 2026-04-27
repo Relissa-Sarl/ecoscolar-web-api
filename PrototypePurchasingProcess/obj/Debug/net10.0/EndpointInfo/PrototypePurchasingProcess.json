@@ -1,0 +1,31 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "PrototypePurchasingProcess | v1",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5173"
+    }
+  ],
+  "paths": {
+    "/api/Payments/test-checkout": {
+      "post": {
+        "tags": [
+          "Payments"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Payments"
+    }
+  ]
+}

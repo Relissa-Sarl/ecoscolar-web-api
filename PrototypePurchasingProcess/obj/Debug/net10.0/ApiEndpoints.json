@@ -1,0 +1,12 @@
+[
+  {
+    "ContainingType": "PrototypePurchasingProcess.Controllers.PaymentsController",
+    "Method": "TestCheckout",
+    "RelativePath": "api/Payments/test-checkout",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  }
+]

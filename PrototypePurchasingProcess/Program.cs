@@ -1,4 +1,6 @@
 
+using Stripe;
+
 namespace PrototypePurchasingProcess
 {
     public class Program
@@ -6,6 +8,11 @@ namespace PrototypePurchasingProcess
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+            // Stripe
+            var stripeSecretKey = builder.Configuration["Stripe:SecretKey"];
+            StripeConfiguration.ApiKey = stripeSecretKey;
+
 
             // Add services to the container.
 
@@ -22,10 +29,7 @@ namespace PrototypePurchasingProcess
             }
 
             app.UseHttpsRedirection();
-
             app.UseAuthorization();
-
-
             app.MapControllers();
 
             app.Run();
