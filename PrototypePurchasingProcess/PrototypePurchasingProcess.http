@@ -1,0 +1,6 @@
+@PrototypePurchasingProcess_HostAddress = http://localhost:5173
+
+GET {{PrototypePurchasingProcess_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
