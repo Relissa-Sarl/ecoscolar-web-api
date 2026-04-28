@@ -1,0 +1,71 @@
+
+# Visual Studio / .NET Core
+.vs/
+.vscode/
+bin/
+obj/
+out/
+
+# Rider
+.idea/
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.DotSettings.user
+
+# Build results
+*.dll
+*.exe
+*.app
+*.pdb
+*.ilk
+
+# NuGet
+packages/
+*.nupkg
+project.lock.json
+project.assets.json
+
+# VS publish
+*.Publish.xml
+*.pubxml.user
+
+# Test results
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+
+# Logs
+*.log
+
+# Database files
+*.mdf
+*.ldf
+*.sqlite
+*.db
+
+# Ignore generated files
+*.generated.cs
+
+# DotCover
+*.dotCover
+
+# JetBrains Rider
+*.sln.iml
+
+# Certificates
+*.pfx
+*.cer
+
+# Node/npm
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Other
+.DS_Store
+# End of .gitignore

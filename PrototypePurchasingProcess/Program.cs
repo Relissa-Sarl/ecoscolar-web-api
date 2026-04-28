@@ -1,5 +1,9 @@
 
 using Stripe;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using PrototypePurchasingProcess.Controllers;
+using PrototypePurchasingProcess.Data;
 
 namespace PrototypePurchasingProcess
 {
@@ -8,6 +12,8 @@ namespace PrototypePurchasingProcess
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+            builder.Services.AddDbContext<PrototypePurchasingProcessContext>(options =>
+                options.UseSqlServer(builder.Configuration.GetConnectionString("PrototypePurchasingProcessContext") ?? throw new InvalidOperationException("Connection string 'PrototypePurchasingProcessContext' not found.")));
 
             // Stripe
             var stripeSecretKey = builder.Configuration["Stripe:SecretKey"];
@@ -31,6 +37,7 @@ namespace PrototypePurchasingProcess
             app.UseHttpsRedirection();
             app.UseAuthorization();
             app.MapControllers();
+
 
             app.Run();
         }

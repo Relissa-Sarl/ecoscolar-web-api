@@ -1,18 +1,30 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "C:\\Users\\dloup\\Desktop\\Development\\Github\\ETML\\PROJ\\ecoscolar-web-api\\PrototypePurchasingProcess\\",
+  "WorkspaceRootPath": "E:\\Development\\01-Github\\Repositories\\03-Studies\\02-ES\\PROJ\\ecoscolar-web-api\\PrototypePurchasingProcess\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{C6819012-5E2A-B33D-BDE0-09CC408E5690}|PrototypePurchasingProcess.csproj|c:\\users\\dloup\\desktop\\development\\github\\etml\\proj\\ecoscolar-web-api\\prototypepurchasingprocess\\controllers\\paymentscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{C6819012-5E2A-B33D-BDE0-09CC408E5690}|PrototypePurchasingProcess.csproj|solutionrelative:controllers\\paymentscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{C6819012-5E2A-B33D-BDE0-09CC408E5690}|PrototypePurchasingProcess.csproj|e:\\development\\01-github\\repositories\\03-studies\\02-es\\proj\\ecoscolar-web-api\\prototypepurchasingprocess\\controllers\\advertscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C6819012-5E2A-B33D-BDE0-09CC408E5690}|PrototypePurchasingProcess.csproj|solutionrelative:controllers\\advertscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{C6819012-5E2A-B33D-BDE0-09CC408E5690}|PrototypePurchasingProcess.csproj|c:\\users\\dloup\\desktop\\development\\github\\etml\\proj\\ecoscolar-web-api\\prototypepurchasingprocess\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{C6819012-5E2A-B33D-BDE0-09CC408E5690}|PrototypePurchasingProcess.csproj|e:\\development\\01-github\\repositories\\03-studies\\02-es\\proj\\ecoscolar-web-api\\prototypepurchasingprocess\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{C6819012-5E2A-B33D-BDE0-09CC408E5690}|PrototypePurchasingProcess.csproj|solutionrelative:appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C6819012-5E2A-B33D-BDE0-09CC408E5690}|PrototypePurchasingProcess.csproj|e:\\development\\01-github\\repositories\\03-studies\\02-es\\proj\\ecoscolar-web-api\\prototypepurchasingprocess\\prototypepurchasingprocess.csproj||{04B8AB82-A572-4FEF-95CE-5222444B6B64}|",
+      "RelativeMoniker": "D:0:0:{C6819012-5E2A-B33D-BDE0-09CC408E5690}|PrototypePurchasingProcess.csproj|solutionrelative:prototypepurchasingprocess.csproj||{04B8AB82-A572-4FEF-95CE-5222444B6B64}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C6819012-5E2A-B33D-BDE0-09CC408E5690}|PrototypePurchasingProcess.csproj|e:\\development\\01-github\\repositories\\03-studies\\02-es\\proj\\ecoscolar-web-api\\prototypepurchasingprocess\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{C6819012-5E2A-B33D-BDE0-09CC408E5690}|PrototypePurchasingProcess.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{C6819012-5E2A-B33D-BDE0-09CC408E5690}|PrototypePurchasingProcess.csproj|c:\\users\\dloup\\desktop\\development\\github\\etml\\proj\\ecoscolar-web-api\\prototypepurchasingprocess\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
-      "RelativeMoniker": "D:0:0:{C6819012-5E2A-B33D-BDE0-09CC408E5690}|PrototypePurchasingProcess.csproj|solutionrelative:appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+      "AbsoluteMoniker": "D:0:0:{C6819012-5E2A-B33D-BDE0-09CC408E5690}|PrototypePurchasingProcess.csproj|e:\\development\\01-github\\repositories\\03-studies\\02-es\\proj\\ecoscolar-web-api\\prototypepurchasingprocess\\controllers\\paymentscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C6819012-5E2A-B33D-BDE0-09CC408E5690}|PrototypePurchasingProcess.csproj|solutionrelative:controllers\\paymentscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C6819012-5E2A-B33D-BDE0-09CC408E5690}|PrototypePurchasingProcess.csproj|e:\\development\\01-github\\repositories\\03-studies\\02-es\\proj\\ecoscolar-web-api\\prototypepurchasingprocess\\prototypepurchasingprocess.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{C6819012-5E2A-B33D-BDE0-09CC408E5690}|PrototypePurchasingProcess.csproj|solutionrelative:prototypepurchasingprocess.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
     }
   ],
   "DocumentGroupContainers": [
@@ -22,47 +34,81 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 2,
+          "SelectedChildIndex": 1,
           "Children": [
-            {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
-            },
             {
               "$type": "Document",
               "DocumentIndex": 2,
+              "Title": "PrototypePurchasingProcess",
+              "DocumentMoniker": "E:\\Development\\01-Github\\Repositories\\03-Studies\\02-ES\\PROJ\\ecoscolar-web-api\\PrototypePurchasingProcess\\PrototypePurchasingProcess.csproj",
+              "RelativeDocumentMoniker": "PrototypePurchasingProcess.csproj",
+              "ToolTip": "E:\\Development\\01-Github\\Repositories\\03-Studies\\02-ES\\PROJ\\ecoscolar-web-api\\PrototypePurchasingProcess\\PrototypePurchasingProcess.csproj",
+              "RelativeToolTip": "PrototypePurchasingProcess.csproj",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2026-04-28T20:38:47.005Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "AdvertsController.cs",
+              "DocumentMoniker": "E:\\Development\\01-Github\\Repositories\\03-Studies\\02-ES\\PROJ\\ecoscolar-web-api\\PrototypePurchasingProcess\\Controllers\\AdvertsController.cs",
+              "RelativeDocumentMoniker": "Controllers\\AdvertsController.cs",
+              "ToolTip": "E:\\Development\\01-Github\\Repositories\\03-Studies\\02-ES\\PROJ\\ecoscolar-web-api\\PrototypePurchasingProcess\\Controllers\\AdvertsController.cs",
+              "RelativeToolTip": "Controllers\\AdvertsController.cs",
+              "ViewState": "AgIAADgAAAAAAAAAAAAIwC8AAAAyAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-28T20:38:17.494Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "PrototypePurchasingProcess",
+              "DocumentMoniker": "E:\\Development\\01-Github\\Repositories\\03-Studies\\02-ES\\PROJ\\ecoscolar-web-api\\PrototypePurchasingProcess\\PrototypePurchasingProcess.csproj",
+              "RelativeDocumentMoniker": "PrototypePurchasingProcess.csproj",
+              "ToolTip": "E:\\Development\\01-Github\\Repositories\\03-Studies\\02-ES\\PROJ\\ecoscolar-web-api\\PrototypePurchasingProcess\\PrototypePurchasingProcess.csproj",
+              "RelativeToolTip": "PrototypePurchasingProcess.csproj",
+              "ViewState": "AgIAAAEAAAAAD+I7iC8awAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2026-04-28T20:21:31.47Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
               "Title": "appsettings.json",
-              "DocumentMoniker": "C:\\Users\\dloup\\Desktop\\Development\\Github\\ETML\\PROJ\\ecoscolar-web-api\\PrototypePurchasingProcess\\appsettings.json",
+              "DocumentMoniker": "E:\\Development\\01-Github\\Repositories\\03-Studies\\02-ES\\PROJ\\ecoscolar-web-api\\PrototypePurchasingProcess\\appsettings.json",
               "RelativeDocumentMoniker": "appsettings.json",
-              "ToolTip": "C:\\Users\\dloup\\Desktop\\Development\\Github\\ETML\\PROJ\\ecoscolar-web-api\\PrototypePurchasingProcess\\appsettings.json",
+              "ToolTip": "E:\\Development\\01-Github\\Repositories\\03-Studies\\02-ES\\PROJ\\ecoscolar-web-api\\PrototypePurchasingProcess\\appsettings.json",
               "RelativeToolTip": "appsettings.json",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
               "WhenOpened": "2026-04-27T13:04:59.311Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 4,
               "Title": "PaymentsController.cs",
-              "DocumentMoniker": "C:\\Users\\dloup\\Desktop\\Development\\Github\\ETML\\PROJ\\ecoscolar-web-api\\PrototypePurchasingProcess\\Controllers\\PaymentsController.cs",
+              "DocumentMoniker": "E:\\Development\\01-Github\\Repositories\\03-Studies\\02-ES\\PROJ\\ecoscolar-web-api\\PrototypePurchasingProcess\\Controllers\\PaymentsController.cs",
               "RelativeDocumentMoniker": "Controllers\\PaymentsController.cs",
-              "ToolTip": "C:\\Users\\dloup\\Desktop\\Development\\Github\\ETML\\PROJ\\ecoscolar-web-api\\PrototypePurchasingProcess\\Controllers\\PaymentsController.cs",
+              "ToolTip": "E:\\Development\\01-Github\\Repositories\\03-Studies\\02-ES\\PROJ\\ecoscolar-web-api\\PrototypePurchasingProcess\\Controllers\\PaymentsController.cs",
               "RelativeToolTip": "Controllers\\PaymentsController.cs",
-              "ViewState": "AgIAAA8AAAAAAAAAAAAqwCEAAABDAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAADEAAAA+AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-04-27T11:59:15.925Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 3,
               "Title": "Program.cs",
-              "DocumentMoniker": "C:\\Users\\dloup\\Desktop\\Development\\Github\\ETML\\PROJ\\ecoscolar-web-api\\PrototypePurchasingProcess\\Program.cs",
+              "DocumentMoniker": "E:\\Development\\01-Github\\Repositories\\03-Studies\\02-ES\\PROJ\\ecoscolar-web-api\\PrototypePurchasingProcess\\Program.cs",
               "RelativeDocumentMoniker": "Program.cs",
-              "ToolTip": "C:\\Users\\dloup\\Desktop\\Development\\Github\\ETML\\PROJ\\ecoscolar-web-api\\PrototypePurchasingProcess\\Program.cs",
+              "ToolTip": "E:\\Development\\01-Github\\Repositories\\03-Studies\\02-ES\\PROJ\\ecoscolar-web-api\\PrototypePurchasingProcess\\Program.cs",
               "RelativeToolTip": "Program.cs",
-              "ViewState": "AgIAAAcAAAAAAAAAAAA1wBYAAAAjAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABcAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-04-27T10:39:24.188Z",
               "EditorCaption": ""
