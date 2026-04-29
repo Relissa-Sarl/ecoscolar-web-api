@@ -9,9 +9,9 @@ using PrototypeAuthentification.Models.DTOs;
 
 namespace PrototypeAuthentification.Controllers
 {
-    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class UsersController : ControllerBase
     {
         private readonly PrototypeAuthentificationContext _context;
@@ -122,6 +122,27 @@ namespace PrototypeAuthentification.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+
+        [HttpGet("me")]
+        public async Task<IActionResult> GetMyProfile()
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+
+            if (currentUser == null)
+            {
+                return NotFound(new { message = "Utilisateur introuvable." });
+            }
+
+            var userProfileDto = new
+            {
+                Id = currentUser.Id,
+                UserName = currentUser.UserName,
+                Name = currentUser.Name,
+                Email = currentUser.Email,
+            };
+
+            return Ok(userProfileDto);
         }
 
         private bool UserExists(string id)
