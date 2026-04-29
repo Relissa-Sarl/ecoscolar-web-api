@@ -17,25 +17,11 @@ namespace PrototypePurchasingProcess.Controllers
             _config = config;
         }
 
-        static async Task<JsonElement> ParseRequestBody(HttpContext context)
-        {
-            if (context.Request.HasFormContentType)
-            {
-                var form = await context.Request.ReadFormAsync();
-                var formDict = form.Keys.ToDictionary(k => k, k => form[k].ToString());
-                return JsonSerializer.Deserialize<JsonElement>(JsonSerializer.Serialize(formDict));
-            }
-            else
-            {
-                using var reader = new StreamReader(context.Request.Body);
-                var body = await reader.ReadToEndAsync();
-                return JsonSerializer.Deserialize<JsonElement>(body);
-            }
-        }
-
         [HttpPost("checkout")]
-        public async Task<IActionResult> TestCheckout()
+        public async Task<IActionResult> Checkout([FromBody] CheckoutRequest request)
         {
+            long price = request.ProductPrice * 100;
+
             // Define the Stripe Checkout options for a hardcoded 1 CHF test
             var options = new SessionCreateOptions
             {
@@ -48,7 +34,7 @@ namespace PrototypePurchasingProcess.Controllers
                         {
                             // Stripe expects the amount in the smallest currency unit. 
                             // For CHF, 1 Franc = 100 centimes/rappen.
-                            UnitAmount = 2000000,
+                            UnitAmount = price,
                             Currency = "chf",
                             ProductData = new SessionLineItemPriceDataProductDataOptions
                             {
@@ -67,8 +53,8 @@ namespace PrototypePurchasingProcess.Controllers
                 },
 
                 // Using generic example URLs so you don't even need your frontend fully built yet
-                SuccessUrl = "https://example.com/success",
-                CancelUrl = "https://example.com/cancel",
+                SuccessUrl = "http://localhost:3000/success",
+                CancelUrl = "http://localhost:3000/denied",
             };
 
 
@@ -112,5 +98,12 @@ namespace PrototypePurchasingProcess.Controllers
         public long Amount { get; set; }
         public string TransferGroup { get; set; }
         public string ConnectedAccountId { get; set; }
+    }
+
+    public class CheckoutRequest
+    {
+        public string ProductId { get; set; }
+
+        public long ProductPrice { get; set; }
     }
 }
