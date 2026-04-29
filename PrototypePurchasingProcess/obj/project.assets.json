@@ -6244,11 +6244,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "E:\\Development\\01-Github\\Repositories\\03-Studies\\02-ES\\PROJ\\ecoscolar-web-api\\PrototypePurchasingProcess\\PrototypePurchasingProcess.csproj",
+      "projectUniqueName": "E:\\Development\\01-Github\\Repositories\\03-Studies\\02-ES\\ecoscolar-web-api\\PrototypePurchasingProcess\\PrototypePurchasingProcess.csproj",
       "projectName": "PrototypePurchasingProcess",
-      "projectPath": "E:\\Development\\01-Github\\Repositories\\03-Studies\\02-ES\\PROJ\\ecoscolar-web-api\\PrototypePurchasingProcess\\PrototypePurchasingProcess.csproj",
+      "projectPath": "E:\\Development\\01-Github\\Repositories\\03-Studies\\02-ES\\ecoscolar-web-api\\PrototypePurchasingProcess\\PrototypePurchasingProcess.csproj",
       "packagesPath": "C:\\Users\\damis\\.nuget\\packages\\",
-      "outputPath": "E:\\Development\\01-Github\\Repositories\\03-Studies\\02-ES\\PROJ\\ecoscolar-web-api\\PrototypePurchasingProcess\\obj\\",
+      "outputPath": "E:\\Development\\01-Github\\Repositories\\03-Studies\\02-ES\\ecoscolar-web-api\\PrototypePurchasingProcess\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

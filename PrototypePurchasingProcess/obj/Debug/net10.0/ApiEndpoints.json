@@ -111,11 +111,27 @@
   {
     "ContainingType": "PrototypePurchasingProcess.Controllers.PaymentsController",
     "Method": "TestCheckout",
-    "RelativePath": "api/Payments/test-checkout",
+    "RelativePath": "api/Payments/checkout",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "PrototypePurchasingProcess.Controllers.PaymentsController",
+    "Method": "CreateTransfer",
+    "RelativePath": "api/Payments/create-transfer",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "PrototypePurchasingProcess.Controllers.TransferRequest",
+        "IsRequired": true
+      }
+    ],
     "ReturnTypes": []
   }
 ]
