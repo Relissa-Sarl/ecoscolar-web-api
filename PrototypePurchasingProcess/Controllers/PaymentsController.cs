@@ -20,7 +20,7 @@ namespace PrototypePurchasingProcess.Controllers
         [HttpPost("checkout")]
         public async Task<IActionResult> Checkout([FromBody] CheckoutRequest request)
         {
-            long price = (long)request.ProductPrice * 100;
+            double price = request.ProductPrice * 100;
 
             // Define the Stripe Checkout options for a hardcoded 1 CHF test
             var options = new SessionCreateOptions
@@ -34,7 +34,7 @@ namespace PrototypePurchasingProcess.Controllers
                         {
                             // Stripe expects the amount in the smallest currency unit. 
                             // For CHF, 1 Franc = 100 centimes/rappen.
-                            UnitAmount = price,
+                            UnitAmount = (long)price,
                             Currency = "chf",
                             ProductData = new SessionLineItemPriceDataProductDataOptions
                             {
