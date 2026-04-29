@@ -40,6 +40,9 @@ namespace PrototypePurchasingProcess
 
             var app = builder.Build();
 
+            // Use the cors 
+            app.UseCors("AllowFrontend");
+
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
