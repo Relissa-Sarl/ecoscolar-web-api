@@ -20,7 +20,7 @@ namespace PrototypePurchasingProcess.Controllers
         [HttpPost("checkout")]
         public async Task<IActionResult> Checkout([FromBody] CheckoutRequest request)
         {
-            long price = request.ProductPrice * 100;
+            long price = (long)request.ProductPrice * 100;
 
             // Define the Stripe Checkout options for a hardcoded 1 CHF test
             var options = new SessionCreateOptions
@@ -104,6 +104,6 @@ namespace PrototypePurchasingProcess.Controllers
     {
         public int ProductId { get; set; }
 
-        public long ProductPrice { get; set; }
+        public double ProductPrice { get; set; }
     }
 }
