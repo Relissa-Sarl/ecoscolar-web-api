@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PrototypePurchasingProcess")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9dd2bc4980ad380df990ebc66b2b296fb4a2423c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b79745ec2626fe178fcee6eda29ded4d66b04966")]
 [assembly: System.Reflection.AssemblyProductAttribute("PrototypePurchasingProcess")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PrototypePurchasingProcess")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

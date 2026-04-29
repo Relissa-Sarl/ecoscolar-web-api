@@ -110,12 +110,18 @@
   },
   {
     "ContainingType": "PrototypePurchasingProcess.Controllers.PaymentsController",
-    "Method": "TestCheckout",
+    "Method": "Checkout",
     "RelativePath": "api/Payments/checkout",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
-    "Parameters": [],
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "PrototypePurchasingProcess.Controllers.CheckoutRequest",
+        "IsRequired": true
+      }
+    ],
     "ReturnTypes": []
   },
   {
