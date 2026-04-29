@@ -102,7 +102,7 @@ namespace PrototypePurchasingProcess.Controllers
 
     public class CheckoutRequest
     {
-        public string ProductId { get; set; }
+        public int ProductId { get; set; }
 
         public long ProductPrice { get; set; }
     }
