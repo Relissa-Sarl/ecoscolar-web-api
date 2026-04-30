@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "QZSKpoE5VYA=",
+  "dgSpecHash": "iDBHR6qWQY0=",
   "success": true,
-  "projectFilePath": "C:\\Users\\dloup\\Desktop\\Development\\Github\\ETML\\PROJ\\ecoscolar-web-api\\PrototypePurchasingProcess\\PrototypePurchasingProcess.csproj",
+  "projectFilePath": "C:\\Users\\dloup\\Desktop\\Development\\Github\\ETML\\PROJ\\demos\\protoPurchase\\ecoscolar-web-api\\PrototypePurchasingProcess\\PrototypePurchasingProcess.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\dloup\\.nuget\\packages\\azure.core\\1.47.1\\azure.core.1.47.1.nupkg.sha512",
     "C:\\Users\\dloup\\.nuget\\packages\\azure.identity\\1.14.2\\azure.identity.1.14.2.nupkg.sha512",

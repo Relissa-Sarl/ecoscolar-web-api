@@ -62,8 +62,8 @@ namespace PrototypePurchasingProcess.Controllers
                     TransferGroup = "COMMANDE_ID_789",
                 },
 
-                SuccessUrl = "http://localhost:3000/success",
-                CancelUrl = "http://localhost:3000/denied",
+                SuccessUrl = "http://localhost:3001/success",
+                CancelUrl = "http://localhost:3001/denied",
             };
 
             var service = new SessionService();
@@ -209,8 +209,8 @@ namespace PrototypePurchasingProcess.Controllers
                         {
                             Configurations = new List<string> { "recipient" },
                             // Note: You should replace these example URLs with your actual front-end URLs
-                            RefreshUrl = "http://localhost:3000/home",
-                            ReturnUrl = $"http://localhost:3000/home?accountId={request.AccountId}",
+                            RefreshUrl = "http://localhost:3001/home",
+                            ReturnUrl = $"http://localhost:3001/home?accountId={request.AccountId}",
                         },
                     },
                 };

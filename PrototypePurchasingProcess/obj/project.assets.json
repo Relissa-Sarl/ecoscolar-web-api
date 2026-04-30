@@ -6244,11 +6244,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\dloup\\Desktop\\Development\\Github\\ETML\\PROJ\\ecoscolar-web-api\\PrototypePurchasingProcess\\PrototypePurchasingProcess.csproj",
+      "projectUniqueName": "C:\\Users\\dloup\\Desktop\\Development\\Github\\ETML\\PROJ\\demos\\protoPurchase\\ecoscolar-web-api\\PrototypePurchasingProcess\\PrototypePurchasingProcess.csproj",
       "projectName": "PrototypePurchasingProcess",
-      "projectPath": "C:\\Users\\dloup\\Desktop\\Development\\Github\\ETML\\PROJ\\ecoscolar-web-api\\PrototypePurchasingProcess\\PrototypePurchasingProcess.csproj",
+      "projectPath": "C:\\Users\\dloup\\Desktop\\Development\\Github\\ETML\\PROJ\\demos\\protoPurchase\\ecoscolar-web-api\\PrototypePurchasingProcess\\PrototypePurchasingProcess.csproj",
       "packagesPath": "C:\\Users\\dloup\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\dloup\\Desktop\\Development\\Github\\ETML\\PROJ\\ecoscolar-web-api\\PrototypePurchasingProcess\\obj\\",
+      "outputPath": "C:\\Users\\dloup\\Desktop\\Development\\Github\\ETML\\PROJ\\demos\\protoPurchase\\ecoscolar-web-api\\PrototypePurchasingProcess\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

@@ -118,7 +118,7 @@
     "Parameters": [
       {
         "Name": "request",
-        "Type": "PrototypePurchasingProcess.Controllers.CheckoutRequest",
+        "Type": "PrototypePurchasingProcess.DTOs.CheckoutRequest",
         "IsRequired": true
       }
     ],
@@ -134,7 +134,7 @@
     "Parameters": [
       {
         "Name": "request",
-        "Type": "PrototypePurchasingProcess.Controllers.AccountLinkRequest",
+        "Type": "PrototypePurchasingProcess.DTOs.AccountLinkRequest",
         "IsRequired": true
       }
     ],
@@ -150,7 +150,7 @@
     "Parameters": [
       {
         "Name": "request",
-        "Type": "PrototypePurchasingProcess.Controllers.ConnectAccountRequest",
+        "Type": "PrototypePurchasingProcess.DTOs.ConnectAccountRequest",
         "IsRequired": true
       }
     ],
@@ -166,7 +166,7 @@
     "Parameters": [
       {
         "Name": "request",
-        "Type": "PrototypePurchasingProcess.Controllers.TransferRequest",
+        "Type": "PrototypePurchasingProcess.DTOs.TransferRequest",
         "IsRequired": true
       }
     ],
