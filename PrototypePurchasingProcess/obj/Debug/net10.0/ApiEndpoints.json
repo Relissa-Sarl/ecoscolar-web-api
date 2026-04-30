@@ -126,6 +126,38 @@
   },
   {
     "ContainingType": "PrototypePurchasingProcess.Controllers.PaymentsController",
+    "Method": "CreateAccountLink",
+    "RelativePath": "api/Payments/create-account-link",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "PrototypePurchasingProcess.Controllers.AccountLinkRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "PrototypePurchasingProcess.Controllers.PaymentsController",
+    "Method": "CreateConnectAccount",
+    "RelativePath": "api/Payments/create-connect-account",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "PrototypePurchasingProcess.Controllers.ConnectAccountRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "PrototypePurchasingProcess.Controllers.PaymentsController",
     "Method": "CreateTransfer",
     "RelativePath": "api/Payments/create-transfer",
     "HttpMethod": "POST",

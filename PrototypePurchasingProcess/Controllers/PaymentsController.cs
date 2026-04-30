@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Stripe;
+using Stripe.V2.Core;
 using Stripe.Checkout;
 using System.Text.Json;
 
@@ -22,7 +23,6 @@ namespace PrototypePurchasingProcess.Controllers
         {
             double price = request.ProductPrice * 100;
 
-            // Define the Stripe Checkout options for a hardcoded 1 CHF test
             var options = new SessionCreateOptions
             {
                 PaymentMethodTypes = new List<string> { "card" },
@@ -32,14 +32,13 @@ namespace PrototypePurchasingProcess.Controllers
                     {
                         PriceData = new SessionLineItemPriceDataOptions
                         {
-                            // Stripe expects the amount in the smallest currency unit. 
-                            // For CHF, 1 Franc = 100 centimes/rappen.
+                            // 1 franc = 100 cents
                             UnitAmount = (long)price,
                             Currency = "chf",
                             ProductData = new SessionLineItemPriceDataProductDataOptions
                             {
-                                Name = "Test Integration Purchase (1 CHF)",
-                                Description = "This is a fake purchase to test the Stripe integration."
+                                Name = $"Test Integration Purchase ({price} CHF)",
+                                Description = "Fake purchase to validate the process for the prototype"
                             },
                         },
                         Quantity = 1,
@@ -48,26 +47,20 @@ namespace PrototypePurchasingProcess.Controllers
                 Mode = "payment",
                 PaymentIntentData = new SessionPaymentIntentDataOptions
                 {
-                    // Un ID unique de ta base de données pour lier le paiement au futur virement
                     TransferGroup = "COMMANDE_ID_789",
                 },
 
-                // Using generic example URLs so you don't even need your frontend fully built yet
                 SuccessUrl = "http://localhost:3000/success",
                 CancelUrl = "http://localhost:3000/denied",
             };
 
-
-
             var service = new SessionService();
-            var client = new Stripe.StripeClient("<API-KEY>");
             Session session = await service.CreateAsync(options);
 
-            // Return the URL. You can copy-paste this URL directly into your browser to test it.
             return Ok(new { url = session.Url });
         }
 
-        [HttpPost("create-transfer")] // Adjust route as needed based on your controller's base route
+        [HttpPost("create-transfer")]
         public async Task<IActionResult> CreateTransfer([FromBody] TransferRequest request)
         {
             try
@@ -75,7 +68,7 @@ namespace PrototypePurchasingProcess.Controllers
                 var options = new TransferCreateOptions
                 {
                     Amount = request.Amount,
-                    Currency = "chf", // Remember: you can make this a property in your model too if you want it dynamic!
+                    Currency = "chf",
                     Destination = request.ConnectedAccountId,
                     TransferGroup = request.TransferGroup,
                 };
@@ -87,12 +80,129 @@ namespace PrototypePurchasingProcess.Controllers
             }
             catch (StripeException e)
             {
-                // It's always a good idea to catch Stripe exceptions in controllers
-                // so you don't crash the app and instead return a clean 400 Bad Request
                 return BadRequest(new { error = e.StripeError.Message });
             }
         }
+
+        [HttpPost("create-connect-account")]
+        public IActionResult CreateConnectAccount([FromBody] ConnectAccountRequest request)
+        {
+            // Basic validation
+            if (string.IsNullOrWhiteSpace(request?.Email))
+            {
+                return BadRequest(new { error = "Email is required." });
+            }
+
+            try
+            {
+                // Create v2 Connect account for an individual in Switzerland
+                var options = new Stripe.V2.Core.AccountCreateOptions
+                {
+                    ContactEmail = request.Email,
+                    DisplayName = request.Email,
+                    Identity = new AccountCreateIdentityOptions
+                    {
+                        Country = "CH", // Changed to Switzerland
+                        EntityType = "individual", // Changed to individual (particular)
+                    },
+                    Configuration = new AccountCreateConfigurationOptions
+                    {
+                        Recipient = new AccountCreateConfigurationRecipientOptions
+                        {
+                            Capabilities = new AccountCreateConfigurationRecipientCapabilitiesOptions
+                            {
+                                StripeBalance = new AccountCreateConfigurationRecipientCapabilitiesStripeBalanceOptions
+                                {
+                                    StripeTransfers = new AccountCreateConfigurationRecipientCapabilitiesStripeBalanceStripeTransfersOptions
+                                    {
+                                        Requested = true,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    Defaults = new AccountCreateDefaultsOptions
+                    {
+                        Responsibilities = new AccountCreateDefaultsResponsibilitiesOptions
+                        {
+                            FeesCollector = "application",
+                            LossesCollector = "application",
+                        },
+                    },
+                    Dashboard = "express",
+                    Include = new List<string>
+                    {
+                        "configuration.recipient",
+                        "requirements",
+                    },
+                };
+
+                var secretKey = _config["Stripe:SecretKey"];
+                var client = new StripeClient(secretKey);
+                
+                var service = client.V2.Core.Accounts;
+                Stripe.V2.Core.Account account = service.Create(options);
+
+                return Ok(new { accountId = account.Id });
+            }
+            catch (StripeException e)
+            {
+                // Catching StripeException specifically can be useful for debugging
+                return StatusCode(500, new { error = e.StripeError.Message });
+            }
+            catch (Exception e)
+            {
+                return StatusCode(500, new { error = e.Message });
+            }
+        }
+            
+        [HttpPost("create-account-link")]
+        public IActionResult CreateAccountLink([FromBody] AccountLinkRequest request)
+        {
+            // Basic validation
+            if (string.IsNullOrWhiteSpace(request?.AccountId))
+            {
+                return BadRequest(new { error = "Account ID is required." });
+            }
+
+            try
+            {
+                var secretKey = _config["Stripe:SecretKey"];
+                var client = new StripeClient(secretKey);
+                var service = client.V2.Core.AccountLinks;  
+
+                var options = new Stripe.V2.Core.AccountLinkCreateOptions
+                {
+                    Account = request.AccountId,
+                    UseCase = new Stripe.V2.Core.AccountLinkCreateUseCaseOptions
+                    {
+                        Type = "account_onboarding",
+                        AccountOnboarding = new Stripe.V2.Core.AccountLinkCreateUseCaseAccountOnboardingOptions
+                        {
+                            Configurations = new List<string> { "recipient" },
+                            // Note: You should replace these example URLs with your actual front-end URLs
+                            RefreshUrl = "https://example.com/onboarding/refresh",
+                            ReturnUrl = $"https://example.com/onboarding/return?accountId={request.AccountId}",
+                        },
+                    },
+                };
+
+                var accountLink = service.Create(options);
+
+                return Ok(new { url = accountLink.Url });
+            }
+            catch (StripeException e)
+            {
+                // Catching StripeException specifically can be useful for debugging
+                return StatusCode(500, new { error = e.StripeError.Message });
+            }
+            catch (Exception e)
+            {
+                return StatusCode(500, new { error = e.Message });
+            }
+        }
     }
+
     public class TransferRequest
     {
         public long Amount { get; set; }
@@ -103,7 +213,16 @@ namespace PrototypePurchasingProcess.Controllers
     public class CheckoutRequest
     {
         public int ProductId { get; set; }
-
         public double ProductPrice { get; set; }
+    }
+
+    public class ConnectAccountRequest
+    {
+        public string Email { get; set; }
+    }
+
+    public class AccountLinkRequest
+    {
+        public string AccountId { get; set; }
     }
 }
