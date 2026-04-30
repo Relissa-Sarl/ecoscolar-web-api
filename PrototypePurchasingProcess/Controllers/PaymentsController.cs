@@ -4,6 +4,7 @@ using Stripe;
 using Stripe.V2.Core;
 using Stripe.Checkout;
 using System.Text.Json;
+using PrototypePurchasingProcess.DTOs;
 
 namespace PrototypePurchasingProcess.Controllers
 {
@@ -11,13 +12,24 @@ namespace PrototypePurchasingProcess.Controllers
     [ApiController]
     public class PaymentsController : ControllerBase
     {
-        private readonly IConfiguration _config;
+        private readonly IConfiguration _config;        // Configuration to access Stripe secret key
 
+        /// <summary>
+        /// PaymentsController constructor
+        /// Takes the configuration as a parameter to access the Stripe secret key
+        /// </summary>
+        /// <param name="config">The configuration object containing the Stripe secret key</param>
         public PaymentsController(IConfiguration config)
         {
             _config = config;
         }
 
+        /// <summary>
+        /// Creates a Stripe Checkout session for a given product price 
+        /// and returns the session URL to the client
+        /// </summary>
+        /// <param name="request">The checkout request containing product information</param>
+        /// <returns>The session URL</returns>
         [HttpPost("checkout")]
         public async Task<IActionResult> Checkout([FromBody] CheckoutRequest request)
         {
@@ -60,6 +72,11 @@ namespace PrototypePurchasingProcess.Controllers
             return Ok(new { url = session.Url });
         }
 
+        /// <summary>
+        /// Creates a transfer to a connected account using the Stripe API
+        /// </summary>
+        /// <param name="request">The transfer request containing transfer information</param>
+        /// <returns>The transfer ID</returns>
         [HttpPost("create-transfer")]
         public async Task<IActionResult> CreateTransfer([FromBody] TransferRequest request)
         {
@@ -84,6 +101,11 @@ namespace PrototypePurchasingProcess.Controllers
             }
         }
 
+        /// <summary>
+        /// Creates a Stripe Connect account for an individual in Switzerland using the Stripe API v2
+        /// </summary>
+        /// <param name="request">The request containing account information</param>
+        /// <returns>The created account ID</returns>
         [HttpPost("create-connect-account")]
         public IActionResult CreateConnectAccount([FromBody] ConnectAccountRequest request)
         {
@@ -156,7 +178,12 @@ namespace PrototypePurchasingProcess.Controllers
                 return StatusCode(500, new { error = e.Message });
             }
         }
-            
+
+        /// <summary>
+        /// Creates an account link for onboarding a connected account using the Stripe API v2
+        /// </summary>
+        /// <param name="request">The request containing account link information</param>
+        /// <returns>The created account link URL</returns>
         [HttpPost("create-account-link")]
         public IActionResult CreateAccountLink([FromBody] AccountLinkRequest request)
         {
@@ -202,28 +229,5 @@ namespace PrototypePurchasingProcess.Controllers
                 return StatusCode(500, new { error = e.Message });
             }
         }
-    }
-
-    public class TransferRequest
-    {
-        public long Amount { get; set; }
-        public string TransferGroup { get; set; }
-        public string ConnectedAccountId { get; set; }
-    }
-
-    public class CheckoutRequest
-    {
-        public int ProductId { get; set; }
-        public double ProductPrice { get; set; }
-    }
-
-    public class ConnectAccountRequest
-    {
-        public string Email { get; set; }
-    }
-
-    public class AccountLinkRequest
-    {
-        public string AccountId { get; set; }
     }
 }
