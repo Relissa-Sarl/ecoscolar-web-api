@@ -1,18 +1,13 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "C:\\Users\\dloup\\Desktop\\Development\\Github\\ETML\\PROJ\\ecoscolar-web-api\\PrototypePurchasingProcess\\",
+  "WorkspaceRootPath": "C:\\Dev\\Relissa\\ecoscolar-web-api\\PrototypePurchasingProcess\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{C6819012-5E2A-B33D-BDE0-09CC408E5690}|PrototypePurchasingProcess.csproj|c:\\users\\dloup\\desktop\\development\\github\\etml\\proj\\ecoscolar-web-api\\prototypepurchasingprocess\\controllers\\paymentscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\arojas\\AppData\\Roaming\\Microsoft\\UserSecrets\\23073be1-deff-4d1a-8360-810e33716639\\secrets.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C6819012-5E2A-B33D-BDE0-09CC408E5690}|PrototypePurchasingProcess.csproj|c:\\dev\\relissa\\ecoscolar-web-api\\prototypepurchasingprocess\\controllers\\paymentscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{C6819012-5E2A-B33D-BDE0-09CC408E5690}|PrototypePurchasingProcess.csproj|solutionrelative:controllers\\paymentscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{C6819012-5E2A-B33D-BDE0-09CC408E5690}|PrototypePurchasingProcess.csproj|c:\\users\\dloup\\desktop\\development\\github\\etml\\proj\\ecoscolar-web-api\\prototypepurchasingprocess\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{C6819012-5E2A-B33D-BDE0-09CC408E5690}|PrototypePurchasingProcess.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{C6819012-5E2A-B33D-BDE0-09CC408E5690}|PrototypePurchasingProcess.csproj|c:\\users\\dloup\\desktop\\development\\github\\etml\\proj\\ecoscolar-web-api\\prototypepurchasingprocess\\controllers\\advertscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{C6819012-5E2A-B33D-BDE0-09CC408E5690}|PrototypePurchasingProcess.csproj|solutionrelative:controllers\\advertscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -22,7 +17,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 2,
+          "SelectedChildIndex": 1,
           "Children": [
             {
               "$type": "Bookmark",
@@ -30,41 +25,28 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "AdvertsController.cs",
-              "DocumentMoniker": "C:\\Users\\dloup\\Desktop\\Development\\Github\\ETML\\PROJ\\ecoscolar-web-api\\PrototypePurchasingProcess\\Controllers\\AdvertsController.cs",
-              "RelativeDocumentMoniker": "Controllers\\AdvertsController.cs",
-              "ToolTip": "C:\\Users\\dloup\\Desktop\\Development\\Github\\ETML\\PROJ\\ecoscolar-web-api\\PrototypePurchasingProcess\\Controllers\\AdvertsController.cs",
-              "RelativeToolTip": "Controllers\\AdvertsController.cs",
-              "ViewState": "AgIAAEQAAAAAAAAAAAAkwGcAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-29T19:35:56.033Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "PaymentsController.cs",
-              "DocumentMoniker": "C:\\Users\\dloup\\Desktop\\Development\\Github\\ETML\\PROJ\\ecoscolar-web-api\\PrototypePurchasingProcess\\Controllers\\PaymentsController.cs",
-              "RelativeDocumentMoniker": "Controllers\\PaymentsController.cs",
-              "ToolTip": "C:\\Users\\dloup\\Desktop\\Development\\Github\\ETML\\PROJ\\ecoscolar-web-api\\PrototypePurchasingProcess\\Controllers\\PaymentsController.cs",
-              "RelativeToolTip": "Controllers\\PaymentsController.cs",
-              "ViewState": "AgIAABUAAAAAAAAAAAAywF0AAAANAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-27T11:59:15.925Z",
+              "Title": "secrets.json",
+              "DocumentMoniker": "C:\\Users\\arojas\\AppData\\Roaming\\Microsoft\\UserSecrets\\23073be1-deff-4d1a-8360-810e33716639\\secrets.json",
+              "RelativeDocumentMoniker": "..\\..\\..\\..\\Users\\arojas\\AppData\\Roaming\\Microsoft\\UserSecrets\\23073be1-deff-4d1a-8360-810e33716639\\secrets.json",
+              "ToolTip": "C:\\Users\\arojas\\AppData\\Roaming\\Microsoft\\UserSecrets\\23073be1-deff-4d1a-8360-810e33716639\\secrets.json",
+              "RelativeToolTip": "..\\..\\..\\..\\Users\\arojas\\AppData\\Roaming\\Microsoft\\UserSecrets\\23073be1-deff-4d1a-8360-810e33716639\\secrets.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-04-30T12:05:19.288Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 1,
-              "Title": "Program.cs",
-              "DocumentMoniker": "C:\\Users\\dloup\\Desktop\\Development\\Github\\ETML\\PROJ\\ecoscolar-web-api\\PrototypePurchasingProcess\\Program.cs",
-              "RelativeDocumentMoniker": "Program.cs",
-              "ToolTip": "C:\\Users\\dloup\\Desktop\\Development\\Github\\ETML\\PROJ\\ecoscolar-web-api\\PrototypePurchasingProcess\\Program.cs",
-              "RelativeToolTip": "Program.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAABMAAAAAAAAAA==",
+              "Title": "PaymentsController.cs",
+              "DocumentMoniker": "C:\\Dev\\Relissa\\ecoscolar-web-api\\PrototypePurchasingProcess\\Controllers\\PaymentsController.cs",
+              "RelativeDocumentMoniker": "Controllers\\PaymentsController.cs",
+              "ToolTip": "C:\\Dev\\Relissa\\ecoscolar-web-api\\PrototypePurchasingProcess\\Controllers\\PaymentsController.cs",
+              "RelativeToolTip": "Controllers\\PaymentsController.cs",
+              "ViewState": "AgIAAEcAAAAAAAAAAAAwwFcAAABbAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-27T10:39:24.188Z",
+              "WhenOpened": "2026-04-30T11:52:10.055Z",
               "EditorCaption": ""
             }
           ]

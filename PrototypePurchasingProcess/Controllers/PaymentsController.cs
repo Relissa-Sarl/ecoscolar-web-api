@@ -90,6 +90,7 @@ namespace PrototypePurchasingProcess.Controllers
             // Basic validation
             if (string.IsNullOrWhiteSpace(request?.Email))
             {
+                Console.WriteLine("Email is required");
                 return BadRequest(new { error = "Email is required." });
             }
 
@@ -181,8 +182,8 @@ namespace PrototypePurchasingProcess.Controllers
                         {
                             Configurations = new List<string> { "recipient" },
                             // Note: You should replace these example URLs with your actual front-end URLs
-                            RefreshUrl = "https://example.com/onboarding/refresh",
-                            ReturnUrl = $"https://example.com/onboarding/return?accountId={request.AccountId}",
+                            RefreshUrl = "http://localhost:3000/home",
+                            ReturnUrl = $"http://localhost:3000/home?accountId={request.AccountId}",
                         },
                     },
                 };
