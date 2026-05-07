@@ -1,0 +1,6 @@
+@EcoScolarWebApi_HostAddress = http://localhost:5022
+
+GET {{EcoScolarWebApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
