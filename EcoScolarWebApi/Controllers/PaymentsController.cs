@@ -2,11 +2,11 @@
 using Stripe;
 using Stripe.V2.Core;
 using Stripe.Checkout;
-using EcoscolarWebApi.Utils.DTOs;
+using EcoscolarWebApi.Utils.DTOs.Stripe;
 
 namespace EcoscolarWebApi.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/v1/[controller]")]
     [ApiController]
     public class PaymentsController : ControllerBase
     {
@@ -15,6 +15,8 @@ namespace EcoscolarWebApi.Controllers
         /// <summary>
         /// PaymentsController constructor
         /// Takes the configuration as a parameter to access the Stripe secret key
+        /// 
+        /// Url: POST /api/v1/payments/checkout
         /// </summary>
         /// <param name="config">The configuration object containing the Stripe secret key</param>
         public PaymentsController(IConfiguration config)
@@ -25,6 +27,8 @@ namespace EcoscolarWebApi.Controllers
         /// <summary>
         /// Creates a Stripe Checkout session for a given product price 
         /// and returns the session URL to the client
+        /// 
+        /// Url: POST /api/v1/payments/checkout
         /// </summary>
         /// <param name="request">The checkout request containing product information</param>
         /// <returns>The session URL</returns>
@@ -72,6 +76,8 @@ namespace EcoscolarWebApi.Controllers
 
         /// <summary>
         /// Creates a transfer to a connected account using the Stripe API
+        /// 
+        /// Url: POST /api/v1/payments/create-transfer
         /// </summary>
         /// <param name="request">The transfer request containing transfer information</param>
         /// <returns>The transfer ID</returns>
@@ -101,6 +107,8 @@ namespace EcoscolarWebApi.Controllers
 
         /// <summary>
         /// Creates a Stripe Connect account for an individual in Switzerland using the Stripe API v2
+        ///     
+        /// Url: POST /api/v1/payments/create-connect-account
         /// </summary>
         /// <param name="request">The request containing account information</param>
         /// <returns>The created account ID</returns>
@@ -179,6 +187,8 @@ namespace EcoscolarWebApi.Controllers
 
         /// <summary>
         /// Creates an account link for onboarding a connected account using the Stripe API v2
+        /// 
+        /// Url: POST /api/v1/payments/create-account-link
         /// </summary>
         /// <param name="request">The request containing account link information</param>
         /// <returns>The created account link URL</returns>
