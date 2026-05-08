@@ -51,6 +51,7 @@ namespace EcoscolarWebApi
                 app.MapOpenApi();
 
             app.UseHttpsRedirection();
+            app.UseAuthentication();
             app.UseAuthorization();
 
             // Map controllers to the application
