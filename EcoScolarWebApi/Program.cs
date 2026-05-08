@@ -14,6 +14,11 @@ namespace EcoscolarWebApi
 
             // Add db context to the builder
             var connectionString = builder.Configuration.GetConnectionString("Default");
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                throw new InvalidOperationException("Required connection string 'ConnectionStrings:Default' is missing or empty.");
+            }
+
             builder.Services.AddDbContext<EcoscolarDbContext>(options => options.UseSqlServer(connectionString));
 
             // Setup Stripe
