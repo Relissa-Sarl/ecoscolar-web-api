@@ -41,6 +41,9 @@ dotnet user-secrets init
 
 # Setup the connection string (replace {{...}} with your local configuration)
 dotnet user-secrets set "ConnectionStrings:Default" "Server={{server_name}};Database=db-ecoscolar;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True"
+
+# Setup strip secret key
+dotnet user-secrets set "Stripe:SecretKey" "{{sk_here}}"
 ```
 
 ### Step 3: Start the program

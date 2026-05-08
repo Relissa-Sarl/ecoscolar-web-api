@@ -1,6 +1,7 @@
 using EcoscolarWebApi.Data;
 using EcoscolarWebApi.Models;
 using Microsoft.EntityFrameworkCore;
+using Stripe;
 
 namespace EcoscolarWebApi
 {
@@ -14,6 +15,10 @@ namespace EcoscolarWebApi
             // Add db context to the builder
             var connectionString = builder.Configuration.GetConnectionString("Default");
             builder.Services.AddDbContext<EcoscolarDbContext>(options => options.UseSqlServer(connectionString));
+
+            // Setup Stripe
+            var stripeSecretKey = builder.Configuration["Stripe:SecretKey"];
+            StripeConfiguration.ApiKey = stripeSecretKey;
 
             // Add identity services to the builder
             builder.Services.AddIdentityApiEndpoints<User>()
@@ -43,9 +48,7 @@ namespace EcoscolarWebApi
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
-            {
                 app.MapOpenApi();
-            }
 
             app.UseHttpsRedirection();
             app.UseAuthorization();
