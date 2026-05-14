@@ -28,7 +28,7 @@ namespace EcoscolarWebApi.Data
         /// </summary>
         public DbSet<Adverts> Adverts { get; set; } = default!;
 
-        public DbSet<PhysicalItems> PhysicalItems { get; set; }
+        public DbSet<PhysicalItems> Products { get; set; }
 
         public DbSet<AdvertServices> Services { get; set; }
 

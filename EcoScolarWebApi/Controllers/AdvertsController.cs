@@ -1,5 +1,9 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using EcoscolarWebApi.Data;
+using EcoscolarWebApi.Models;
+using EcoscolarWebApi.Utils.enums;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace EcoscolarWebApi.Controllers
 {
@@ -7,79 +11,171 @@ namespace EcoscolarWebApi.Controllers
     [ApiController]
     public class AdvertsController : Controller
     {
-        // GET: AdvertsController
-        public ActionResult Index()
+        private readonly EcoscolarDbContext _context;
+
+        public AdvertsController(EcoscolarDbContext context)
         {
-            return View();
+            _context = context;
+        }
+
+        // GET METHODS
+
+        // GET: AdvertsController
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Adverts>>> Index()
+        {
+            return await _context.Adverts.ToListAsync();
+        }
+
+        // GET: AdvertsController/GetBooks
+        [HttpGet("books")]
+        public async Task<ActionResult<IEnumerable<Books>>> GetBooks()
+        {
+            return await _context.Books.ToListAsync();
+        }
+
+        // GET: AdvertsController/GetProducts
+        [HttpGet("products")]
+        public async Task<ActionResult<IEnumerable<PhysicalItems>>> GetProducts()
+        {
+            return await _context.Products.ToListAsync();
+        }
+
+        // GET: AdvertsController/GetServices
+        [HttpGet("services")]
+        public async Task<ActionResult<IEnumerable<AdvertServices>>> GetServices()
+        {
+            return await _context.Services.ToListAsync();
         }
 
         // GET: AdvertsController/Details/5
-        public ActionResult Details(int id)
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Adverts>> Details(int id)
         {
-            return View();
+            var advert = await _context.Adverts.FindAsync(id);
+            if (advert == null)
+            {
+                return NotFound();
+            }
+            return advert;
         }
 
-        // GET: AdvertsController/Create
-        public ActionResult Create()
+        // POST METHODS
+
+        // POST: AdvertsController/CreateBook
+        [HttpPost("books")]
+        public async Task<ActionResult<Books>> CreateBook([FromBody] Books book)
         {
-            return View();
+            _context.Books.Add(book);
+            await _context.SaveChangesAsync();
+            return CreatedAtAction("GetBooks", new { id = book.AdvertId }, book);
         }
 
-        // POST: AdvertsController/Create
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
+        // POST: AdvertsController/CreateProduct
+        [HttpPost("products")]
+        public async Task<ActionResult<PhysicalItems>> CreateProduct([FromBody] PhysicalItems product)
         {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
+            _context.Products.Add(product);
+            await _context.SaveChangesAsync();
+            return CreatedAtAction("GetProducts", new { id = product.AdvertId }, product);
         }
 
-        // GET: AdvertsController/Edit/5
-        public ActionResult Edit(int id)
+        // POST: AdvertsController/CreateService
+        [HttpPost("services")]
+        public async Task<ActionResult<AdvertServices>> CreateService([FromBody] AdvertServices service)
         {
-            return View();
+            _context.Services.Add(service);
+            await _context.SaveChangesAsync();
+            return CreatedAtAction("GetServices", new { id = service.AdvertId }, service);
         }
 
-        // POST: AdvertsController/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
+        // PUT METHODS
+
+        // PUT: AdvertsController/EditBook/5
+        [HttpPut("books/{id}")]
+        public async Task<IActionResult> EditBook(int id, [FromBody] Books book)
         {
-            try
+            if (id != book.AdvertId)
             {
-                return RedirectToAction(nameof(Index));
+                return BadRequest();
             }
-            catch
-            {
-                return View();
-            }
+            _context.Entry(book).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+            return NoContent();
         }
 
-        // GET: AdvertsController/Delete/5
-        public ActionResult Delete(int id)
+        // PUT: AdvertsController/EditProduct/5
+        [HttpPut("products/{id}")]
+        public async Task<IActionResult> EditProduct(int id, [FromBody] PhysicalItems product)
         {
-            return View();
+            if (id != product.AdvertId)
+            {
+                return BadRequest();
+            }
+            _context.Entry(product).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+            return NoContent();
         }
 
-        // POST: AdvertsController/Delete/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
+        // PUT: AdvertsController/EditService/5
+        [HttpPut("services/{id}")]
+        public async Task<IActionResult> EditService(int id, [FromBody] AdvertServices service)
         {
-            try
+            if (id != service.AdvertId)
             {
-                return RedirectToAction(nameof(Index));
+                return BadRequest();
             }
-            catch
+            _context.Entry(service).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
+
+        // PATCH METHODS
+
+        // PATCH: AdvertsController/UpdateAdvertStatus/5
+        [HttpPatch("{id}/status")]
+        public async Task<IActionResult> UpdateAdvertStatus(int id, [FromBody] AdvertStatus status)
+        {
+            Adverts? advert = await _context.Adverts.FindAsync(id);
+            if (advert == null)
             {
-                return View();
+                return NotFound();
             }
+            advert.Status = status;
+            _context.Entry(advert).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
+
+        // DELETE METHODS
+
+        // DELETE: AdvertsController/Delete/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteAdvert(int id)
+        {
+            Adverts? advert = await _context.Adverts.FindAsync(id);
+            if (advert == null)
+            {
+                return NotFound();
+            }
+            _context.Adverts.Remove(advert);
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
+
+        // DELETE: AdvertsController/RemoveImages
+        [HttpDelete("{id}/images")]
+        public async Task<IActionResult> RemoveAdvertImages(int id, [FromBody] List<string> imageUrls)
+        {
+            PhysicalItems? advert = await _context.Products.FindAsync(id);
+            if (advert == null)
+            {
+                return NotFound();
+            }
+            advert.Images = advert.Images.Where(url => !imageUrls.Contains(url)).ToList();
+            _context.Entry(advert).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+            return NoContent();
         }
     }
 }
