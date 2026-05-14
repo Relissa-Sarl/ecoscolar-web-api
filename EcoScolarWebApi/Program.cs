@@ -1,6 +1,7 @@
 using EcoscolarWebApi.Data;
 using EcoscolarWebApi.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi;
 using Stripe;
 
 namespace EcoscolarWebApi
@@ -32,7 +33,20 @@ namespace EcoscolarWebApi
             // Add services to the container.
             builder.Services.AddControllers();
             builder.Services.AddOpenApi();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(options =>
+            {
+                options.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Version = "v1",
+                    Title = "EcoScolar Web API",
+                    Description = "API for the EcoScolar application, providing endpoints for user management, payment processing, and more.",
+                    Contact = new OpenApiContact
+                    {
+                        Name = "EcoScolar Support",
+                        Email = "email@here.com"
+                    }
+                });
+            });
 
             // Setup CORS policy
             builder.Services.AddCors(options =>

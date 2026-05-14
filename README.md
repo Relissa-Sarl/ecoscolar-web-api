@@ -46,7 +46,7 @@ dotnet user-secrets set "ConnectionStrings:Default" "Server={{server_name}};Data
 dotnet user-secrets set "Stripe:SecretKey" "{{sk_here}}"
 
 # Open swagger
-localhost:5001/swagger/index.html
+http://localhost:5001/swagger/index.html
 
 ```
 
