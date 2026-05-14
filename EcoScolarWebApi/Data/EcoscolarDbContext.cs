@@ -26,7 +26,7 @@ namespace EcoscolarWebApi.Data
         /// <summary>
         /// DbSet for the Advert entity, representing the adverts in the database
         /// </summary>
-        public DbSet<Adverts> Adverts { get; set; } = default!;
+        public DbSet<Adverts> Adverts { get; set; }
 
         public DbSet<PhysicalItems> Products { get; set; }
 
@@ -34,13 +34,15 @@ namespace EcoscolarWebApi.Data
 
         public DbSet<Books> Books { get; set; }
 
+        public DbSet<Pictures> Pictures { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
 
             builder.Entity<PhysicalItems>().ToTable("Adverts");
             builder.Entity<AdvertServices>().ToTable("Adverts");
-            builder.Entity<PhysicalItems>().ToTable("PhysicalItems");
+            builder.Entity<Books>().ToTable("PhysicalItems");
         }
     }
 }
