@@ -1,4 +1,4 @@
-﻿namespace EcoscolarWebApi.Utils.enums
+﻿namespace EcoscolarWebApi.Utils.Enums
 {
     public enum AdvertStatus
     {
