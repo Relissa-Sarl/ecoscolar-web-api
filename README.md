@@ -44,6 +44,10 @@ dotnet user-secrets set "ConnectionStrings:Default" "Server={{server_name}};Data
 
 # Setup strip secret key
 dotnet user-secrets set "Stripe:SecretKey" "{{sk_here}}"
+
+# Open swagger
+http://localhost:5001/swagger/index.html
+
 ```
 
 ### Step 3: Start the program
