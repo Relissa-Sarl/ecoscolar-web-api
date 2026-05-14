@@ -7,6 +7,7 @@ namespace EcoscolarWebApi.Models
     {
         public long PictureId { get; set; }
         public string Label { get; set; }
-        public PhysicalItems AdvertId { get; set; }
+        public long AdvertId { get; set; }
+        public virtual PhysicalItems Advert { get; set; } = new PhysicalItems();
     }
 }

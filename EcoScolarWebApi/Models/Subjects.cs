@@ -8,5 +8,6 @@ namespace EcoscolarWebApi.Models
         public long SubjectId { get; set; }
         public string Name { get; set; }
         public string Subject { get; set; }
+        public virtual ICollection<AdvertServices> AdvertServices { get; set; } = new List<AdvertServices>();
     }
 }
