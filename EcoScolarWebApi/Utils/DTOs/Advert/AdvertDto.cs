@@ -1,7 +1,5 @@
 ﻿using EcoscolarWebApi.Models;
 using EcoscolarWebApi.Utils.Enums;
-using Microsoft.AspNetCore.Identity;
-using System.Runtime.InteropServices;
 
 namespace EcoscolarWebApi.Utils.DTOs.Advert
 {
