@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace EcoscolarWebApi.Utils.DTOs.Advert
 {
-    public record AdvertReadDto(long id, string type, float price, DateTime publicationDate, DateTime notificationDate, AdvertStatus status, string userId, string sellerPseudo, string? primaryImage)
+    public record AdvertReadDto(long id, string type, string title, double price, DateTime publicationDate, DateTime notificationDate, AdvertStatus status, string userId, string sellerPseudo, string? primaryImage)
     {
         public static AdvertReadDto FromEntity(Models.Adverts entity)
         {
@@ -22,17 +22,18 @@ namespace EcoscolarWebApi.Utils.DTOs.Advert
             return new AdvertReadDto(
                 id: entity.AdvertId,
                 type: type,
+                title:entity.Title,
                 price: entity.Price,
                 publicationDate: entity.CreatedAt,
                 notificationDate: entity.NotificationDate,
                 status: entity.Status,
                 userId: entity.UserId,
-                sellerPseudo: entity.User.UserName ?? "Anonyme",
+                sellerPseudo: entity.User?.UserName ?? "Anonyme",
                 primaryImage: primaryImage
             );
         }
     }
-    public record AdvertBaseCreateDto(string Title, string Description, float Price, string UserId)
+    public record AdvertBaseCreateDto(string Title, string Description, double Price, string UserId)
     {
         public Adverts ToEntity()
         {
@@ -53,7 +54,7 @@ namespace EcoscolarWebApi.Utils.DTOs.Advert
         }
     }
 
-    public record ServiceCreateDto(string Title, string Description, float Price, string UserId, long SubjectId, long SchoolLevelId, Language TeachingLanguage, string SpecificStudyLevel)
+    public record ServiceCreateDto(string Title, string Description, double Price, string UserId, long SubjectId, long SchoolLevelId, Language TeachingLanguage, string SpecificStudyLevel)
         : AdvertBaseCreateDto(Title, Description, Price, UserId)
     {
         public AdvertServices ToEntity()
@@ -71,12 +72,12 @@ namespace EcoscolarWebApi.Utils.DTOs.Advert
                 service.SubjectId = SubjectId;
                 service.SchoolGradeId = SchoolLevelId;
                 service.TeachingLanguage = TeachingLanguage;
-                service.SpecificStudyLevel = SpecificStudyLevel;
+                service.StudyLevel = SpecificStudyLevel;
             }
         }
     }
 
-    public record ProductCreateDto(string Title, string Description, float Price, string UserId, string[] Images, Condition Condition)
+    public record ProductCreateDto(string Title, string Description, double Price, string UserId, string[] Images, Condition Condition)
         : AdvertBaseCreateDto(Title, Description, Price, UserId)
     {
         public PhysicalItems ToEntity()
@@ -98,7 +99,7 @@ namespace EcoscolarWebApi.Utils.DTOs.Advert
     }
 
     public record BookCreateDto(
-        string Title, string Description, float Price, string UserId, string[] Images, Condition Condition,
+        string Title, string Description, double Price, string UserId, string[] Images, Condition Condition,
         long CategoryId, string Isbn, string Author, string Publisher, string Edition
     ) : ProductCreateDto(Title, Description, Price, UserId, Images, Condition)
     {
@@ -118,7 +119,7 @@ namespace EcoscolarWebApi.Utils.DTOs.Advert
                 book.Publisher = Publisher;
                 book.Edition = Edition;
                 book.ISBN = Isbn;
-                book.BookCategory = new BookCategories { BookCategoryId = CategoryId };
+                book.BookCategoryId = CategoryId;
             }
         }
     }

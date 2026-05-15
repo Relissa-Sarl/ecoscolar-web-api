@@ -2,7 +2,6 @@
 using EcoscolarWebApi.Models;
 using EcoscolarWebApi.Utils.DTOs.Advert;
 using EcoscolarWebApi.Utils.Enums;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Stripe.Billing;
@@ -14,7 +13,7 @@ namespace EcoscolarWebApi.Controllers
     public class AdvertsController : Controller
     {
         private readonly EcoscolarDbContext _context;
-        private bool AdvertExists(int id) => _context.Adverts.Any(e => e.AdvertId == id);
+        private bool AdvertExists(long id) => _context.Adverts.Any(e => e.AdvertId == id);
 
         public AdvertsController(EcoscolarDbContext context)
         {
@@ -25,9 +24,10 @@ namespace EcoscolarWebApi.Controllers
 
         // GET: AdvertsController
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Adverts>>> Index()
+        public async Task<ActionResult<IEnumerable<AdvertReadDto>>> Index()
         {
-            return await _context.Adverts.ToListAsync();
+            var adverts = await _context.Adverts.ToListAsync();
+            return Ok(adverts.Select(AdvertReadDto.FromEntity));
         }
 
         // GET: AdvertsController/GetBooks
@@ -56,12 +56,19 @@ namespace EcoscolarWebApi.Controllers
 
         // GET: AdvertsController/Details/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Adverts>> Details(int id)
+        public async Task<ActionResult<AdvertReadDto>> Details(long id)
         {
-            var advert = await _context.Adverts.FindAsync(id);
+            Adverts advert;
+            try
+            {
+                advert = await _context.Adverts.FindAsync(id);
+            } catch (Exception e)
+            {
+                throw;
+            }
             if (advert == null) return NotFound();
             
-            return advert;
+            return Ok(AdvertReadDto.FromEntity(advert));
         }
 
         // POST METHODS
@@ -115,11 +122,11 @@ namespace EcoscolarWebApi.Controllers
 
         // PUT: AdvertsController/EditBook/5
         [HttpPut("books/{id}")]
-        public async Task<IActionResult> EditBook(int id, [FromBody] BookCreateDto bookDto)
+        public async Task<IActionResult> EditBook(long id, [FromBody] BookCreateDto bookDto)
         {
             Books existingBook = await _context.Books
                 .Include(b => b.Pictures)
-                .FirstAsync(b => b.AdvertId == id);
+                .FirstOrDefaultAsync(b => b.AdvertId == id);
             
             if(existingBook == null) return NotFound();
             bookDto.MapToEntity(existingBook);
@@ -140,11 +147,11 @@ namespace EcoscolarWebApi.Controllers
 
         // PUT: AdvertsController/EditProduct/5
         [HttpPut("products/{id}")]
-        public async Task<IActionResult> EditProduct(int id, [FromBody] ProductCreateDto productDto)
+        public async Task<IActionResult> EditProduct(long id, [FromBody] ProductCreateDto productDto)
         {
             PhysicalItems existingProduct = await _context.Products
                 .Include(p => p.Pictures)
-                .FirstAsync(p => p.AdvertId == id);
+                .FirstOrDefaultAsync(p => p.AdvertId == id);
 
             if (existingProduct == null) return NotFound();
             productDto.MapToEntity(existingProduct);
@@ -165,10 +172,10 @@ namespace EcoscolarWebApi.Controllers
 
         // PUT: AdvertsController/EditService/5
         [HttpPut("services/{id}")]
-        public async Task<IActionResult> EditService(int id, [FromBody] ServiceCreateDto serviceDto)
+        public async Task<IActionResult> EditService(long id, [FromBody] ServiceCreateDto serviceDto)
         {
             AdvertServices existingService = await _context.Services
-                .FirstAsync(s => s.AdvertId == id);
+                .FirstOrDefaultAsync(s => s.AdvertId == id);
 
             if (existingService == null) return NotFound();
             serviceDto.MapToEntity(existingService);
@@ -191,7 +198,7 @@ namespace EcoscolarWebApi.Controllers
 
         // PATCH: AdvertsController/UpdateAdvertStatus/5
         [HttpPatch("{id}/status")]
-        public async Task<IActionResult> UpdateAdvertStatus(int id, [FromBody] AdvertStatus status)
+        public async Task<IActionResult> UpdateAdvertStatus(long id, [FromBody] AdvertStatus status)
         {
             Adverts? advert = await _context.Adverts.FindAsync(id);
             if (advert == null) return NotFound();
@@ -206,7 +213,7 @@ namespace EcoscolarWebApi.Controllers
 
         // DELETE: AdvertsController/Delete/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteAdvert(int id)
+        public async Task<IActionResult> DeleteAdvert(long id)
         {
             Adverts? advert = await _context.Adverts.FindAsync(id);
             if (advert == null) return NotFound();
@@ -218,7 +225,7 @@ namespace EcoscolarWebApi.Controllers
 
         // DELETE: AdvertsController/RemoveImages
         [HttpDelete("{id}/images")]
-        public async Task<IActionResult> RemoveAdvertImages(int id, [FromBody] List<string> imageUrls)
+        public async Task<IActionResult> RemoveAdvertImages(long id, [FromBody] List<string> imageUrls)
         {
             PhysicalItems? product = await _context.Products
                 .Include(p => p.Pictures)

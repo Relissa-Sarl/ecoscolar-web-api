@@ -1,10 +1,12 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EcoscolarWebApi.Models
 {
     [Table("SchoolGrade")]
     public class SchoolGrades
     {
+        [Key]
         public long SchoolGradeId { get; set; }
         public string Name { get; set; }
         public string SchoolGrade { get; set; }

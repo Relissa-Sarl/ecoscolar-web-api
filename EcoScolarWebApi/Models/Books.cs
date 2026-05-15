@@ -12,6 +12,7 @@ namespace EcoscolarWebApi.Models
         public string Publisher { get; set; }
         public string Edition { get; set; }
         public Language WrittenLanguage { get; set; }
+        [ForeignKey("BookCategories")]
         public long BookCategoryId { get; set; }
         public virtual BookCategories BookCategory { get; set; }
     }

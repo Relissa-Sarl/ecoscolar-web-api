@@ -1,6 +1,8 @@
 ﻿using EcoscolarWebApi.Models;
+using EcoscolarWebApi.Utils.Enums;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Stripe.Terminal;
 
 namespace EcoscolarWebApi.Data
 {
@@ -39,10 +41,20 @@ namespace EcoscolarWebApi.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+            this.seeding(builder);
+        }
 
-            builder.Entity<PhysicalItems>().ToTable("Adverts");
-            builder.Entity<AdvertServices>().ToTable("Adverts");
-            builder.Entity<Books>().ToTable("PhysicalItems");
+        private void seeding(ModelBuilder builder)
+        {
+            builder.Entity<BookCategories>().HasData(
+                new BookCategories { BookCategoryId = 1, Description = "desciption", Name = "first cat" }
+            );
+            builder.Entity<Subjects>().HasData(
+                new Subjects { SubjectId = 1, Name = "Math", Subject = "MATH"}
+            );
+            builder.Entity<SchoolGrades>().HasData(
+                new SchoolGrades { SchoolGradeId = 1, Name = "École Supérieur", SchoolGrade = "ES"}
+            );
         }
     }
 }
