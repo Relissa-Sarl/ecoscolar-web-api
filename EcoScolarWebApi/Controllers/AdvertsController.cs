@@ -58,7 +58,7 @@ namespace EcoscolarWebApi.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest(new { error = e.Message });;
+                return BadRequest(new { error = e.Message });
             }
             return Ok(adverts.Select(AdvertReadDto.FromEntity));
         }
