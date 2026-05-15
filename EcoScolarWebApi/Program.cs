@@ -45,8 +45,19 @@ namespace EcoscolarWebApi
                     });
             });
 
+            builder.Services.AddHealthChecks();
+
             // Build the application
             var app = builder.Build();
+
+            if (app.Configuration.GetValue<bool>("ApplyDatabaseMigrations"))
+            {
+                using (var scope = app.Services.CreateScope())
+                {
+                    var db = scope.ServiceProvider.GetRequiredService<EcoscolarDbContext>();
+                    db.Database.Migrate();
+                }
+            }
 
             // Use the CORS policy
             app.UseCors("AllowFrontend");
@@ -58,6 +69,8 @@ namespace EcoscolarWebApi
             app.UseHttpsRedirection();
             app.UseAuthentication();
             app.UseAuthorization();
+
+            app.MapHealthChecks("/health");
 
             // Map controllers to the application
             app.MapControllers();

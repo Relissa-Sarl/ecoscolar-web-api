@@ -1,0 +1,62 @@
+# This workflow will build a .NET project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+
+name: ci
+
+on:
+  push:
+    branches: [ "develop" ]
+  pull_request:
+    branches: [ "develop" ]
+
+env:
+  # Path to the API project (relative to the repository root).
+  PROJECT_PATH: EcoScolarWebApi/EcoScolarWebApi.csproj
+  # SQL Server connection string stored as a GitHub Actions secret (Settings → Secrets).
+  CONNECTION_STRING: ${{ secrets.CONNECTION_STRING }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Clone the repository into the runner workspace.
+      - uses: actions/checkout@v4
+
+      # Install the .NET SDK version matching the project.
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      # Download NuGet packages for the API project.
+      - name: Restore dependencies
+        run: dotnet restore ${{ env.PROJECT_PATH }}
+
+      # Compile the API in Release configuration.
+      - name: Build
+        run: dotnet build --no-restore ${{ env.PROJECT_PATH }} --configuration Release --no-restore
+
+      # Build the Docker image.
+      # -f: path to the Dockerfile
+      # last argument: build context directory (must contain the .csproj and source files)
+      - name: Docker build
+        run: docker build -t ecoscolar-web-api -f EcoScolarWebApi/Dockerfile EcoScolarWebApi
+
+      # Start the container and hit the /health endpoint to verify it boots correctly.
+      - name: Container Launch Test
+        run: |
+          # Run the API container in the background.
+          docker run -d -p 8080:8080 --name test-container \
+            -e ASPNETCORE_HTTP_PORTS=8080 \
+            -e "ConnectionStrings__Default=${{ env.CONNECTION_STRING }}" \
+            ecoscolar-web-api
+
+          # Give the app a few seconds to start before probing it.
+          sleep 5
+
+          # Fail the job if the health check does not return HTTP 2xx.
+          curl -f http://localhost:8080/health
+
+          # Clean up the test container.
+          docker rm -f test-container
