@@ -12,8 +12,8 @@ on:
 env:
   # Path to the API project (relative to the repository root).
   PROJECT_PATH: EcoScolarWebApi/EcoScolarWebApi.csproj
-  # SQL Server connection string stored as a GitHub Actions secret (Settings → Secrets).
-  CONNECTION_STRING: ${{ secrets.CONNECTION_STRING }}
+  # SQL Server connection string
+  CONNECTION_STRING: Server=localhost,1433;Database=ecoscolar-api-database;User Id=sa;Password="${MSSQL_SA_PASSWORD}";TrustServerCertificate=True
 
 jobs:
   build:
