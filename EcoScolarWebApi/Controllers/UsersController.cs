@@ -96,7 +96,11 @@ namespace EcoscolarWebApi.Controllers
             if (currentUser == null)
                 return NotFound(new { message = "Utilisateur introuvable." });
 
-            var adverts = await _context.Adverts.Where(a => a.UserId == currentUser.Id).ToListAsync();
+            var adverts = await _context.Adverts
+                .Where(a => a.UserId == currentUser.Id)
+                .Include(a => a.User)
+                .Include(a => ((PhysicalItems)a).Pictures)
+                .ToListAsync();
             return Ok(adverts.Select(AdvertReadDto.FromEntity));
         }
     }
