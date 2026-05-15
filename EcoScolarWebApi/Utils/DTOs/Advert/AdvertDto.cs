@@ -89,7 +89,6 @@ namespace EcoscolarWebApi.Utils.DTOs.Advert
             entity.Price = Price;
             entity.Status = AdvertStatus.ACTIVE;
             entity.UserId = UserId;
-            entity.CreatedAt = DateTime.UtcNow;
             entity.NotificationDate = DateTime.UtcNow.AddMonths(3);
         }
     }
@@ -191,7 +190,7 @@ namespace EcoscolarWebApi.Utils.DTOs.Advert
     /// <param name="Edition">The edition of the book advert</param>
     public record BookCreateDto(
         string Title, string Description, decimal Price, string UserId, string[] Images, Condition Condition,
-        long CategoryId, string Isbn, string Author, string Publisher, string Edition
+        long CategoryId, string Isbn, string Author, string Publisher, string Edition, Language WrittenLanguage
     ) : ProductCreateDto(Title, Description, Price, UserId, Images, Condition)
     {
         /// <summary>
@@ -219,6 +218,7 @@ namespace EcoscolarWebApi.Utils.DTOs.Advert
                 book.Edition = Edition;
                 book.ISBN = Isbn;
                 book.BookCategoryId = CategoryId;
+                book.WrittenLanguage = WrittenLanguage;
             }
         }
     }

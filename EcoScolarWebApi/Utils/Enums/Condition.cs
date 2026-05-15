@@ -1,4 +1,6 @@
-﻿using System.Runtime.Serialization;
+﻿using Newtonsoft.Json;
+using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 
 namespace EcoscolarWebApi.Utils.Enums
 {
@@ -9,10 +11,13 @@ namespace EcoscolarWebApi.Utils.Enums
     public enum Condition
     {
         [EnumMember(Value = "NEW")]
+        [JsonPropertyName("NEW")]
         NEW,
         [EnumMember(Value = "LIKE NEW")]
+        [JsonPropertyName("LIKE NEW")]
         LIKE_NEW,
         [EnumMember(Value = "USED")]
+        [JsonPropertyName("USED")]
         USED
     }
 }

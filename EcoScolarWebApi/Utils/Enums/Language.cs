@@ -1,4 +1,7 @@
-﻿namespace EcoscolarWebApi.Utils.Enums
+﻿using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
+
+namespace EcoscolarWebApi.Utils.Enums
 {
     /// <summary>
     /// Enumeration that represents the language of an advert.
@@ -6,8 +9,14 @@
     /// </summary>
     public enum Language
     {
+        [EnumMember(Value = "FR")]
+        [JsonPropertyName("FR")]
         FR,
+        [EnumMember(Value = "DE")]
+        [JsonPropertyName("DE")]
         DE,
+        [EnumMember(Value = "IT")]
+        [JsonPropertyName("IT")]
         IT
     }
 }

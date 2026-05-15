@@ -1,5 +1,6 @@
 ﻿using EcoscolarWebApi.Data;
 using EcoscolarWebApi.Models;
+using EcoscolarWebApi.Services;
 using EcoscolarWebApi.Utils.DTOs.Advert;
 using EcoscolarWebApi.Utils.Enums;
 using Microsoft.AspNetCore.Mvc;
@@ -11,6 +12,7 @@ namespace EcoscolarWebApi.Controllers
     [ApiController]
     public class AdvertsController : Controller
     {
+        private readonly IAdvertSearchService _advertSearchService;
         private readonly EcoscolarDbContext _context;                                           // Database context for accessing the database
         private bool AdvertExists(long id) => _context.Adverts.Any(e => e.AdvertId == id);      // Helper method to check if an advert with the specified ID exists in the database
 
@@ -18,9 +20,11 @@ namespace EcoscolarWebApi.Controllers
         /// AdvertsController constructor
         /// </summary>
         /// <param name="context">The database context</param>
-        public AdvertsController(EcoscolarDbContext context)
+        /// <param name="advertSearchService">The advert search service</param>
+        public AdvertsController(EcoscolarDbContext context, IAdvertSearchService advertSearchService)
         {
             _context = context;
+            _advertSearchService = advertSearchService;
         }
 
         // GET METHODS
@@ -43,7 +47,7 @@ namespace EcoscolarWebApi.Controllers
             }
             catch (Exception e)
             {
-                throw;
+                return BadRequest(new { error = e.Message });;
             }
             return Ok(adverts.Select(AdvertReadDto.FromEntity));
         }
@@ -66,7 +70,7 @@ namespace EcoscolarWebApi.Controllers
             }
             catch (Exception e)
             {
-                throw;
+                return BadRequest(new { error = e.Message });
             }
             return Ok(books.Select(AdvertReadDto.FromEntity));
         }
@@ -88,7 +92,7 @@ namespace EcoscolarWebApi.Controllers
             }
             catch (Exception e)
             {
-                throw;
+                return BadRequest(new { error = e.Message });
             }
             return Ok(products.Select(AdvertReadDto.FromEntity));
         }
@@ -110,7 +114,7 @@ namespace EcoscolarWebApi.Controllers
             }
             catch (Exception e)
             {
-                throw;
+                return BadRequest(new { error = e.Message });
             }
             return Ok(services.Select(AdvertReadDto.FromEntity));
         }
@@ -133,13 +137,13 @@ namespace EcoscolarWebApi.Controllers
                 advert = await _context.Adverts.FindAsync(id);
             } catch (Exception e)
             {
-                throw;
+                return BadRequest(new { error = e.Message });
             }
             if (advert == null) return NotFound();
             
             return Ok(AdvertReadDto.FromEntity(advert));
         }
-        
+
         [HttpGet]
         public async Task<IActionResult> GetSummaries(CancellationToken cancellationToken = default)
         {
@@ -161,19 +165,12 @@ namespace EcoscolarWebApi.Controllers
         [HttpPost("books")]
         public async Task<ActionResult<AdvertReadDto>> CreateBook([FromBody] BookCreateDto bookDto)
         {
-            if (bookDto == null) return NotFound();
+            if (bookDto == null) return BadRequest();
 
             Books book = bookDto.ToEntity();
 
             _context.Books.Add(book);
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (Exception e)
-            {
-                throw;
-            }
+            await _context.SaveChangesAsync();
 
             AdvertReadDto readDto = AdvertReadDto.FromEntity(book);
             return CreatedAtAction("GetBooks", new { id = book.AdvertId }, readDto);
@@ -190,19 +187,12 @@ namespace EcoscolarWebApi.Controllers
         [HttpPost("products")]
         public async Task<ActionResult<AdvertReadDto>> CreateProduct([FromBody] ProductCreateDto productDto)
         {
-            if (productDto == null) return NotFound();
+            if (productDto == null) return BadRequest();
 
             PhysicalItems product = productDto.ToEntity();
 
             _context.Products.Add(product);
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (Exception e)
-            {
-                throw;
-            }
+            await _context.SaveChangesAsync();
 
             AdvertReadDto readDto = AdvertReadDto.FromEntity(product);
             return CreatedAtAction("GetProducts", new { id = product.AdvertId }, readDto);
@@ -219,19 +209,12 @@ namespace EcoscolarWebApi.Controllers
         [HttpPost("services")]
         public async Task<ActionResult<AdvertReadDto>> CreateService([FromBody] ServiceCreateDto serviceDto)
         {
-            if (serviceDto == null) return NotFound();
+            if (serviceDto == null) return BadRequest();
 
             AdvertServices service = serviceDto.ToEntity();
 
             _context.Services.Add(service);
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (Exception e)
-            {
-                throw;
-            }
+            await _context.SaveChangesAsync();
 
             AdvertReadDto readDto = AdvertReadDto.FromEntity(service);
             return CreatedAtAction("GetServices", new { id = service.AdvertId }, readDto);
@@ -266,7 +249,7 @@ namespace EcoscolarWebApi.Controllers
             catch (DbUpdateConcurrencyException)
             {
                 if (!AdvertExists(id)) return NotFound();
-                throw;
+                return BadRequest(new { error = e.Message });
             }
 
             return NoContent();
@@ -299,7 +282,7 @@ namespace EcoscolarWebApi.Controllers
             catch (DbUpdateConcurrencyException)
             {
                 if (!AdvertExists(id)) return NotFound();
-                throw;
+                return BadRequest(new { error = e.Message });
             }
 
             return NoContent();
@@ -331,7 +314,7 @@ namespace EcoscolarWebApi.Controllers
             catch (DbUpdateConcurrencyException)
             {
                 if (!AdvertExists(id)) return NotFound();
-                throw;
+                return BadRequest(new { error = e.Message });
             }
 
             return NoContent();
@@ -358,7 +341,7 @@ namespace EcoscolarWebApi.Controllers
             }
             catch (Exception e)
             {
-                throw;
+                return BadRequest(new { error = e.Message });
             }
             if (advert == null) return NotFound();
 
@@ -386,7 +369,7 @@ namespace EcoscolarWebApi.Controllers
             {
                 advert = await _context.Adverts.FindAsync(id);
             } catch (Exception e) {
-                throw;
+                return BadRequest(new { error = e.Message });
             }
             if (advert == null) return NotFound();
 
@@ -417,7 +400,7 @@ namespace EcoscolarWebApi.Controllers
             }
             catch (Exception e)
             {
-                throw;
+                return BadRequest(new { error = e.Message });
             }
             if (product == null) return NotFound();
 
@@ -434,7 +417,7 @@ namespace EcoscolarWebApi.Controllers
                 }
                 catch (Exception e)
                 {
-                    throw;
+                    return BadRequest(new { error = e.Message });
                 }
                 return NoContent();
             }

@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace EcoscolarWebApi.Utils.DTOs.Advert
+﻿namespace EcoscolarWebApi.Utils.DTOs.Advert
 {
     /// <summary>
     /// DTO used to represent a picture in an advert. 

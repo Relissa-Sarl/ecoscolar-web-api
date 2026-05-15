@@ -1,8 +1,6 @@
 ﻿using EcoscolarWebApi.Models;
-using EcoscolarWebApi.Utils.Enums;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Stripe.Terminal;
 
 namespace EcoscolarWebApi.Data
 {
@@ -28,15 +26,15 @@ namespace EcoscolarWebApi.Data
         /// <summary>
         /// DbSet for the Advert entity, representing the adverts in the database
         /// </summary>
-        public DbSet<Adverts> Adverts { get; set; }
+        public DbSet<Adverts> Adverts { get; set; } = default!;
 
-        public DbSet<PhysicalItems> Products { get; set; }
+        public DbSet<PhysicalItems> Products { get; set; } = default!;
 
-        public DbSet<AdvertServices> Services { get; set; }
+        public DbSet<AdvertServices> Services { get; set; } = default!;
 
-        public DbSet<Books> Books { get; set; }
+        public DbSet<Books> Books { get; set; } = default!;
 
-        public DbSet<Pictures> Pictures { get; set; }
+        public DbSet<Pictures> Pictures { get; set; } = default!;
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
