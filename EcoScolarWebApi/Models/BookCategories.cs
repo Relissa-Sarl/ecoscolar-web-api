@@ -8,8 +8,15 @@ namespace EcoscolarWebApi.Models
     {
         [Key]
         public long BookCategoryId { get; set; }
+
+        [Required]
+        [StringLength(100)]
         public string Name { get; set; }
+
+        [Required]
+        [StringLength(1000)]
         public string Description { get; set; }
+
         public virtual ICollection<Books> Books { get; set; } = new List<Books>();
     }
 }

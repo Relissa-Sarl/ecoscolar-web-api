@@ -9,14 +9,32 @@ namespace EcoscolarWebApi.Models
     {
         [Key]
         public long AdvertId { get; set; }
+
+        [Required]
+        [StringLength(150)]
         public string Title { get; set; }
+
+        [Required]
+        [StringLength(2000)]
         public string Description { get; set; }
-        public double Price { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+
+        [Required] 
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal Price { get; set; }
+
+        [Required]
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        [Required]
         public DateTime NotificationDate { get; set; }
+
+        [Required]
         public AdvertStatus Status { get; set; }
-        [ForeignKey("User")]
+
+        [Required]
         public string UserId { get; set; }
+
+        [ForeignKey("UserId")]
         public virtual User User { get; set; }
     }
 }

@@ -26,7 +26,16 @@ namespace EcoscolarWebApi.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<AdvertReadDto>>> Index()
         {
-            var adverts = await _context.Adverts.ToListAsync();
+            IEnumerable<Adverts> adverts;
+            try
+            {
+                adverts = await _context.Adverts.ToListAsync();
+
+            }
+            catch (Exception e)
+            {
+                throw;
+            }
             return Ok(adverts.Select(AdvertReadDto.FromEntity));
         }
 
@@ -34,7 +43,16 @@ namespace EcoscolarWebApi.Controllers
         [HttpGet("books")]
         public async Task<ActionResult<IEnumerable<AdvertReadDto>>> GetBooks()
         {
-            var books = await _context.Books.Include(p => p.Pictures).ToListAsync();
+            IEnumerable<Books> books;
+            try
+            {
+                books = await _context.Books.Include(p => p.Pictures).ToListAsync();
+
+            }
+            catch (Exception e)
+            {
+                throw;
+            }
             return Ok(books.Select(AdvertReadDto.FromEntity));
         }
 
@@ -42,7 +60,15 @@ namespace EcoscolarWebApi.Controllers
         [HttpGet("products")]
         public async Task<ActionResult<IEnumerable<AdvertReadDto>>> GetProducts()
         {
-            var products = await _context.Products.Include(p => p.Pictures).ToListAsync();
+            IEnumerable<PhysicalItems> products;
+            try
+            {
+                products = await _context.Products.Include(p => p.Pictures).ToListAsync();
+            }
+            catch (Exception e)
+            {
+                throw;
+            }
             return Ok(products.Select(AdvertReadDto.FromEntity));
         }
 
@@ -50,7 +76,15 @@ namespace EcoscolarWebApi.Controllers
         [HttpGet("services")]
         public async Task<ActionResult<IEnumerable<AdvertReadDto>>> GetServices()
         {
-            var services = await _context.Services.ToListAsync();
+            IEnumerable<AdvertServices> services;
+            try
+            {
+                services = await _context.Services.ToListAsync();
+            }
+            catch (Exception e)
+            {
+                throw;
+            }
             return Ok(services.Select(AdvertReadDto.FromEntity));
         }
 
@@ -82,7 +116,14 @@ namespace EcoscolarWebApi.Controllers
             Books book = bookDto.ToEntity();
 
             _context.Books.Add(book);
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception e)
+            {
+                throw;
+            }
 
             AdvertReadDto readDto = AdvertReadDto.FromEntity(book);
             return CreatedAtAction("GetBooks", new { id = book.AdvertId }, readDto);
@@ -97,7 +138,14 @@ namespace EcoscolarWebApi.Controllers
             PhysicalItems product = productDto.ToEntity();
 
             _context.Products.Add(product);
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception e)
+            {
+                throw;
+            }
 
             AdvertReadDto readDto = AdvertReadDto.FromEntity(product);
             return CreatedAtAction("GetProducts", new { id = product.AdvertId }, readDto);
@@ -112,7 +160,14 @@ namespace EcoscolarWebApi.Controllers
             AdvertServices service = serviceDto.ToEntity();
 
             _context.Services.Add(service);
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception e)
+            {
+                throw;
+            }
 
             AdvertReadDto readDto = AdvertReadDto.FromEntity(service);
             return CreatedAtAction("GetServices", new { id = service.AdvertId }, readDto);
@@ -200,7 +255,15 @@ namespace EcoscolarWebApi.Controllers
         [HttpPatch("{id}/status")]
         public async Task<IActionResult> UpdateAdvertStatus(long id, [FromBody] AdvertStatus status)
         {
-            Adverts? advert = await _context.Adverts.FindAsync(id);
+            Adverts? advert;
+            try
+            {
+                advert = await _context.Adverts.FindAsync(id);
+            }
+            catch (Exception e)
+            {
+                throw;
+            }
             if (advert == null) return NotFound();
 
             advert.Status = status;
@@ -215,7 +278,13 @@ namespace EcoscolarWebApi.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAdvert(long id)
         {
-            Adverts? advert = await _context.Adverts.FindAsync(id);
+            Adverts? advert;
+            try
+            {
+                advert = await _context.Adverts.FindAsync(id);
+            } catch (Exception e) {
+                throw;
+            }
             if (advert == null) return NotFound();
 
             _context.Adverts.Remove(advert);
@@ -227,9 +296,18 @@ namespace EcoscolarWebApi.Controllers
         [HttpDelete("{id}/images")]
         public async Task<IActionResult> RemoveAdvertImages(long id, [FromBody] List<string> imageUrls)
         {
-            PhysicalItems? product = await _context.Products
+            PhysicalItems? product;
+            try
+            {
+                product = await _context.Products
                 .Include(p => p.Pictures)
                 .FirstOrDefaultAsync(p => p.AdvertId == id);
+
+            }
+            catch (Exception e)
+            {
+                throw;
+            }
             if (product == null) return NotFound();
 
             ICollection<Pictures> picturesToRemove = product.Pictures
@@ -239,7 +317,14 @@ namespace EcoscolarWebApi.Controllers
             if (picturesToRemove.Any())
             {
                 _context.Pictures.RemoveRange(picturesToRemove);
-                await _context.SaveChangesAsync();
+                try
+                {
+                    await _context.SaveChangesAsync();
+                }
+                catch (Exception e)
+                {
+                    throw;
+                }
                 return NoContent();
             }
             return BadRequest("No matching images found to remove.");

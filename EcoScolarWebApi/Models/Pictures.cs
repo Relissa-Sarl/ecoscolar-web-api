@@ -8,9 +8,15 @@ namespace EcoscolarWebApi.Models
     {
         [Key]
         public long PictureId { get; set; }
+
+        [Required]
+        [StringLength(500)]
         public string Label { get; set; }
-        [ForeignKey("Advert")]
+
+        [Required]
         public long AdvertId { get; set; }
-        public virtual PhysicalItems Advert { get; set; } = new PhysicalItems();
+
+        [ForeignKey("AdvertId")]
+        public virtual PhysicalItems Advert { get; set; } = null!;
     }
 }

@@ -8,8 +8,15 @@ namespace EcoscolarWebApi.Models
     {
         [Key]
         public long SchoolGradeId { get; set; }
+
+        [Required]
+        [StringLength(100)]
         public string Name { get; set; }
+
+        [Required]
+        [StringLength(100)]
         public string SchoolGrade { get; set; }
+
         public virtual ICollection<AdvertServices> AdvertServices { get; set; } = new List<AdvertServices>();
     }
 }

@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace EcoscolarWebApi.Utils.DTOs.Advert
 {
-    public record AdvertReadDto(long id, string type, string title, double price, DateTime publicationDate, DateTime notificationDate, AdvertStatus status, string userId, string sellerPseudo, string? primaryImage)
+    public record AdvertReadDto(long id, string type, string title, decimal price, DateTime publicationDate, DateTime notificationDate, AdvertStatus status, string userId, string sellerPseudo, string? primaryImage)
     {
         public static AdvertReadDto FromEntity(Models.Adverts entity)
         {
@@ -33,7 +33,7 @@ namespace EcoscolarWebApi.Utils.DTOs.Advert
             );
         }
     }
-    public record AdvertBaseCreateDto(string Title, string Description, double Price, string UserId)
+    public record AdvertBaseCreateDto(string Title, string Description, decimal Price, string UserId)
     {
         public Adverts ToEntity()
         {
@@ -46,7 +46,7 @@ namespace EcoscolarWebApi.Utils.DTOs.Advert
         {
             entity.Title = Title;
             entity.Description = Description;
-            entity.Price = (long)Price;
+            entity.Price = Price;
             entity.Status = AdvertStatus.ACTIVE;
             entity.UserId = UserId;
             entity.CreatedAt = DateTime.UtcNow;
@@ -54,7 +54,7 @@ namespace EcoscolarWebApi.Utils.DTOs.Advert
         }
     }
 
-    public record ServiceCreateDto(string Title, string Description, double Price, string UserId, long SubjectId, long SchoolLevelId, Language TeachingLanguage, string SpecificStudyLevel)
+    public record ServiceCreateDto(string Title, string Description, decimal Price, string UserId, long SubjectId, long SchoolLevelId, Language TeachingLanguage, string SpecificStudyLevel)
         : AdvertBaseCreateDto(Title, Description, Price, UserId)
     {
         public AdvertServices ToEntity()
@@ -77,7 +77,7 @@ namespace EcoscolarWebApi.Utils.DTOs.Advert
         }
     }
 
-    public record ProductCreateDto(string Title, string Description, double Price, string UserId, string[] Images, Condition Condition)
+    public record ProductCreateDto(string Title, string Description, decimal Price, string UserId, string[] Images, Condition Condition)
         : AdvertBaseCreateDto(Title, Description, Price, UserId)
     {
         public PhysicalItems ToEntity()
@@ -99,7 +99,7 @@ namespace EcoscolarWebApi.Utils.DTOs.Advert
     }
 
     public record BookCreateDto(
-        string Title, string Description, double Price, string UserId, string[] Images, Condition Condition,
+        string Title, string Description, decimal Price, string UserId, string[] Images, Condition Condition,
         long CategoryId, string Isbn, string Author, string Publisher, string Edition
     ) : ProductCreateDto(Title, Description, Price, UserId, Images, Condition)
     {
