@@ -10,7 +10,7 @@ namespace EcoscolarWebApi.Controllers
 {
     [Route("api/v1/[controller]")]
     [ApiController]
-    public class AdvertsController : Controller
+    public class AdvertsController : ControllerBase
     {
         private readonly IAdvertSearchService _advertSearchService;
         private readonly EcoscolarDbContext _context;                                           // Database context for accessing the database
