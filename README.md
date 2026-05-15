@@ -15,6 +15,9 @@ Here are the main languages and tools used to build this project:
 ### Backend & Database
 ![SQL Server](https://img.shields.io/badge/SQL%20Server-CC2927?style=for-the-badge&logo=microsoft-sql-server&logoColor=white)
 
+### Testing
+- **TUnit**: A modern unit testing framework for .NET. Tests are written using standard attributes and run via the .NET CLI (`dotnet test`) or Test Explorer.
+
 ---
 
 ## Features
@@ -44,6 +47,10 @@ dotnet user-secrets set "ConnectionStrings:Default" "Server={{server_name}};Data
 
 # Setup strip secret key
 dotnet user-secrets set "Stripe:SecretKey" "{{sk_here}}"
+
+# Open swagger
+http://localhost:5001/swagger/index.html
+
 ```
 
 ### Step 3: Start the program

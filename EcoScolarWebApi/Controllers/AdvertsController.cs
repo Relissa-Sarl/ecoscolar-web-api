@@ -139,6 +139,13 @@ namespace EcoscolarWebApi.Controllers
             
             return Ok(AdvertReadDto.FromEntity(advert));
         }
+        
+        [HttpGet]
+        public async Task<IActionResult> GetSummaries(CancellationToken cancellationToken = default)
+        {
+            var items = await _advertSearchService.GetSummariesAsync();
+            return Ok(items);
+        }
 
         // POST METHODS
 
