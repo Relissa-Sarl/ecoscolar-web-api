@@ -42,7 +42,18 @@ namespace EcoscolarWebApi.Controllers
             IEnumerable<Adverts> adverts;
             try
             {
-                adverts = await _context.Adverts.ToListAsync();
+                adverts = await _context.Adverts
+                    .Include(a => a.User)
+                    .ToListAsync();
+                List<long> physicalItemIds = adverts.OfType<PhysicalItems>()
+                    .Select(item => item.AdvertId)
+                    .ToList();
+                if (physicalItemIds.Any())
+                {
+                    await _context.Pictures
+                        .Where(picture => physicalItemIds.Contains(picture.AdvertId))
+                        .LoadAsync();
+                }
 
             }
             catch (Exception e)
@@ -65,7 +76,10 @@ namespace EcoscolarWebApi.Controllers
             IEnumerable<Books> books;
             try
             {
-                books = await _context.Books.Include(p => p.Pictures).ToListAsync();
+                books = await _context.Books
+                    .Include(p => p.User)
+                    .Include(p => p.Pictures)
+                    .ToListAsync();
 
             }
             catch (Exception e)
@@ -88,7 +102,10 @@ namespace EcoscolarWebApi.Controllers
             IEnumerable<PhysicalItems> products;
             try
             {
-                products = await _context.Products.Include(p => p.Pictures).ToListAsync();
+                products = await _context.Products
+                    .Include(p => p.User)
+                    .Include(p => p.Pictures)
+                    .ToListAsync();
             }
             catch (Exception e)
             {
@@ -110,7 +127,9 @@ namespace EcoscolarWebApi.Controllers
             IEnumerable<AdvertServices> services;
             try
             {
-                services = await _context.Services.ToListAsync();
+                services = await _context.Services
+                    .Include(s => s.User)
+                    .ToListAsync();
             }
             catch (Exception e)
             {
@@ -134,7 +153,15 @@ namespace EcoscolarWebApi.Controllers
             Adverts advert;
             try
             {
-                advert = await _context.Adverts.FindAsync(id);
+                advert = await _context.Adverts
+                    .Include(a => a.User)
+                    .FirstOrDefaultAsync(a => a.AdvertId == id);
+                if (advert is PhysicalItems physicalItem)
+                {
+                    await _context.Entry(physicalItem)
+                        .Collection(item => item.Pictures)
+                        .LoadAsync();
+                }
             } catch (Exception e)
             {
                 return BadRequest(new { error = e.Message });
