@@ -1,5 +1,6 @@
 using EcoscolarWebApi.Data;
 using EcoscolarWebApi.Models;
+using EcoscolarWebApi.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 using Stripe;
@@ -31,6 +32,7 @@ namespace EcoscolarWebApi
                 .AddEntityFrameworkStores<EcoscolarDbContext>();
 
             // Add services to the container.
+            builder.Services.AddScoped<IAdvertSearchService, FakeAdvertSearchService>();
             builder.Services.AddControllers();
             builder.Services.AddOpenApi();
             builder.Services.AddSwaggerGen(options =>
