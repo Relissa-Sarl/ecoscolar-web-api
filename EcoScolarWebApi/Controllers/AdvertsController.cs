@@ -40,8 +40,16 @@ namespace EcoscolarWebApi.Controllers
             {
                 adverts = await _context.Adverts
                     .Include(a => a.User)
-                    .Include(a => ((PhysicalItems)a).Pictures)
                     .ToListAsync();
+                List<long> physicalItemIds = adverts.OfType<PhysicalItems>()
+                    .Select(item => item.AdvertId)
+                    .ToList();
+                if (physicalItemIds.Any())
+                {
+                    await _context.Pictures
+                        .Where(picture => physicalItemIds.Contains(picture.AdvertId))
+                        .LoadAsync();
+                }
 
             }
             catch (Exception e)
@@ -143,8 +151,13 @@ namespace EcoscolarWebApi.Controllers
             {
                 advert = await _context.Adverts
                     .Include(a => a.User)
-                    .Include(a => ((PhysicalItems)a).Pictures)
                     .FirstOrDefaultAsync(a => a.AdvertId == id);
+                if (advert is PhysicalItems physicalItem)
+                {
+                    await _context.Entry(physicalItem)
+                        .Collection(item => item.Pictures)
+                        .LoadAsync();
+                }
             } catch (Exception e)
             {
                 throw;

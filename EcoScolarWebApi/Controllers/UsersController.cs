@@ -99,8 +99,16 @@ namespace EcoscolarWebApi.Controllers
             var adverts = await _context.Adverts
                 .Where(a => a.UserId == currentUser.Id)
                 .Include(a => a.User)
-                .Include(a => ((PhysicalItems)a).Pictures)
                 .ToListAsync();
+            List<long> physicalItemIds = adverts.OfType<PhysicalItems>()
+                .Select(item => item.AdvertId)
+                .ToList();
+            if (physicalItemIds.Any())
+            {
+                await _context.Pictures
+                    .Where(picture => physicalItemIds.Contains(picture.AdvertId))
+                    .LoadAsync();
+            }
             return Ok(adverts.Select(AdvertReadDto.FromEntity));
         }
     }
