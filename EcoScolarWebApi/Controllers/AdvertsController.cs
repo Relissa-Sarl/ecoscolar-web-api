@@ -171,7 +171,7 @@ namespace EcoscolarWebApi.Controllers
             return Ok(AdvertReadDto.FromEntity(advert));
         }
 
-        [HttpGet]
+        [HttpGet("summary")]
         public async Task<IActionResult> GetSummaries(CancellationToken cancellationToken = default)
         {
             var items = await _advertSearchService.GetSummariesAsync();
@@ -273,7 +273,7 @@ namespace EcoscolarWebApi.Controllers
                 _context.Entry(existingBook).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
             }
-            catch (DbUpdateConcurrencyException)
+            catch (DbUpdateConcurrencyException e)
             {
                 if (!AdvertExists(id)) return NotFound();
                 return BadRequest(new { error = e.Message });
@@ -306,7 +306,7 @@ namespace EcoscolarWebApi.Controllers
                 _context.Entry(existingProduct).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
             }
-            catch (DbUpdateConcurrencyException)
+            catch (DbUpdateConcurrencyException e)
             {
                 if (!AdvertExists(id)) return NotFound();
                 return BadRequest(new { error = e.Message });
@@ -338,7 +338,7 @@ namespace EcoscolarWebApi.Controllers
                 _context.Entry(existingService).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
             }
-            catch (DbUpdateConcurrencyException)
+            catch (DbUpdateConcurrencyException e)
             {
                 if (!AdvertExists(id)) return NotFound();
                 return BadRequest(new { error = e.Message });
