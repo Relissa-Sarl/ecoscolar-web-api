@@ -45,7 +45,7 @@ namespace EcoscolarWebApi.Data
         private void seeding(ModelBuilder builder)
         {
             builder.Entity<BookCategories>().HasData(
-                new BookCategories { BookCategoryId = 1, Description = "desciption", Name = "first cat" }
+                new BookCategories { BookCategoryId = 1, Description = "description", Name = "first cat" }
             );
             builder.Entity<Subjects>().HasData(
                 new Subjects { SubjectId = 1, Name = "Math", Subject = "MATH"}
