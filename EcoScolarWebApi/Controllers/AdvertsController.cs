@@ -4,7 +4,6 @@ using EcoscolarWebApi.Utils.DTOs.Advert;
 using EcoscolarWebApi.Utils.Enums;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Stripe.Billing;
 
 namespace EcoscolarWebApi.Controllers
 {
@@ -12,9 +11,13 @@ namespace EcoscolarWebApi.Controllers
     [ApiController]
     public class AdvertsController : Controller
     {
-        private readonly EcoscolarDbContext _context;
-        private bool AdvertExists(long id) => _context.Adverts.Any(e => e.AdvertId == id);
+        private readonly EcoscolarDbContext _context;                                           // Database context for accessing the database
+        private bool AdvertExists(long id) => _context.Adverts.Any(e => e.AdvertId == id);      // Helper method to check if an advert with the specified ID exists in the database
 
+        /// <summary>
+        /// AdvertsController constructor
+        /// </summary>
+        /// <param name="context">The database context</param>
         public AdvertsController(EcoscolarDbContext context)
         {
             _context = context;
@@ -22,7 +25,13 @@ namespace EcoscolarWebApi.Controllers
 
         // GET METHODS
 
-        // GET: AdvertsController
+        /// <summary>
+        /// Get all adverts whatever their type is (book, product or service)
+        /// 
+        /// GET: AdvertsController
+        /// Url: /api/v1/adverts
+        /// </summary>
+        /// <returns>List of all formatted adverts</returns>
         [HttpGet]
         public async Task<ActionResult<IEnumerable<AdvertReadDto>>> Index()
         {
@@ -39,7 +48,13 @@ namespace EcoscolarWebApi.Controllers
             return Ok(adverts.Select(AdvertReadDto.FromEntity));
         }
 
-        // GET: AdvertsController/GetBooks
+        /// <summary>
+        /// Get all books adverts
+        /// 
+        /// GET: AdvertsController/GetBooks
+        /// Url: /api/v1/adverts/books
+        /// </summary>
+        /// <returns>List of formatted book adverts</returns>
         [HttpGet("books")]
         public async Task<ActionResult<IEnumerable<AdvertReadDto>>> GetBooks()
         {
@@ -56,7 +71,13 @@ namespace EcoscolarWebApi.Controllers
             return Ok(books.Select(AdvertReadDto.FromEntity));
         }
 
-        // GET: AdvertsController/GetProducts
+        /// <summary>
+        /// Get all products adverts
+        /// 
+        /// GET: AdvertsController/GetProducts
+        /// Url: /api/v1/adverts/products
+        /// </summary>
+        /// <returns>List of formatted product adverts</returns>
         [HttpGet("products")]
         public async Task<ActionResult<IEnumerable<AdvertReadDto>>> GetProducts()
         {
@@ -72,7 +93,13 @@ namespace EcoscolarWebApi.Controllers
             return Ok(products.Select(AdvertReadDto.FromEntity));
         }
 
-        // GET: AdvertsController/GetServices
+        /// <summary>
+        /// Get all services adverts
+        /// 
+        /// GET: AdvertsController/GetServices
+        /// Url: /api/v1/adverts/services
+        /// </summary>
+        /// <returns>List of formatted service adverts</returns>
         [HttpGet("services")]
         public async Task<ActionResult<IEnumerable<AdvertReadDto>>> GetServices()
         {
@@ -88,7 +115,15 @@ namespace EcoscolarWebApi.Controllers
             return Ok(services.Select(AdvertReadDto.FromEntity));
         }
 
-        // GET: AdvertsController/Details/5
+        /// <summary>
+        /// Get the details of a specific advert by its ID, 
+        /// regardless of its type (book, product or service).
+        /// 
+        /// GET: AdvertsController/Details/5
+        /// Url: /api/v1/adverts/5
+        /// </summary>
+        /// <param name="id">The ID of the advert to retrieve</param>
+        /// <returns>The formatted advert details</returns>
         [HttpGet("{id}")]
         public async Task<ActionResult<AdvertReadDto>> Details(long id)
         {
@@ -107,7 +142,15 @@ namespace EcoscolarWebApi.Controllers
 
         // POST METHODS
 
-        // POST: AdvertsController/CreateBook
+        /// <summary>
+        /// Create a new book advert with the provided details in the request body.
+        /// The advert will be added to the database and the created advert details will be returned in the response.
+        /// 
+        /// POST: AdvertsController/CreateBook
+        /// Url: /api/v1/adverts/books
+        /// </summary>
+        /// <param name="bookDto">The DTO containing the book advert details</param>
+        /// <returns>The created advert details</returns>
         [HttpPost("books")]
         public async Task<ActionResult<AdvertReadDto>> CreateBook([FromBody] BookCreateDto bookDto)
         {
@@ -129,7 +172,14 @@ namespace EcoscolarWebApi.Controllers
             return CreatedAtAction("GetBooks", new { id = book.AdvertId }, readDto);
         }
 
-        // POST: AdvertsController/CreateProduct
+        /// <summary>
+        /// Create a new product advert with the provided details in the request body.
+        /// 
+        /// POST: AdvertsController/CreateProduct
+        /// Url: /api/v1/adverts/products
+        /// </summary>
+        /// <param name="productDto">The DTO containing the product advert details</param>
+        /// <returns>The created advert details</returns>
         [HttpPost("products")]
         public async Task<ActionResult<AdvertReadDto>> CreateProduct([FromBody] ProductCreateDto productDto)
         {
@@ -151,7 +201,14 @@ namespace EcoscolarWebApi.Controllers
             return CreatedAtAction("GetProducts", new { id = product.AdvertId }, readDto);
         }
 
-        // POST: AdvertsController/CreateService
+        /// <summary>
+        /// Create a new service advert with the provided details in the request body.
+        /// 
+        /// POST: AdvertsController/CreateService
+        /// Url: /api/v1/adverts/services
+        /// </summary>
+        /// <param name="serviceDto">The DTO containing the service advert details</param>
+        /// <returns>The created advert details</returns>
         [HttpPost("services")]
         public async Task<ActionResult<AdvertReadDto>> CreateService([FromBody] ServiceCreateDto serviceDto)
         {
@@ -175,7 +232,15 @@ namespace EcoscolarWebApi.Controllers
 
         // PUT METHODS
 
-        // PUT: AdvertsController/EditBook/5
+        /// <summary>
+        /// Edit an existing book advert with the provided details in the request body.
+        /// 
+        /// PUT: AdvertsController/EditBook/5
+        /// Url: /api/v1/adverts/books/{id}
+        /// </summary>
+        /// <param name="id">The ID of the book advert to edit</param>
+        /// <param name="bookDto">The DTO containing the updated book advert details</param>
+        /// <returns>The updated advert details</returns>
         [HttpPut("books/{id}")]
         public async Task<IActionResult> EditBook(long id, [FromBody] BookCreateDto bookDto)
         {
@@ -200,7 +265,15 @@ namespace EcoscolarWebApi.Controllers
             return NoContent();
         }
 
-        // PUT: AdvertsController/EditProduct/5
+        /// <summary>
+        /// Edit an existing product advert with the provided details in the request body.
+        /// 
+        /// PUT: AdvertsController/EditProduct/5
+        /// Url: /api/v1/adverts/products/{id}
+        /// </summary>
+        /// <param name="id">The ID of the product advert to edit</param>
+        /// <param name="productDto">The DTO containing the updated product advert details</param>
+        /// <returns>The updated advert details</returns>
         [HttpPut("products/{id}")]
         public async Task<IActionResult> EditProduct(long id, [FromBody] ProductCreateDto productDto)
         {
@@ -225,7 +298,15 @@ namespace EcoscolarWebApi.Controllers
             return NoContent();
         }
 
-        // PUT: AdvertsController/EditService/5
+        /// <summary>
+        /// Edit an existing service advert with the provided details in the request body.
+        /// 
+        /// PUT: AdvertsController/EditService/5
+        /// Url: /api/v1/adverts/services/{id}
+        /// </summary>
+        /// <param name="id">The ID of the service advert to edit</param>
+        /// <param name="serviceDto">The DTO containing the updated service advert details</param>
+        /// <returns>The updated advert details</returns>
         [HttpPut("services/{id}")]
         public async Task<IActionResult> EditService(long id, [FromBody] ServiceCreateDto serviceDto)
         {
@@ -251,7 +332,15 @@ namespace EcoscolarWebApi.Controllers
 
         // PATCH METHODS
 
-        // PATCH: AdvertsController/UpdateAdvertStatus/5
+        /// <summary>
+        /// Update the status of an existing advert.
+        /// 
+        /// PATCH: AdvertsController/UpdateAdvertStatus/5
+        /// Url: /api/v1/adverts/{id}/status
+        /// </summary>
+        /// <param name="id">The ID of the advert to update</param>
+        /// <param name="status">The new status for the advert</param>
+        /// <returns>The updated advert details</returns>
         [HttpPatch("{id}/status")]
         public async Task<IActionResult> UpdateAdvertStatus(long id, [FromBody] AdvertStatus status)
         {
@@ -274,7 +363,14 @@ namespace EcoscolarWebApi.Controllers
 
         // DELETE METHODS
 
-        // DELETE: AdvertsController/Delete/5
+        /// <summary>
+        /// Delete an existing advert.
+        /// 
+        /// DELETE: AdvertsController/Delete/5
+        /// Url: /api/v1/adverts/{id}
+        /// </summary>
+        /// <param name="id">The ID of the advert to delete</param>
+        /// <returns>The deleted advert details</returns>
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAdvert(long id)
         {
@@ -292,7 +388,15 @@ namespace EcoscolarWebApi.Controllers
             return NoContent();
         }
 
-        // DELETE: AdvertsController/RemoveImages
+        /// <summary>
+        /// Remove images from an existing advert.
+        /// 
+        /// DELETE: AdvertsController/RemoveImages
+        /// Url: /api/v1/adverts/{id}/images
+        /// </summary>
+        /// <param name="id">The ID of the advert from which to remove images</param>
+        /// <param name="imageUrls">The list of image URLs to remove</param>
+        /// <returns>The updated advert details</returns>
         [HttpDelete("{id}/images")]
         public async Task<IActionResult> RemoveAdvertImages(long id, [FromBody] List<string> imageUrls)
         {
