@@ -6,8 +6,10 @@ using Microsoft.EntityFrameworkCore;
 namespace EcoscolarWebApi.Services
 {
     /// <summary>
-    /// Catalogue summaries/detail backed by EF Core (<see cref="Books"/>). Same contract as <see cref="FakeAdvertSearchService"/>.
-    /// <see cref="AdvertSummaryDto.Id"/> is a deterministic <see cref="Guid"/> encoding <see cref="Adverts.AdvertId"/> for stable REST paths until the API settles on long ids.
+    /// Catalogue summaries/detail sur <see cref="Adverts"/> (livres, produits hors livre, services).
+    /// Filtre <c>isbn</c> : lignes résolues comme annonces reliées à <see cref="Books"/>.
+    /// Filtre <c>q</c> : titre ou ISBN (pour les lignes livre uniquement dans la sous-requête).
+    /// <see cref="AdvertSummaryDto.Id"/> encode <see cref="Adverts.AdvertId"/> en <see cref="Guid"/>.
     /// </summary>
     public sealed class AdvertSearchService : IAdvertSearchService
     {
@@ -22,20 +24,18 @@ namespace EcoscolarWebApi.Services
             AdvertSearchQuery? query,
             CancellationToken cancellationToken = default)
         {
-            // Filtres sur IQueryable pour que WHERE / JOIN partent au serveur SQL (voir PR Copilot perf).
-            IQueryable<Books> q = _context.Books
-                .AsNoTracking()
-                .AsSplitQuery()
-                .Include(b => b.BookCategory)
-                .Include(b => b.Pictures);
+            IQueryable<Adverts> advertsQuery = _context.Adverts.AsNoTracking();
 
             if (query != null && !string.IsNullOrWhiteSpace(query.Isbn))
             {
                 var needle = Normalize(query.Isbn);
-                q = q.Where(b =>
-                    b.ISBN != null
-                    && b.ISBN.Trim() != string.Empty
-                    && b.ISBN.Replace("-", string.Empty).Trim().ToLower().Contains(needle));
+
+                advertsQuery = advertsQuery.Where(a =>
+                    _context.Set<Books>().Any(b =>
+                        b.AdvertId == a.AdvertId
+                        && b.ISBN != null
+                        && b.ISBN.Trim() != string.Empty
+                        && b.ISBN.Replace("-", string.Empty).Trim().ToLower().Contains(needle)));
             }
 
             if (query != null && !string.IsNullOrWhiteSpace(query.Q))
@@ -44,16 +44,37 @@ namespace EcoscolarWebApi.Services
                 var titleProbe = keyword.ToLower();
                 var isbnProbe = Normalize(keyword);
 
-                q = q.Where(b =>
-                    b.Title.ToLower().Contains(titleProbe)
-                    || (b.ISBN != null
+                advertsQuery = advertsQuery.Where(a =>
+                    a.Title.ToLower().Contains(titleProbe)
+                    || _context.Set<Books>().Any(b =>
+                        b.AdvertId == a.AdvertId
+                        && b.ISBN != null
                         && b.ISBN.Trim() != string.Empty
                         && b.ISBN.Replace("-", string.Empty).Trim().ToLower().Contains(isbnProbe)));
             }
 
-            var books = await q.ToListAsync(cancellationToken);
+            var adverts = await advertsQuery.ToListAsync(cancellationToken);
 
-            return books.Select(ToSummaryDto).ToList();
+            var bookAdvertIds = adverts.OfType<Books>().Select(b => b.AdvertId).Distinct().ToArray();
+            var serviceAdvertIds = adverts.OfType<AdvertServices>().Select(s => s.AdvertId).Distinct().ToArray();
+
+            var booksDict = bookAdvertIds.Length == 0
+                ? []
+                : await _context.Books.AsNoTracking()
+                    .Include(b => b.BookCategory)
+                    .Include(b => b.Pictures)
+                    .Where(b => bookAdvertIds.Contains(b.AdvertId))
+                    .ToDictionaryAsync(b => b.AdvertId, cancellationToken);
+
+            var servicesDict = serviceAdvertIds.Length == 0
+                ? []
+                : await _context.Services.AsNoTracking()
+                    .Include(s => s.Subject)
+                    .Include(s => s.SchoolGrade)
+                    .Where(s => serviceAdvertIds.Contains(s.AdvertId))
+                    .ToDictionaryAsync(s => s.AdvertId, cancellationToken);
+
+            return adverts.Select(a => MapSummary(a, booksDict, servicesDict)).ToList();
         }
 
         public async Task<AdvertDetailDto?> GetDetailAsync(Guid id, CancellationToken cancellationToken = default)
@@ -61,31 +82,90 @@ namespace EcoscolarWebApi.Services
             if (!TryAdvertIdFromCatalogGuid(id, out var advertId))
                 return null;
 
-            var book = await _context.Books
+            var bookDetail = await _context.Books
                 .AsNoTracking()
                 .Include(b => b.BookCategory)
                 .Include(b => b.Pictures)
                 .FirstOrDefaultAsync(b => b.AdvertId == advertId, cancellationToken);
+            if (bookDetail != null)
+                return ToDetailFromBook(bookDetail, id);
 
-            return book == null ? null : ToDetailDto(book, id);
+            var serviceDetail = await _context.Services
+                .AsNoTracking()
+                .Include(s => s.Subject)
+                .Include(s => s.SchoolGrade)
+                .FirstOrDefaultAsync(s => s.AdvertId == advertId, cancellationToken);
+            if (serviceDetail != null)
+                return ToDetailFromService(serviceDetail, id);
+
+            var productDetail = await _context.Products
+                .AsNoTracking()
+                .Include(p => p.Pictures)
+                .Where(p =>
+                    p.AdvertId == advertId
+                    && !_context.Set<Books>().Any(book => book.AdvertId == p.AdvertId))
+                .FirstOrDefaultAsync(cancellationToken);
+
+            return productDetail == null ? null : ToDetailFromPhysical(productDetail, id);
         }
 
-        private static AdvertSummaryDto ToSummaryDto(Books b)
+        private static AdvertSummaryDto MapSummary(
+            Adverts a,
+            Dictionary<long, Books> booksDict,
+            Dictionary<long, AdvertServices> servicesDict)
         {
-            return new AdvertSummaryDto
+            switch (a)
             {
-                Id = CatalogIdFromAdvertId(b.AdvertId),
-                Title = b.Title,
-                Price = b.Price,
-                Type = CatalogAdvertTypeCodes.Book,
-                Isbn = string.IsNullOrWhiteSpace(b.ISBN) ? null : b.ISBN,
-                Category = b.BookCategory?.Name,
-                Subject = null,
-                Grade = null
-            };
+                case Books bk:
+                {
+                    booksDict.TryGetValue(bk.AdvertId, out var fullBk);
+                    var src = fullBk ?? bk;
+                    return new AdvertSummaryDto
+                    {
+                        Id = CatalogIdFromAdvertId(bk.AdvertId),
+                        Title = bk.Title,
+                        Price = bk.Price,
+                        Type = CatalogAdvertTypeCodes.Book,
+                        Isbn = string.IsNullOrWhiteSpace(src.ISBN) ? null : src.ISBN,
+                        Category = src.BookCategory?.Name,
+                        Subject = null,
+                        Grade = null
+                    };
+                }
+                case AdvertServices svc:
+                {
+                    servicesDict.TryGetValue(svc.AdvertId, out var fullSvc);
+                    var src = fullSvc ?? svc;
+                    return new AdvertSummaryDto
+                    {
+                        Id = CatalogIdFromAdvertId(svc.AdvertId),
+                        Title = svc.Title,
+                        Price = svc.Price,
+                        Type = CatalogAdvertTypeCodes.Service,
+                        Isbn = null,
+                        Category = null,
+                        Subject = src.Subject?.Name,
+                        Grade = src.SchoolGrade?.Name
+                    };
+                }
+                case PhysicalItems phy when phy is not Books:
+                    return new AdvertSummaryDto
+                    {
+                        Id = CatalogIdFromAdvertId(phy.AdvertId),
+                        Title = phy.Title,
+                        Price = phy.Price,
+                        Type = CatalogAdvertTypeCodes.Product,
+                        Isbn = null,
+                        Category = null,
+                        Subject = null,
+                        Grade = null
+                    };
+                default:
+                    throw new InvalidOperationException($"Unknown advert CLR type '{a.GetType().Name}'.");
+            }
         }
 
-        private static AdvertDetailDto ToDetailDto(Books b, Guid catalogId)
+        private static AdvertDetailDto ToDetailFromBook(Books b, Guid catalogId)
         {
             string? imageUrl = b.Pictures?.FirstOrDefault()?.Label;
 
@@ -100,6 +180,41 @@ namespace EcoscolarWebApi.Services
                 Grade = null,
                 Price = b.Price,
                 Description = b.Description ?? string.Empty,
+                ImageUrl = imageUrl
+            };
+        }
+
+        private static AdvertDetailDto ToDetailFromService(AdvertServices s, Guid catalogId)
+        {
+            return new AdvertDetailDto
+            {
+                Id = catalogId,
+                Title = s.Title,
+                Type = CatalogAdvertTypeCodes.Service,
+                Isbn = null,
+                Category = null,
+                Subject = s.Subject?.Name,
+                Grade = s.SchoolGrade?.Name,
+                Price = s.Price,
+                Description = s.Description ?? string.Empty,
+                ImageUrl = null
+            };
+        }
+
+        private static AdvertDetailDto ToDetailFromPhysical(PhysicalItems p, Guid catalogId)
+        {
+            string? imageUrl = p.Pictures?.FirstOrDefault()?.Label;
+            return new AdvertDetailDto
+            {
+                Id = catalogId,
+                Title = p.Title,
+                Type = CatalogAdvertTypeCodes.Product,
+                Isbn = null,
+                Category = null,
+                Subject = null,
+                Grade = null,
+                Price = p.Price,
+                Description = p.Description ?? string.Empty,
                 ImageUrl = imageUrl
             };
         }
