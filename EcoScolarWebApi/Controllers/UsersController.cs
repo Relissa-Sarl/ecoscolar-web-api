@@ -1,9 +1,12 @@
-﻿using EcoscolarWebApi.Models;
+﻿using EcoscolarWebApi.Data;
+using EcoscolarWebApi.Models;
 using EcoscolarWebApi.Utils.DTOs;
+using EcoscolarWebApi.Utils.DTOs.Advert;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace EcoscolarWebApi.Controllers
 {
@@ -13,14 +16,16 @@ namespace EcoscolarWebApi.Controllers
     public class UsersController : ControllerBase
     {
         private readonly UserManager<User> _userManager;            // User manager provided by ASP.NET Core Identity for user management operations
+        private readonly EcoscolarDbContext _context;                // Database context for accessing the database
 
         /// <summary>
         /// UsersController constructor
         /// </summary>
         /// <param name="userManager">The user manager for handling user management operations</param>
-        public UsersController(UserManager<User> userManager)
+        public UsersController(UserManager<User> userManager, EcoscolarDbContext context)
         {
             _userManager = userManager;
+            _context = context;
         }
 
         /// <summary>
@@ -82,6 +87,29 @@ namespace EcoscolarWebApi.Controllers
             };
 
             return Ok(userProfileDto);
+        }
+
+        [HttpGet("me/adverts")]
+        public async Task<IActionResult> GetMyAdverts()
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null)
+                return NotFound(new { message = "Utilisateur introuvable." });
+
+            var adverts = await _context.Adverts
+                .Where(a => a.UserId == currentUser.Id)
+                .Include(a => a.User)
+                .ToListAsync();
+            List<long> physicalItemIds = adverts.OfType<PhysicalItems>()
+                .Select(item => item.AdvertId)
+                .ToList();
+            if (physicalItemIds.Any())
+            {
+                await _context.Pictures
+                    .Where(picture => physicalItemIds.Contains(picture.AdvertId))
+                    .LoadAsync();
+            }
+            return Ok(adverts.Select(AdvertReadDto.FromEntity));
         }
     }
 }

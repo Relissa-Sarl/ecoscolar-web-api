@@ -23,5 +23,36 @@ namespace EcoscolarWebApi.Data
         /// DbSet for the User entity, representing the users in the database
         /// </summary>
         public DbSet<User> User { get; set; } = default!;
+        /// <summary>
+        /// DbSet for the Advert entity, representing the adverts in the database
+        /// </summary>
+        public DbSet<Adverts> Adverts { get; set; } = default!;
+
+        public DbSet<PhysicalItems> Products { get; set; } = default!;
+
+        public DbSet<AdvertServices> Services { get; set; } = default!;
+
+        public DbSet<Books> Books { get; set; } = default!;
+
+        public DbSet<Pictures> Pictures { get; set; } = default!;
+
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            base.OnModelCreating(builder);
+            this.seeding(builder);
+        }
+
+        private void seeding(ModelBuilder builder)
+        {
+            builder.Entity<BookCategories>().HasData(
+                new BookCategories { BookCategoryId = 1, Description = "description", Name = "first cat" }
+            );
+            builder.Entity<Subjects>().HasData(
+                new Subjects { SubjectId = 1, Name = "Math", Subject = "MATH"}
+            );
+            builder.Entity<SchoolGrades>().HasData(
+                new SchoolGrades { SchoolGradeId = 1, Name = "École Supérieur", SchoolGrade = "ES"}
+            );
+        }
     }
 }
