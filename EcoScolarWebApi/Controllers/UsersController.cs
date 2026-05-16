@@ -1,8 +1,6 @@
-﻿using EcoscolarWebApi.Models;
-using EcoscolarWebApi.Utils.DTOs;
+﻿using EcoscolarWebApi.Services;
+using EcoscolarWebApi.Utils;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EcoscolarWebApi.Controllers
@@ -12,76 +10,45 @@ namespace EcoscolarWebApi.Controllers
     [Authorize]
     public class UsersController : ControllerBase
     {
-        private readonly UserManager<User> _userManager;            // User manager provided by ASP.NET Core Identity for user management operations
+        private readonly IUserService _userService;            // User service for handling user-related operations
 
         /// <summary>
         /// UsersController constructor
         /// </summary>
-        /// <param name="userManager">The user manager for handling user management operations</param>
-        public UsersController(UserManager<User> userManager)
+        /// <param name="userService">The user service for handling user-related operations</param>
+        public UsersController(IUserService userService)
         {
-            _userManager = userManager;
-        }
-
-        /// <summary>
-        /// Register a new user with the provided information in the UserDto object. 
-        /// This endpoint is accessible without authentication and uses the UserManager 
-        /// to create a new user and hash the password automatically.
-        /// 
-        /// Url: POST /api/v1/users/register
-        /// </summary>
-        /// <param name="request"></param>
-        /// <returns></returns>
-        [HttpPost("register")]
-        [AllowAnonymous]
-        public async Task<IActionResult> RegisterCustom([FromBody] UserDto request)
-        {
-            // Create a new user object with the provided information
-            User newUser = new User
-            {
-                UserName = request.Email,
-                Email = request.Email,
-                FirstName = request.FirstName,
-                LastName = request.LastName
-            };
-
-            // Ask identity to save the user and hash the password automatically
-            var result = await _userManager.CreateAsync(newUser, request.Password);
-            if (result.Succeeded)
-                return Ok(new { message = "User created successfully!" });
-
-            return BadRequest(result.Errors);
+            _userService = userService;
         }
 
         /// <summary>
         /// Get the profile information of the currently authenticated user. 
         /// This endpoint requires authentication and retrieves the user's information using 
         /// the UserManager based on the current user context.
-        /// 
-        /// Url: GET /api/v1/users/me
         /// </summary>
         /// <returns></returns>
         [HttpGet("me")]
         public async Task<IActionResult> GetMyProfile()
         {
-            // Get the current user from the UserManager using the current user context
-            var currentUser = await _userManager.GetUserAsync(User);
+            // Pass the HTTP session's User directly to the service
+            var result = await _userService.GetCurrentUserProfileAsync(User);
 
-            // If the user is not found, return a 404 Not Found response
-            if (currentUser == null)
-                return NotFound(new { message = "Utilisateur introuvable." });
+            // If successful, return 200 OK along with the user's data
+            if (result.IsSuccess)
+                return Ok(result.Data);
 
-            // Create a DTO to return only the relevant user information to the client
-            var userProfileDto = new
+            // Dispatch the response depending on the error code
+            return result.ErrorType switch
             {
-                Id = currentUser.Id,
-                UserName = currentUser.UserName,
-                FirstName = currentUser.FirstName,
-                LastName = currentUser.LastName,
-                Email = currentUser.Email,
-            };
+                // 401 Unauthorized if the user isn't connected
+                ErrorType.Unauthorized => Unauthorized (new { result.Errors } ),
 
-            return Ok(userProfileDto);
+                // 404 Not Found if the user was deleted
+                ErrorType.NotFound => NotFound(new { result.Errors }),
+
+                // 400 Bad Request fallback
+                _ => BadRequest(new { result.Errors })
+            };
         }
     }
 }
