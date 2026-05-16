@@ -32,8 +32,11 @@ namespace EcoscolarWebApi
                 .AddEntityFrameworkStores<EcoscolarDbContext>();
 
             // Add services to the container.
+            builder.Services.AddControllers().AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+            });
             builder.Services.AddScoped<IAdvertSearchService, FakeAdvertSearchService>();
-            builder.Services.AddControllers();
             builder.Services.AddOpenApi();
             builder.Services.AddSwaggerGen(options =>
             {
