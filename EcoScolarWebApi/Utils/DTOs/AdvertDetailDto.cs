@@ -3,7 +3,8 @@ namespace EcoscolarWebApi.Utils.DTOs
 	public class AdvertDetailDto
 	{
 		public Guid Id { get; set; }
-		public AdvertKind Kind { get; set; }
+		/// <summary>Même sémantique que <see cref="Advert.AdvertReadDto"/> <c>type</c>. Valeurs : <see cref="CatalogAdvertTypeCodes"/>.</summary>
+		public string Type { get; set; } = string.Empty;
 		public string Title { get; set; } = string.Empty;
 		public decimal Price { get; set; }
 		public string? Isbn { get; set; }

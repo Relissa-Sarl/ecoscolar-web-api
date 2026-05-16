@@ -1,4 +1,4 @@
-﻿namespace EcoscolarWebApi.Utils.DTOs
+namespace EcoscolarWebApi.Utils.DTOs
 {
     public class AdvertSearchQuery
     {

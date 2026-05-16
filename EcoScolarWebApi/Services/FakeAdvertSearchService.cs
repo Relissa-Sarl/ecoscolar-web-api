@@ -1,42 +1,25 @@
+using EcoscolarWebApi.Models;
 using EcoscolarWebApi.Utils.DTOs;
+using EcoscolarWebApi.Utils.Enums;
 
 namespace EcoscolarWebApi.Services
 {
     /// <summary>
-    /// Mock search (T5-1): <c>Isbn</c> and <c>Q</c> filters apply to <see cref="AdvertKind.Book"/> only.
+    /// Mock search (T5-1): <c>Isbn</c> and <c>Q</c> filters apply to <see cref="CatalogAdvertTypeCodes.Book"/> adverts only.
+    /// Seed data uses domain <see cref="Books"/> (inherits <see cref="Adverts"/>) then maps to API DTOs.
     /// Product/service filters come in T5-2 / T5-3.
     /// </summary>
     public class FakeAdvertSearchService : IAdvertSearchService
     {
+        private sealed record CatalogBookSeed(Books Book, Guid CatalogId, string? Subject, string? Grade);
+
+        /// <remarks>
+        /// <see cref="Guid"/> preserves stable mock catalogue IDs for REST paths; EF uses <see cref="Adverts.AdvertId"/> independently.
+        /// </remarks>
+        private static readonly IReadOnlyList<CatalogBookSeed> CatalogSeed = BuildCatalogSeed();
+
         private static readonly IReadOnlyList<AdvertSummaryDto> Summaries =
-            new List<AdvertSummaryDto>
-            {
-                new()
-                {
-                    Id = Guid.Parse("6d4b9d4a-1dd1-4a38-8d68-7af4d9cb3c01"),
-                    Kind = AdvertKind.Book,
-                    Title = "Exemple annonce 1",
-                    Price = 12.50m
-                },
-                new()
-                {
-                    Id = Guid.Parse("9a2d7d6e-8b4c-4d55-a901-2ec6f6c4d202"),
-                    Kind = AdvertKind.Book,
-                    Title = "Exemple annonce 2",
-                    Price = 7.00m
-                },
-                new()
-                {
-                    Id = Guid.Parse("3f8e5c9b-2a7e-4f1a-9c3d-5b6e7f8a9c03"),
-                    Title = "Exemple annonce 3",
-                    Kind = AdvertKind.Book,
-                    Isbn = "978-3-16-148410-0",
-                    Category = "Fiction",
-                    Subject = "Mathematics",
-                    Grade = "Grade 10",
-                    Price = 15.00m
-                }
-            };
+            CatalogSeed.Select(ToSummaryDto).ToList();
 
         public Task<IEnumerable<AdvertSummaryDto>> SearchSummariesAsync(
             AdvertSearchQuery? query,
@@ -55,7 +38,7 @@ namespace EcoscolarWebApi.Services
             {
                 var needle = Normalize(query.Isbn);
                 result = result.Where(a =>
-                    a.Kind == AdvertKind.Book
+                    a.Type == CatalogAdvertTypeCodes.Book
                     && a.Isbn is not null
                     && Normalize(a.Isbn).Contains(needle, StringComparison.Ordinal));
             }
@@ -64,7 +47,7 @@ namespace EcoscolarWebApi.Services
             {
                 var keyword = query.Q.Trim();
                 result = result.Where(a =>
-                    a.Kind == AdvertKind.Book
+                    a.Type == CatalogAdvertTypeCodes.Book
                     && (a.Title.Contains(keyword, StringComparison.OrdinalIgnoreCase)
                         || (a.Isbn is not null
                             && a.Isbn.Contains(keyword, StringComparison.OrdinalIgnoreCase))));
@@ -75,21 +58,135 @@ namespace EcoscolarWebApi.Services
 
         public Task<AdvertDetailDto?> GetDetailAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            var summary = Summaries.FirstOrDefault(s => s.Id == id);
-            if (summary == null)
+            var seed = CatalogSeed.FirstOrDefault(s => s.CatalogId == id);
+            if (seed == null)
                 return Task.FromResult<AdvertDetailDto?>(null);
+
+            var s = ToSummaryDto(seed);
+            var b = seed.Book;
 
             return Task.FromResult<AdvertDetailDto?>(new AdvertDetailDto
             {
-                Id = summary.Id,
-                Title = summary.Title,
-                Kind = summary.Kind,
-                Isbn = summary.Isbn,
-                Category = summary.Category,
-                Subject = summary.Subject,
-                Grade = summary.Grade,
-                Price = summary.Price
+                Id = s.Id,
+                Title = s.Title,
+                Type = s.Type,
+                Isbn = s.Isbn,
+                Category = s.Category,
+                Subject = s.Subject,
+                Grade = s.Grade,
+                Price = s.Price,
+                Description = b.Description ?? string.Empty
             });
+        }
+
+        private static IReadOnlyList<CatalogBookSeed> BuildCatalogSeed()
+        {
+            var categoryGeneral = new BookCategories
+            {
+                BookCategoryId = 1,
+                Name = "General",
+                Description = "Mock category (catalogue démo)."
+            };
+
+            var categoryFiction = new BookCategories
+            {
+                BookCategoryId = 2,
+                Name = "Fiction",
+                Description = "Fiction mock (catalogue démo)."
+            };
+
+            const string mockUserId = "00000000-0000-4000-8000-000000000099";
+            var catalogUser = new User
+            {
+                Id = mockUserId,
+                UserName = "catalog-mock-user",
+                Email = "catalog-mock@ecoscolar.invalid"
+            };
+
+            return new List<CatalogBookSeed>
+            {
+                new(SeedMockBook(
+                        catalogUser,
+                        advertId: 101,
+                        "Exemple annonce 1",
+                        12.50m,
+                        isbnForEntity: "",
+                        categoryGeneral),
+                    Guid.Parse("6d4b9d4a-1dd1-4a38-8d68-7af4d9cb3c01"),
+                    Subject: null,
+                    Grade: null),
+                new(SeedMockBook(
+                        catalogUser,
+                        advertId: 102,
+                        "Exemple annonce 2",
+                        7.00m,
+                        isbnForEntity: "",
+                        categoryGeneral),
+                    Guid.Parse("9a2d7d6e-8b4c-4d55-a901-2ec6f6c4d202"),
+                    Subject: null,
+                    Grade: null),
+                new(SeedMockBook(
+                        catalogUser,
+                        advertId: 103,
+                        "Exemple annonce 3",
+                        15.00m,
+                        isbnForEntity: "978-3-16-148410-0",
+                        categoryFiction),
+                    Guid.Parse("3f8e5c9b-2a7e-4f1a-9c3d-5b6e7f8a9c03"),
+                    Subject: "Mathematics",
+                    Grade: "Grade 10")
+            };
+        }
+
+        /// <summary>Build a non-persisted <see cref="Books"/> graph for catalogue mock only.</summary>
+        private static Books SeedMockBook(
+            User seller,
+            long advertId,
+            string title,
+            decimal price,
+            string isbnForEntity,
+            BookCategories category)
+        {
+            var now = DateTime.UtcNow;
+            var book = new Books
+            {
+                AdvertId = advertId,
+                Title = title,
+                Description = "Données de démonstration (catalogue mock). Non persistées.",
+                Price = price,
+                CreatedAt = now,
+                NotificationDate = now.AddMonths(3),
+                Status = AdvertStatus.ACTIVE,
+                UserId = seller.Id ?? string.Empty,
+                User = seller,
+                Condition = Condition.NEW,
+                Pictures = new List<Pictures>(),
+                ISBN = isbnForEntity,
+                Author = "—",
+                Publisher = "—",
+                Edition = "—",
+                WrittenLanguage = Language.FR,
+                BookCategoryId = category.BookCategoryId,
+                BookCategory = category
+            };
+
+            return book;
+        }
+
+        private static AdvertSummaryDto ToSummaryDto(CatalogBookSeed seed)
+        {
+            var b = seed.Book;
+            return new AdvertSummaryDto
+            {
+                Id = seed.CatalogId,
+                Title = b.Title,
+                Price = b.Price,
+                Type = CatalogAdvertTypeCodes.Book,
+                Isbn = string.IsNullOrWhiteSpace(b.ISBN) ? null : b.ISBN,
+                Category = b.BookCategory?.Name,
+                Subject = seed.Subject,
+                Grade = seed.Grade
+            };
         }
 
         private static string Normalize(string? isbnText)

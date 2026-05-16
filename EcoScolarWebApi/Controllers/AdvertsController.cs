@@ -1,4 +1,4 @@
-﻿using EcoscolarWebApi.Data;
+using EcoscolarWebApi.Data;
 using EcoscolarWebApi.Models;
 using EcoscolarWebApi.Services;
 using EcoscolarWebApi.Utils.DTOs;
