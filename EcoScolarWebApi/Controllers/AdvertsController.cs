@@ -173,7 +173,7 @@ namespace EcoscolarWebApi.Controllers
         }
 
         /// <summary>
-        /// Mock catalogue summaries with optional filters (e.g. ISBN, keyword). GET api/v1/adverts/summary
+        /// Mock catalogue summaries (T5-1: book-only filters <c>isbn</c> / <c>q</c>). GET api/v1/adverts/summary
         /// </summary>
         [HttpGet("summary")]
         public async Task<IActionResult> GetSummaries(
@@ -182,6 +182,21 @@ namespace EcoscolarWebApi.Controllers
         {
             var items = await _advertSearchService.SearchSummariesAsync(query, cancellationToken);
             return Ok(items);
+        }
+
+        /// <summary>
+        /// Mock catalogue detail by GUID (same dataset as /summary). GET api/v1/adverts/summary/{id}
+        /// </summary>
+        [HttpGet("summary/{id:guid}")]
+        public async Task<IActionResult> GetSummaryDetail(Guid id, CancellationToken cancellationToken = default)
+        {
+            var detail = await _advertSearchService.GetDetailAsync(id, cancellationToken);
+            if (detail is null)
+            {
+                return NotFound();
+            }
+
+            return Ok(detail);
         }
 
         // POST METHODS
