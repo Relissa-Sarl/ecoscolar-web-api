@@ -22,33 +22,38 @@ namespace EcoscolarWebApi.Services
             AdvertSearchQuery? query,
             CancellationToken cancellationToken = default)
         {
-            var booksList = await _context.Books
+            // Filtres sur IQueryable pour que WHERE / JOIN partent au serveur SQL (voir PR Copilot perf).
+            IQueryable<Books> q = _context.Books
                 .AsNoTracking()
+                .AsSplitQuery()
                 .Include(b => b.BookCategory)
-                .Include(b => b.Pictures)
-                .ToListAsync(cancellationToken);
+                .Include(b => b.Pictures);
 
-            IEnumerable<Books> filtered = booksList;
-
-            // T5-1: ISBN applied to books first, then substring match on normalized ISBN field.
             if (query != null && !string.IsNullOrWhiteSpace(query.Isbn))
             {
                 var needle = Normalize(query.Isbn);
-                filtered = filtered.Where(b =>
-                    !string.IsNullOrWhiteSpace(b.ISBN)
-                    && Normalize(b.ISBN).Contains(needle, StringComparison.Ordinal));
+                q = q.Where(b =>
+                    b.ISBN != null
+                    && b.ISBN.Trim() != string.Empty
+                    && b.ISBN.Replace("-", string.Empty).Trim().ToLower().Contains(needle));
             }
 
             if (query != null && !string.IsNullOrWhiteSpace(query.Q))
             {
                 var keyword = query.Q.Trim();
-                filtered = filtered.Where(b =>
-                    b.Title.Contains(keyword, StringComparison.OrdinalIgnoreCase)
-                    || (!string.IsNullOrWhiteSpace(b.ISBN)
-                        && b.ISBN.Contains(keyword, StringComparison.OrdinalIgnoreCase)));
+                var titleProbe = keyword.ToLower();
+                var isbnProbe = Normalize(keyword);
+
+                q = q.Where(b =>
+                    b.Title.ToLower().Contains(titleProbe)
+                    || (b.ISBN != null
+                        && b.ISBN.Trim() != string.Empty
+                        && b.ISBN.Replace("-", string.Empty).Trim().ToLower().Contains(isbnProbe)));
             }
 
-            return filtered.Select(ToSummaryDto).ToList();
+            var books = await q.ToListAsync(cancellationToken);
+
+            return books.Select(ToSummaryDto).ToList();
         }
 
         public async Task<AdvertDetailDto?> GetDetailAsync(Guid id, CancellationToken cancellationToken = default)

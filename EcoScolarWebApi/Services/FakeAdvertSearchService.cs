@@ -46,11 +46,12 @@ namespace EcoscolarWebApi.Services
             if (!string.IsNullOrWhiteSpace(query.Q))
             {
                 var keyword = query.Q.Trim();
+                var normalizedIsbnProbe = Normalize(keyword);
                 result = result.Where(a =>
                     a.Type == CatalogAdvertTypeCodes.Book
                     && (a.Title.Contains(keyword, StringComparison.OrdinalIgnoreCase)
                         || (a.Isbn is not null
-                            && a.Isbn.Contains(keyword, StringComparison.OrdinalIgnoreCase))));
+                            && Normalize(a.Isbn).Contains(normalizedIsbnProbe, StringComparison.Ordinal))));
             }
 
             return Task.FromResult<IEnumerable<AdvertSummaryDto>>(result.ToList());
