@@ -1,7 +1,8 @@
 using EcoscolarWebApi.Data;
 using EcoscolarWebApi.Models;
 using EcoscolarWebApi.Services;
-using EcoscolarWebApi.Services.Impl;
+using EcoscolarWebApi.Services.Contracts;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Stripe;
 
@@ -34,23 +35,6 @@ namespace EcoscolarWebApi
             // Add services to the container.
             builder.Services.AddControllers();
             builder.Services.AddOpenApi();
-            builder.Services.ConfigureApplicationCookie(options =>
-            {
-                options.Cookie.Name = "ecoscolar_session";
-
-                options.ExpireTimeSpan = TimeSpan.FromDays(14);
-                options.SlidingExpiration = true;
-
-                options.Cookie.HttpOnly = true;
-                options.Cookie.SecurePolicy = CookieSecurePolicy.Always; 
-                options.Cookie.SameSite = SameSiteMode.Lax; 
-
-                options.Events.OnRedirectToLogin = context =>
-                {
-                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                    return Task.CompletedTask;
-                };
-            });
 
             // Setup CORS policy
             builder.Services.AddCors(options =>
@@ -67,6 +51,7 @@ namespace EcoscolarWebApi
 
             // Add business logic services
             builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddTransient<IEmailSender<User>, DevEmailSenderService>();
 
             // Build the application
             var app = builder.Build();
@@ -84,7 +69,7 @@ namespace EcoscolarWebApi
 
             // Map controllers to the application
             app.MapControllers();
-            app.MapIdentityApi<User>();
+            app.MapGroup("/api/v1/auth").MapIdentityApi<User>();
 
             // Run the application
             app.Run();

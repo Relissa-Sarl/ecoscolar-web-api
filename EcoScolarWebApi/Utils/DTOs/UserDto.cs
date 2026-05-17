@@ -64,4 +64,23 @@ namespace EcoscolarWebApi.Utils.DTOs
         [Required] string Language,
         [Required] string Level
     );
+
+    public record UserUpdateDto(
+        [Required] string Nickname,
+        [Required] string FirstName,
+        [Required] string LastName,
+        [Required] string PostalCode,
+        [Required] string BirthdayDate,
+        //[Required] int CurrentSchoolLevelId,
+        [Required] IEnumerable<SpokenLanguageDto> SpokenLanguages
+    );
+
+    public record UserPublicReadDto(
+        [Required] string Id,
+        [Required] string Nickname
+        //[Required] int GlobalRating
+    )
+    {
+        public static UserPublicReadDto fromEntity(User user) => new UserPublicReadDto(user.Id, user.Nickname);
+    }
 }

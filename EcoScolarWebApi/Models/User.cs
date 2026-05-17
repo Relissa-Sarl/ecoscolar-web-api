@@ -8,22 +8,26 @@ namespace EcoscolarWebApi.Models
     {
         // === User properties ===
 
-        [Required]
-        public string FirstName { get; set; }
+        public string? FirstName { get; set; }
+
+        public string? LastName { get; set; }
+
+        public string? Nickname { get; set; }
+
+        public string? BirthdayDate { get; set; }
 
         [Required]
-        public string LastName { get; set; }
+        public bool IsOnboarded { get; set; } = false;
 
-        [Required]
-        public string BirthdayDate { get; set; }
+        // === Foreign keys ===
 
         [ForeignKey(nameof(Location))]
-        public int LocationId { get; set; }
+        public int? LocationId { get; set; }
 
         // === Navigation properties ===
-        public Location Location { get; set; }
+        public Location? Location { get; set; }
 
-        // === Many-to-many relationship with Language through UserLanguage ===
+        // === Many-to-many relationships ===
         public ICollection<UserLanguage> Languages { get; set; } = new List<UserLanguage>();
     }
 }

@@ -1,5 +1,6 @@
-﻿using EcoscolarWebApi.Services;
+﻿using EcoscolarWebApi.Services.Contracts;
 using EcoscolarWebApi.Utils;
+using EcoscolarWebApi.Utils.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -20,6 +21,8 @@ namespace EcoscolarWebApi.Controllers
         {
             _userService = userService;
         }
+
+        #region Current user
 
         /// <summary>
         /// Get the profile information of the currently authenticated user. 
@@ -50,5 +53,50 @@ namespace EcoscolarWebApi.Controllers
                 _ => BadRequest(new { result.Errors })
             };
         }
+
+        [HttpPut("me")]
+        public async Task<IActionResult> UpdateFullProfile([FromBody] UserUpdateDto dto)
+        {
+            // This single method handles both initial onboarding and later profile updates
+            var result = await _userService.UpdateProfileAsync(User, dto);
+
+            if (result.IsSuccess)
+                return Ok(result.Data);
+
+            return result.ErrorType switch
+            {
+                ErrorType.NotFound => NotFound(new { result.Errors }),
+
+                _ => BadRequest(new { result.Errors })
+            };
+        }
+
+        [HttpDelete("me")]
+        public async Task<IActionResult> DeleteMyProfile()
+        {
+            return null;
+        }
+
+        #endregion ===
+
+        #region Public profiles
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetUserProfile(string id)
+        {
+            var result = await _userService.GetPublicProfileAsync(id);
+
+            if (result.IsSuccess)
+                return Ok(result.Data);
+
+            return result.ErrorType switch
+            {
+                ErrorType.NotFound => NotFound(new { result.Errors }),
+
+                _ => BadRequest(new { result.Errors })
+            };
+        }
+
+        #endregion
     }
 }
