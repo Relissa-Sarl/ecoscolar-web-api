@@ -60,6 +60,7 @@ dist/
 # IDE / user
 *.user
 .vscode/
+.idea
 
 # OS / logs
 .DS_Store
