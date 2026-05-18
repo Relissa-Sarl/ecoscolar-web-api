@@ -36,7 +36,17 @@ namespace EcoscolarWebApi
             {
                 options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
             });
-            builder.Services.AddScoped<IAdvertSearchService, FakeAdvertSearchService>();
+
+            var useFakeAdvertSearch = builder.Configuration.GetValue("Features:UseFakeAdvertSearch", defaultValue: true);
+            if (useFakeAdvertSearch)
+            {
+                builder.Services.AddScoped<IAdvertSearchService, FakeAdvertSearchService>();
+            }
+            else
+            {
+                builder.Services.AddScoped<IAdvertSearchService, AdvertSearchService>();
+            }
+
             builder.Services.AddOpenApi();
             builder.Services.AddSwaggerGen(options =>
             {
