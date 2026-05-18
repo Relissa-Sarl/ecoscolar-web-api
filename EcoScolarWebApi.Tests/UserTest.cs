@@ -1,9 +1,11 @@
 ﻿using EcoscolarWebApi.Controllers;
+using EcoscolarWebApi.Data;
 using EcoscolarWebApi.Models;
 using EcoscolarWebApi.Utils.DTOs;
 using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using NSubstitute;
 using System.Security.Claims;
 using Xunit;
@@ -13,6 +15,7 @@ namespace EcoscolarWebApi.Tests.Controllers;
 public class UsersControllerTests
 {
 	private readonly UserManager<User> _userManagerMock;
+	private readonly EcoscolarDbContext _context;
 	private readonly UsersController _controller;
 
 	public UsersControllerTests()
@@ -20,8 +23,14 @@ public class UsersControllerTests
 		var store = Substitute.For<IUserStore<User>>();
 		_userManagerMock = Substitute.For<UserManager<User>>(store, null!, null!, null!, null!, null!, null!, null!, null!); // UserManager requires a lot of dependencies, we can mock them all with NSubstitute
 
-		// Simulate the dependency injection of UserManager into the UsersController
-		_controller = new UsersController(_userManagerMock);
+		// Setup InMemory database context
+		var options = new DbContextOptionsBuilder<EcoscolarDbContext>()
+			.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+			.Options;
+		_context = new EcoscolarDbContext(options);
+
+		// Simulate the dependency injection of UserManager and DbContext into the UsersController
+		_controller = new UsersController(_userManagerMock, _context);
 	}
 
 	#region Tests pour RegisterCustom
@@ -86,7 +95,7 @@ public class UsersControllerTests
 			Id = "guid-123",
 			UserName = "alexis@etml.ch",
 			Email = "alexis@etml.ch",
-			FirstName = "alexis",
+			FirstName = "Alexis",
 			LastName = "Rojas"
 		};
 
