@@ -37,7 +37,7 @@ namespace EcoscolarWebApi.Utils.DTOs.Advert
                 Models.AdvertServices => "SERVICE",
                 _ => throw new InvalidOperationException("Unknown advert type")
             };
-
+            
             string? primaryImage = (entity as Models.PhysicalItems)?.Pictures?.FirstOrDefault()?.Label;
 
             return new AdvertReadDto(
@@ -143,7 +143,8 @@ namespace EcoscolarWebApi.Utils.DTOs.Advert
     /// <param name="UserId">The ID of the user who is creating the product advert</param>
     /// <param name="Images">The array of image URLs for the product advert</param>
     /// <param name="Condition">The condition of the product advert</param>
-    public record ProductCreateDto(string Title, string Description, decimal Price, string UserId, string[] Images, Condition Condition)
+    /// <param name="ProductCategoryId">The ID of the product category to which the product advert belongs</param>
+    public record ProductCreateDto(string Title, string Description, decimal Price, string UserId, string[] Images, Condition Condition, long? ProductCategoryId=null)
         : AdvertBaseCreateDto(Title, Description, Price, UserId)
     {
         /// <summary>
@@ -167,6 +168,7 @@ namespace EcoscolarWebApi.Utils.DTOs.Advert
             if (entity is PhysicalItems product)
             {
                 product.Condition = Condition;
+                product.ProductCategoryId = ProductCategoryId;
                 product.Pictures = Images.Select(url => new Pictures { Label = url }).ToList();
             }
         }
@@ -189,7 +191,7 @@ namespace EcoscolarWebApi.Utils.DTOs.Advert
     public record BookCreateDto(
         string Title, string Description, decimal Price, string UserId, string[] Images, Condition Condition,
         long CategoryId, string Isbn, string Author, string Publisher, string Edition, Language WrittenLanguage
-    ) : ProductCreateDto(Title, Description, Price, UserId, Images, Condition)
+    ) : ProductCreateDto(Title, Description, Price, UserId, Images, Condition, ProductCategoryId: null)
     {
         /// <summary>
         /// Converts the BookCreateDto to a Books entity.
