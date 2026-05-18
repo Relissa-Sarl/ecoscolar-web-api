@@ -98,15 +98,26 @@ namespace EcoscolarWebApi.Controllers
         /// </summary>
         /// <returns>List of formatted product adverts</returns>
         [HttpGet("products")]
-        public async Task<ActionResult<IEnumerable<AdvertReadDto>>> GetProducts()
+        public async Task<ActionResult<IEnumerable<AdvertReadDto>>> GetProducts(
+                [FromQuery] long? categoryId,
+                [FromQuery] decimal? maxPrice)
         {
             IEnumerable<PhysicalItems> products;
             try
             {
-                products = await _context.Products
+                var query = _context.Products
                     .Include(p => p.User)
                     .Include(p => p.Pictures)
-                    .ToListAsync();
+                    .Where(p => !_context.Set<Books>().Any(b => b.AdvertId == p.AdvertId));
+                if (categoryId.HasValue)
+                {
+                    query = query.Where(p => p.ProductCategoryId == categoryId.Value);
+                }
+                if (maxPrice.HasValue)
+                {
+                    query = query.Where(p => p.Price <= maxPrice.Value);
+                }
+                products = await query.ToListAsync();
             }
             catch (Exception e)
             {

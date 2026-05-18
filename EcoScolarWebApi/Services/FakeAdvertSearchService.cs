@@ -25,13 +25,11 @@ namespace EcoscolarWebApi.Services
             AdvertSearchQuery? query,
             CancellationToken cancellationToken = default)
         {
-            // Étape B : aucun critère dans l'URL → toute la liste
             if (query == null)
             {
                 return Task.FromResult<IEnumerable<AdvertSummaryDto>>(Summaries);
             }
 
-            // Point de départ pour les filtres (étapes C, D — T5-1 puis T5-2/T5-3)
             IEnumerable<AdvertSummaryDto> result = Summaries;
 
             if (!string.IsNullOrWhiteSpace(query.Isbn))
