@@ -60,7 +60,7 @@ namespace EcoscolarWebApi.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Adverts");
+                    b.ToTable("Adverts", (string)null);
 
                     b.UseTptMappingStrategy();
                 });
@@ -85,7 +85,7 @@ namespace EcoscolarWebApi.Migrations
 
                     b.HasKey("BookCategoryId");
 
-                    b.ToTable("BookCategories");
+                    b.ToTable("BookCategories", (string)null);
 
                     b.HasData(
                         new
@@ -116,7 +116,7 @@ namespace EcoscolarWebApi.Migrations
 
                     b.HasIndex("AdvertId");
 
-                    b.ToTable("Pictures");
+                    b.ToTable("Pictures", (string)null);
                 });
 
             modelBuilder.Entity("EcoscolarWebApi.Models.ProductCategories", b =>
@@ -139,7 +139,7 @@ namespace EcoscolarWebApi.Migrations
 
                     b.HasKey("ProductCategoryId");
 
-                    b.ToTable("ProductCategories");
+                    b.ToTable("ProductCategories", (string)null);
 
                     b.HasData(
                         new
@@ -170,7 +170,7 @@ namespace EcoscolarWebApi.Migrations
 
                     b.HasKey("SchoolGradeId");
 
-                    b.ToTable("SchoolGrade");
+                    b.ToTable("SchoolGrade", (string)null);
 
                     b.HasData(
                         new
@@ -201,7 +201,7 @@ namespace EcoscolarWebApi.Migrations
 
                     b.HasKey("SubjectId");
 
-                    b.ToTable("Subject");
+                    b.ToTable("Subject", (string)null);
 
                     b.HasData(
                         new
@@ -304,7 +304,7 @@ namespace EcoscolarWebApi.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserFavorites");
+                    b.ToTable("UserFavorites", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -462,7 +462,7 @@ namespace EcoscolarWebApi.Migrations
 
                     b.HasIndex("SubjectId");
 
-                    b.ToTable("Services");
+                    b.ToTable("Services", (string)null);
                 });
 
             modelBuilder.Entity("EcoscolarWebApi.Models.PhysicalItems", b =>
@@ -480,7 +480,7 @@ namespace EcoscolarWebApi.Migrations
 
                     b.HasIndex("ProductCategoryId");
 
-                    b.ToTable("PhysicalItems");
+                    b.ToTable("PhysicalItems", (string)null);
                 });
 
             modelBuilder.Entity("EcoscolarWebApi.Models.Books", b =>
@@ -515,7 +515,7 @@ namespace EcoscolarWebApi.Migrations
 
                     b.HasIndex("BookCategoryId");
 
-                    b.ToTable("Books");
+                    b.ToTable("Books", (string)null);
                 });
 
             modelBuilder.Entity("EcoscolarWebApi.Models.Adverts", b =>
