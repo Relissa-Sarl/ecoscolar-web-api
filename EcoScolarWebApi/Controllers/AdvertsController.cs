@@ -131,22 +131,34 @@ namespace EcoscolarWebApi.Controllers
         /// 
         /// GET: AdvertsController/GetServices
         /// Url: /api/v1/adverts/services
+        /// q query parameter allows to filter services by title or description containing the provided keyword (case-insensitive)
         /// </summary>
         /// <returns>List of formatted service adverts</returns>
         [HttpGet("services")]
-        public async Task<ActionResult<IEnumerable<AdvertReadDto>>> GetServices()
+        public async Task<ActionResult<IEnumerable<AdvertReadDto>>> GetServices([FromQuery] string? q)
         {
             IEnumerable<AdvertServices> services;
             try
             {
-                services = await _context.Services
+                var query = _context.Services
                     .Include(s => s.User)
-                    .ToListAsync();
+                    .AsQueryable();
+
+                if (!string.IsNullOrWhiteSpace(q))
+                {
+                    var probe = q.Trim().ToLower();
+                    query = query.Where(s =>
+                        s.Title.ToLower().Contains(probe)
+                        || s.Description.ToLower().Contains(probe));
+                }
+
+                services = await query.ToListAsync();
             }
             catch (Exception e)
             {
                 return BadRequest(new { error = e.Message });
             }
+
             return Ok(services.Select(AdvertReadDto.FromEntity));
         }
 

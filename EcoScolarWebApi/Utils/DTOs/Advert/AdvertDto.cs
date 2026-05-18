@@ -37,7 +37,7 @@ namespace EcoscolarWebApi.Utils.DTOs.Advert
                 Models.AdvertServices => "SERVICE",
                 _ => throw new InvalidOperationException("Unknown advert type")
             };
-
+            
             string? primaryImage = (entity as Models.PhysicalItems)?.Pictures?.FirstOrDefault()?.Label;
 
             return new AdvertReadDto(
