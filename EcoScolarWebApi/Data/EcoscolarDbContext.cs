@@ -35,10 +35,16 @@ namespace EcoscolarWebApi.Data
         public DbSet<Books> Books { get; set; } = default!;
 
         public DbSet<Pictures> Pictures { get; set; } = default!;
+        public DbSet<ProductCategories> ProductCategories { get; set; } = default!;
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+            builder.Entity<PhysicalItems>()
+                .HasOne(p => p.ProductCategory)
+                .WithMany(c => c.PhysicalItems)
+                .HasForeignKey(p => p.ProductCategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
             this.seeding(builder);
         }
 
@@ -52,6 +58,9 @@ namespace EcoscolarWebApi.Data
             );
             builder.Entity<SchoolGrades>().HasData(
                 new SchoolGrades { SchoolGradeId = 1, Name = "École Supérieur", SchoolGrade = "ES"}
+            );
+            builder.Entity<ProductCategories>().HasData(
+                new ProductCategories { ProductCategoryId = 1, Name = "Fournitures", Description = "Catégorie exemple pour produits non-livres" }
             );
         }
     }

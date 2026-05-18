@@ -13,5 +13,9 @@ namespace EcoscolarWebApi.Models
         [Column(TypeName = "decimal(18,2)")]
         public decimal? Weight { get; set; }
         public virtual ICollection<Pictures> Pictures { get; set; } = new List<Pictures>();
+        public long? ProductCategoryId { get; set; }
+
+        [ForeignKey(nameof(ProductCategoryId))]
+        public virtual ProductCategories? ProductCategory { get; set; }
     }
 }

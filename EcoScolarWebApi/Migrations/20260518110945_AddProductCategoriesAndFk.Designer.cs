@@ -4,6 +4,7 @@ using EcoscolarWebApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EcoscolarWebApi.Migrations
 {
     [DbContext(typeof(EcoscolarDbContext))]
-    partial class EcoscolarDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260518110945_AddProductCategoriesAndFk")]
+    partial class AddProductCategoriesAndFk
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -140,14 +143,6 @@ namespace EcoscolarWebApi.Migrations
                     b.HasKey("ProductCategoryId");
 
                     b.ToTable("ProductCategories");
-
-                    b.HasData(
-                        new
-                        {
-                            ProductCategoryId = 1L,
-                            Description = "Catégorie exemple pour produits non-livres",
-                            Name = "Fournitures"
-                        });
                 });
 
             modelBuilder.Entity("EcoscolarWebApi.Models.SchoolGrades", b =>
@@ -450,13 +445,16 @@ namespace EcoscolarWebApi.Migrations
                     b.Property<int>("Condition")
                         .HasColumnType("int");
 
+                    b.Property<long?>("ProductCategoriesProductCategoryId")
+                        .HasColumnType("bigint");
+
                     b.Property<long?>("ProductCategoryId")
                         .HasColumnType("bigint");
 
                     b.Property<decimal?>("Weight")
                         .HasColumnType("decimal(18,2)");
 
-                    b.HasIndex("ProductCategoryId");
+                    b.HasIndex("ProductCategoriesProductCategoryId");
 
                     b.ToTable("PhysicalItems");
                 });
@@ -602,11 +600,9 @@ namespace EcoscolarWebApi.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("EcoscolarWebApi.Models.ProductCategories", "ProductCategory")
+                    b.HasOne("EcoscolarWebApi.Models.ProductCategories", null)
                         .WithMany("PhysicalItems")
-                        .HasForeignKey("ProductCategoryId");
-
-                    b.Navigation("ProductCategory");
+                        .HasForeignKey("ProductCategoriesProductCategoryId");
                 });
 
             modelBuilder.Entity("EcoscolarWebApi.Models.Books", b =>
