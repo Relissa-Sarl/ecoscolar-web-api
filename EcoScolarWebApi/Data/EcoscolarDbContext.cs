@@ -40,6 +40,11 @@ namespace EcoscolarWebApi.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+            builder.Entity<PhysicalItems>()
+                .HasOne(p => p.ProductCategory)
+                .WithMany(c => c.PhysicalItems)
+                .HasForeignKey(p => p.ProductCategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
             this.seeding(builder);
         }
 
