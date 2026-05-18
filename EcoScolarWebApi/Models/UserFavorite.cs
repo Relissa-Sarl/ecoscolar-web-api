@@ -6,6 +6,8 @@ namespace EcoscolarWebApi.Models;
 [Table("UserFavorites")]
 public class UserFavorite
 {
+	[Key]
+	public int Id { get; set; }
 	[Required]
 	public required string UserId { get; set; }
 

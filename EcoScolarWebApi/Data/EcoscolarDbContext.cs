@@ -39,12 +39,15 @@ namespace EcoscolarWebApi.Data
             base.OnModelCreating(builder);
 
             builder.Entity<UserFavorite>()
-                .HasKey(uf => new { uf.UserId, uf.AdvertId });
-
-            builder.Entity<UserFavorite>()
                 .HasOne(uf => uf.User)
                 .WithMany(u => u.Favorites)
                 .HasForeignKey(uf => uf.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<UserFavorite>()
+                .HasOne(uf => uf.Advert)
+                .WithMany()
+                .HasForeignKey(uf => uf.AdvertId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.Entity<PhysicalItems>()

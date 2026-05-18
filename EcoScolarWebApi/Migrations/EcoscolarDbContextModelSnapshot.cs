@@ -232,11 +232,9 @@ namespace EcoscolarWebApi.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("FirstName")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("LastName")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("LockoutEnabled")
@@ -287,15 +285,24 @@ namespace EcoscolarWebApi.Migrations
 
             modelBuilder.Entity("EcoscolarWebApi.Models.UserFavorite", b =>
                 {
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<long>("AdvertId")
                         .HasColumnType("bigint");
 
-                    b.HasKey("UserId", "AdvertId");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
 
                     b.HasIndex("AdvertId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("UserFavorites");
                 });
@@ -544,7 +551,7 @@ namespace EcoscolarWebApi.Migrations
                     b.HasOne("EcoscolarWebApi.Models.User", "User")
                         .WithMany("Favorites")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Advert");
