@@ -28,9 +28,27 @@ namespace EcoscolarWebApi
             var stripeSecretKey = builder.Configuration["Stripe:SecretKey"];
             StripeConfiguration.ApiKey = stripeSecretKey;
 
-            // Add identity services to the builder
+            // Add services to the builder
             builder.Services.AddIdentityApiEndpoints<User>()
                 .AddEntityFrameworkStores<EcoscolarDbContext>();
+
+            builder.Services.ConfigureApplicationCookie(options =>
+            {
+                options.Cookie.Name = "Ecoscolar.Auth.Session";
+                options.Cookie.HttpOnly = true;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                options.Cookie.SameSite = SameSiteMode.None;
+                options.ExpireTimeSpan = TimeSpan.FromDays(14);
+                options.SlidingExpiration = true;
+
+                // Optional: Where to redirect if an unauthenticated user tries to access a protected route
+                // (Note: For APIs returning JSON, we usually return 401 instead of redirecting)
+                //options.Events.OnRedirectToLogin = context =>
+                //{
+                //    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                //    return Task.CompletedTask;
+                //};
+            });
 
             // Add services to the container.
             builder.Services.AddControllers();
