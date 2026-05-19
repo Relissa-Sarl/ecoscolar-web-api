@@ -4,8 +4,6 @@
 name: CI Pipeline - EcoScolar backend
 
 on:
-  push:
-    branches: ["main", "develop" ]
   pull_request:
     branches: [ "main", "develop" ]
 
