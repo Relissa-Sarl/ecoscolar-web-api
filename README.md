@@ -53,4 +53,34 @@ http://localhost:5001/swagger/index.html
 
 ```
 
-### Step 3: Start the program
+### Step 3: Database Setup with Seeds (Development)
+
+For development purposes, the application includes seed data that populates the database with test users, adverts, books, services, and other entities.
+
+To use the seed data:
+
+1. **Drop the existing database** (if it exists):
+   ```powershell
+   Drop-Database
+   ```
+   Run this command in the **Package Manager Console**.
+
+2. **Apply migrations**:
+   ```powershell
+   Update-Database
+   ```
+   Run this command in the **Package Manager Console**.
+
+3. **Start the application**:
+   ```bash
+   dotnet run
+   ```
+   The seeds will automatically populate the database on startup when running in Development mode.
+
+#### Test User Credentials
+Use the following credentials to test the application:
+
+- **Email**: `albert@einstein.ch`
+- **Password**: `P@ssw0rd!`
+
+### Step 4: Start the program

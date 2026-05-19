@@ -1,6 +1,7 @@
 using EcoscolarWebApi.Data;
 using EcoscolarWebApi.Models;
 using EcoscolarWebApi.Services;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 using Stripe;
@@ -104,6 +105,14 @@ namespace EcoscolarWebApi
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
+                using (var scope = app.Services.CreateScope())
+                {
+                    var db = scope.ServiceProvider.GetRequiredService<EcoscolarDbContext>();
+                    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+                    // Call the seeder only when running in Development mode
+                    DataSeeder.Seed(db, userManager).Wait();
+                }
+
                 app.MapOpenApi();
                 app.UseSwagger();
                 app.UseSwaggerUI(c =>
