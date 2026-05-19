@@ -4,6 +4,7 @@ using EcoscolarWebApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,13 +12,15 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EcoscolarWebApi.Migrations
 {
     [DbContext(typeof(EcoscolarDbContext))]
-    partial class EcoscolarDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260515170914_ImplementAdvertTable")]
+    partial class ImplementAdvertTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.8")
+                .HasAnnotation("ProductVersion", "10.0.7")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -35,22 +38,20 @@ namespace EcoscolarWebApi.Migrations
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("NotificationDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<decimal>("Price")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<double>("Price")
+                        .HasColumnType("float");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("UserId")
                         .IsRequired()
@@ -60,7 +61,7 @@ namespace EcoscolarWebApi.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Adverts", (string)null);
+                    b.ToTable("Adverts");
 
                     b.UseTptMappingStrategy();
                 });
@@ -75,23 +76,21 @@ namespace EcoscolarWebApi.Migrations
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("BookCategoryId");
 
-                    b.ToTable("BookCategories", (string)null);
+                    b.ToTable("BookCategories");
 
                     b.HasData(
                         new
                         {
                             BookCategoryId = 1L,
-                            Description = "description",
+                            Description = "desciption",
                             Name = "first cat"
                         });
                 });
@@ -109,45 +108,13 @@ namespace EcoscolarWebApi.Migrations
 
                     b.Property<string>("Label")
                         .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("PictureId");
 
                     b.HasIndex("AdvertId");
 
-                    b.ToTable("Pictures", (string)null);
-                });
-
-            modelBuilder.Entity("EcoscolarWebApi.Models.ProductCategories", b =>
-                {
-                    b.Property<long>("ProductCategoryId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("ProductCategoryId"));
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.HasKey("ProductCategoryId");
-
-                    b.ToTable("ProductCategories", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            ProductCategoryId = 1L,
-                            Description = "Catégorie exemple pour produits non-livres",
-                            Name = "Fournitures"
-                        });
+                    b.ToTable("Pictures");
                 });
 
             modelBuilder.Entity("EcoscolarWebApi.Models.SchoolGrades", b =>
@@ -160,17 +127,15 @@ namespace EcoscolarWebApi.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("SchoolGrade")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("SchoolGradeId");
 
-                    b.ToTable("SchoolGrade", (string)null);
+                    b.ToTable("SchoolGrade");
 
                     b.HasData(
                         new
@@ -191,17 +156,15 @@ namespace EcoscolarWebApi.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Subject")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("SubjectId");
 
-                    b.ToTable("Subject", (string)null);
+                    b.ToTable("Subject");
 
                     b.HasData(
                         new
@@ -232,9 +195,11 @@ namespace EcoscolarWebApi.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("FirstName")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("LastName")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("LockoutEnabled")
@@ -281,30 +246,6 @@ namespace EcoscolarWebApi.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
-                });
-
-            modelBuilder.Entity("EcoscolarWebApi.Models.UserFavorite", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<long>("AdvertId")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AdvertId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("UserFavorites", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -449,8 +390,7 @@ namespace EcoscolarWebApi.Migrations
 
                     b.Property<string>("StudyLevel")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<long>("SubjectId")
                         .HasColumnType("bigint");
@@ -462,7 +402,7 @@ namespace EcoscolarWebApi.Migrations
 
                     b.HasIndex("SubjectId");
 
-                    b.ToTable("Services", (string)null);
+                    b.ToTable("Services");
                 });
 
             modelBuilder.Entity("EcoscolarWebApi.Models.PhysicalItems", b =>
@@ -472,15 +412,10 @@ namespace EcoscolarWebApi.Migrations
                     b.Property<int>("Condition")
                         .HasColumnType("int");
 
-                    b.Property<long?>("ProductCategoryId")
-                        .HasColumnType("bigint");
+                    b.Property<float?>("Weight")
+                        .HasColumnType("real");
 
-                    b.Property<decimal?>("Weight")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.HasIndex("ProductCategoryId");
-
-                    b.ToTable("PhysicalItems", (string)null);
+                    b.ToTable("PhysicalItems");
                 });
 
             modelBuilder.Entity("EcoscolarWebApi.Models.Books", b =>
@@ -489,33 +424,29 @@ namespace EcoscolarWebApi.Migrations
 
                     b.Property<string>("Author")
                         .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<long>("BookCategoryId")
                         .HasColumnType("bigint");
 
                     b.Property<string>("Edition")
                         .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ISBN")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Publisher")
                         .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("WrittenLanguage")
                         .HasColumnType("int");
 
                     b.HasIndex("BookCategoryId");
 
-                    b.ToTable("Books", (string)null);
+                    b.ToTable("Books");
                 });
 
             modelBuilder.Entity("EcoscolarWebApi.Models.Adverts", b =>
@@ -538,25 +469,6 @@ namespace EcoscolarWebApi.Migrations
                         .IsRequired();
 
                     b.Navigation("Advert");
-                });
-
-            modelBuilder.Entity("EcoscolarWebApi.Models.UserFavorite", b =>
-                {
-                    b.HasOne("EcoscolarWebApi.Models.Adverts", "Advert")
-                        .WithMany()
-                        .HasForeignKey("AdvertId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("EcoscolarWebApi.Models.User", "User")
-                        .WithMany("Favorites")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("Advert");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -642,13 +554,6 @@ namespace EcoscolarWebApi.Migrations
                         .HasForeignKey("EcoscolarWebApi.Models.PhysicalItems", "AdvertId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("EcoscolarWebApi.Models.ProductCategories", "ProductCategory")
-                        .WithMany("PhysicalItems")
-                        .HasForeignKey("ProductCategoryId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("ProductCategory");
                 });
 
             modelBuilder.Entity("EcoscolarWebApi.Models.Books", b =>
@@ -673,11 +578,6 @@ namespace EcoscolarWebApi.Migrations
                     b.Navigation("Books");
                 });
 
-            modelBuilder.Entity("EcoscolarWebApi.Models.ProductCategories", b =>
-                {
-                    b.Navigation("PhysicalItems");
-                });
-
             modelBuilder.Entity("EcoscolarWebApi.Models.SchoolGrades", b =>
                 {
                     b.Navigation("AdvertServices");
@@ -686,11 +586,6 @@ namespace EcoscolarWebApi.Migrations
             modelBuilder.Entity("EcoscolarWebApi.Models.Subjects", b =>
                 {
                     b.Navigation("AdvertServices");
-                });
-
-            modelBuilder.Entity("EcoscolarWebApi.Models.User", b =>
-                {
-                    b.Navigation("Favorites");
                 });
 
             modelBuilder.Entity("EcoscolarWebApi.Models.PhysicalItems", b =>

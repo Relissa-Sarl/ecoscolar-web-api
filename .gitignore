@@ -59,6 +59,7 @@ dist/
 
 # IDE / user
 *.user
+*.lscache
 .vscode/
 .idea
 

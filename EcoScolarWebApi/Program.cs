@@ -1,6 +1,8 @@
 using EcoscolarWebApi.Data;
 using EcoscolarWebApi.Models;
+using EcoscolarWebApi.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi;
 using Stripe;
 
 namespace EcoscolarWebApi
@@ -30,8 +32,45 @@ namespace EcoscolarWebApi
                 .AddEntityFrameworkStores<EcoscolarDbContext>();
 
             // Add services to the container.
-            builder.Services.AddControllers();
+            builder.Services.AddControllers().AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+            });
+
+            var useFakeAdvertSearch = builder.Configuration.GetValue("Features:UseFakeAdvertSearch", defaultValue: true);
+            if (useFakeAdvertSearch)
+            {
+                builder.Services.AddScoped<IAdvertSearchService, FakeAdvertSearchService>();
+            }
+            else
+            {
+                builder.Services.AddScoped<IAdvertSearchService, AdvertSearchService>();
+            }
+
             builder.Services.AddOpenApi();
+            builder.Services.AddSwaggerGen(options =>
+            {
+                options.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Version = "v1",
+                    Title = "EcoScolar Web API",
+                    Description = "API for the EcoScolar application, providing endpoints for user management, payment processing, and more.",
+                    Contact = new OpenApiContact
+                    {
+                        Name = "EcoScolar Support",
+                        Email = "email@here.com"
+                    }
+                });
+                options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+				{
+					In = ParameterLocation.Header,
+					Description = "Please enter a valid token",
+					Name = "Authorization",
+					Type = SecuritySchemeType.Http,
+					Scheme = "bearer",
+					BearerFormat = "JWT"
+				});
+			});
 
             // Setup CORS policy
             builder.Services.AddCors(options =>
@@ -64,7 +103,14 @@ namespace EcoscolarWebApi
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
+            {
                 app.MapOpenApi();
+                app.UseSwagger();
+                app.UseSwaggerUI(c =>
+                {
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "EcoScolar Web API V1");
+                });
+            }
 
             app.UseHttpsRedirection();
             app.UseAuthentication();
