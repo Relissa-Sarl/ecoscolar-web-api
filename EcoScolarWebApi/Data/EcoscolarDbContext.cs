@@ -27,28 +27,39 @@ namespace EcoscolarWebApi.Data
         /// DbSet for the Advert entity, representing the adverts in the database
         /// </summary>
         public DbSet<Adverts> Adverts { get; set; } = default!;
-
         public DbSet<PhysicalItems> Products { get; set; } = default!;
-
         public DbSet<AdvertServices> Services { get; set; } = default!;
-
         public DbSet<Books> Books { get; set; } = default!;
-
         public DbSet<Pictures> Pictures { get; set; } = default!;
         public DbSet<ProductCategories> ProductCategories { get; set; } = default!;
+        public DbSet<UserFavorite> UserFavorites { get; set; } = default!;
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
+            builder.Entity<UserFavorite>()
+                .HasOne(uf => uf.User)
+                .WithMany(u => u.Favorites)
+                .HasForeignKey(uf => uf.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<UserFavorite>()
+                .HasOne(uf => uf.Advert)
+                .WithMany()
+                .HasForeignKey(uf => uf.AdvertId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             builder.Entity<PhysicalItems>()
                 .HasOne(p => p.ProductCategory)
                 .WithMany(c => c.PhysicalItems)
                 .HasForeignKey(p => p.ProductCategoryId)
                 .OnDelete(DeleteBehavior.Restrict);
-            this.seeding(builder);
+
+			Seeding(builder);
         }
 
-        private void seeding(ModelBuilder builder)
+        private static void Seeding(ModelBuilder builder)
         {
             builder.Entity<BookCategories>().HasData(
                 new BookCategories { BookCategoryId = 1, Description = "description", Name = "first cat" }
