@@ -2,10 +2,13 @@ using EcoscolarWebApi.Controllers;
 using EcoscolarWebApi.Data;
 using EcoscolarWebApi.Models;
 using EcoscolarWebApi.Services;
+using EcoscolarWebApi.Utils.DTOs;
 using EcoscolarWebApi.Utils.DTOs.Advert;
 using EcoscolarWebApi.Utils.Enums;
 using FluentAssertions;
+using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NSubstitute;
 using System.Security.Claims;
@@ -48,13 +51,24 @@ public class AdvertsControllerTests : IDisposable
         _context.Dispose();
     }
 
-    #region Tests for GetAdverts
+    #region Tests for Index
     [Fact]
-    public async Task GetAdverts_ReturnsAllAdverts()
+    public async Task Index_ReturnsAllAdverts()
     {
         // Arrange
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+        List<Pictures> pictures = new List<Pictures>
+        {
+            new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
+            new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+        };
+        List<Pictures> pictures2 = new List<Pictures>
+        {
+            new Pictures { PictureId = 3, Label = "http://example.com/pic1.jpg", AdvertId = 2 },
+            new Pictures { PictureId = 4, Label = "http://example.com/pic2.jpg", AdvertId = 2 }
+        };
+
         var adverts = new List<Adverts>
         {
             new Books 
@@ -73,7 +87,8 @@ public class AdvertsControllerTests : IDisposable
                 Author = "John",
                 Publisher = "Pub",
                 Edition = "1st",
-                WrittenLanguage = Language.FR
+                WrittenLanguage = Language.FR,
+                Pictures = pictures
             },
             new PhysicalItems
             {
@@ -86,7 +101,8 @@ public class AdvertsControllerTests : IDisposable
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
-                Condition = Condition.LIKE_NEW
+                Condition = Condition.LIKE_NEW,
+                Pictures = pictures2
             },
             new AdvertServices
             {
@@ -106,31 +122,35 @@ public class AdvertsControllerTests : IDisposable
         };
         _context.Adverts.AddRange(adverts);
         await _context.SaveChangesAsync();
+
         // Act
         var result = await _controller.Index();
+
         // Assert
-        var okResult = result.Result as Microsoft.AspNetCore.Mvc.OkObjectResult;
-        okResult.Should().NotBeNull();
+        var okResult = result.Result as OkObjectResult;
+        okResult.Should().NotBeNull("The controller did not return an OkObjectResult");
 
         var value = okResult!.Value as IEnumerable<AdvertReadDto>;
-        value.Should().NotBeNull();
+        value.Should().NotBeNull("The controller did not return an AdvertReadDto");
         value.Should().HaveCount(3);
     }
 
     [Fact]
-    public async Task GetAdverts_ReturnsEmptyList_WhenNoAdverts()
+    public async Task Index_ReturnsEmptyList_WhenNoAdverts()
     {
         // Arrange
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+
         // Act
         var result = await _controller.Index();
+
         // Assert
-        var okResult = result.Result as Microsoft.AspNetCore.Mvc.OkObjectResult;
-        okResult.Should().NotBeNull();
+        var okResult = result.Result as OkObjectResult;
+        okResult.Should().NotBeNull("The controller did not return an OkObjectResult");
         var value = okResult!.Value as IEnumerable<AdvertReadDto>;
-        value.Should().NotBeNull();
-        value.Should().BeEmpty();
+        value.Should().NotBeNull("The controller did not return an AdvertReadDto");
+        value.Should().BeEmpty("The controller did not return an empty list");
     }
     #endregion
 
@@ -141,6 +161,15 @@ public class AdvertsControllerTests : IDisposable
         // Arrange
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+        List<Pictures> pictures = new List<Pictures>
+        {
+            new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
+            new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+        };
+        List<Pictures> pictures2 = new List<Pictures>
+        {
+            new Pictures { PictureId = 3, Label = "http://example.com/pic1.jpg", AdvertId = 2 }
+        };
         var adverts = new List<Adverts>
         {
             new Books
@@ -159,7 +188,8 @@ public class AdvertsControllerTests : IDisposable
                 Author = "John",
                 Publisher = "Pub",
                 Edition = "1st",
-                WrittenLanguage = Language.FR
+                WrittenLanguage = Language.FR,
+                Pictures = pictures
             },
             new Books
             {
@@ -177,7 +207,8 @@ public class AdvertsControllerTests : IDisposable
                 Author = "Doe",
                 Publisher = "Smith",
                 Edition = "3st",
-                WrittenLanguage = Language.FR
+                WrittenLanguage = Language.FR,
+                Pictures = pictures2
             },
             new AdvertServices
             {
@@ -197,14 +228,16 @@ public class AdvertsControllerTests : IDisposable
         };
         _context.Adverts.AddRange(adverts);
         await _context.SaveChangesAsync();
+
         // Act
         var result = await _controller.GetBooks();
+
         // Assert
-        var okResult = result.Result as Microsoft.AspNetCore.Mvc.OkObjectResult;
+        var okResult = result.Result as OkObjectResult;
         okResult.Should().NotBeNull();
 
         var value = okResult!.Value as IEnumerable<AdvertReadDto>;
-        value.Should().NotBeNull();
+        value.Should().NotBeNull("The controller did not return an AdvertReadDto");
         value.Should().HaveCount(2);
         value.Should().OnlyContain(ad => ad.type == "BOOK");
         value.Should().Contain(ad => ad.id == 1 && ad.title == "Book Title" && ad.price == 10);
@@ -220,11 +253,11 @@ public class AdvertsControllerTests : IDisposable
         // Act
         var result = await _controller.GetBooks();
         // Assert
-        var okResult = result.Result as Microsoft.AspNetCore.Mvc.OkObjectResult;
-        okResult.Should().NotBeNull();
+        var okResult = result.Result as OkObjectResult;
+        okResult.Should().NotBeNull("The controller did not return an OkObjectResult");
         var value = okResult!.Value as IEnumerable<AdvertReadDto>;
-        value.Should().NotBeNull();
-        value.Should().BeEmpty();
+        value.Should().NotBeNull("The controller did not return an AdvertReadDto");
+        value.Should().BeEmpty("The controller did not return an empty list");
     }
     #endregion
 
@@ -235,6 +268,15 @@ public class AdvertsControllerTests : IDisposable
         // Arrange
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+        List<Pictures> pictures = new List<Pictures>
+        {
+            new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
+            new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+        };
+        List<Pictures> pictures2 = new List<Pictures>
+        {
+            new Pictures { PictureId = 3, Label = "http://example.com/pic1.jpg", AdvertId = 2 }
+        };
         var adverts = new List<Adverts>
         {
             new PhysicalItems
@@ -249,6 +291,7 @@ public class AdvertsControllerTests : IDisposable
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
                 Condition = Condition.NEW,
+                Pictures = pictures
             },
             new PhysicalItems
             {
@@ -262,6 +305,7 @@ public class AdvertsControllerTests : IDisposable
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
                 Condition = Condition.NEW,
+                Pictures = pictures2
             },
             new AdvertServices
             {
@@ -281,14 +325,16 @@ public class AdvertsControllerTests : IDisposable
         };
         _context.Adverts.AddRange(adverts);
         await _context.SaveChangesAsync();
+
         // Act
         var result = await _controller.GetProducts();
+
         // Assert
-        var okResult = result.Result as Microsoft.AspNetCore.Mvc.OkObjectResult;
-        okResult.Should().NotBeNull();
+        var okResult = result.Result as OkObjectResult;
+        okResult.Should().NotBeNull("The controller did not return an OkObjectResult");
 
         var value = okResult!.Value as IEnumerable<AdvertReadDto>;
-        value.Should().NotBeNull();
+        value.Should().NotBeNull("The controller did not return an AdvertReadDto");
         value.Should().HaveCount(2);
         value.Should().OnlyContain(ad => ad.type == "PRODUCT");
         value.Should().Contain(ad => ad.id == 1 && ad.title == "Guitar" && ad.price == 10);
@@ -296,13 +342,28 @@ public class AdvertsControllerTests : IDisposable
     }
 
     [Fact]
-    public async Task GetProducts_ReturnsAllProductsWithCategoryId()
+    public async Task GetProducts_ReturnsAllProducts_WhenCategoryIdSpecified()
     {
         // Arrange
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
         var productCategory = new ProductCategories { ProductCategoryId = 1, Name = "Instruments" };
         var productCategory2 = new ProductCategories { ProductCategoryId = 2, Name = "Books" };
+        List<Pictures> pictures = new List<Pictures>
+        {
+            new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
+            new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+        };
+        List<Pictures> pictures2 = new List<Pictures>
+        {
+            new Pictures { PictureId = 3, Label = "http://example.com/pic1.jpg", AdvertId = 2 }
+        };
+        List<Pictures> pictures3 = new List<Pictures>
+        {
+            new Pictures { PictureId = 4, Label = "http://example.com/pic1.jpg", AdvertId = 3 },
+            new Pictures { PictureId = 5, Label = "http://example.com/pic2.jpg", AdvertId = 3 },
+            new Pictures { PictureId = 6, Label = "http://example.com/pic3.jpg", AdvertId = 3 }
+        };
         var adverts = new List<Adverts>
         {
             new PhysicalItems
@@ -318,6 +379,7 @@ public class AdvertsControllerTests : IDisposable
                 NotificationDate = DateTime.UtcNow,
                 Condition = Condition.NEW,
                 ProductCategoryId = productCategory.ProductCategoryId,
+                Pictures = pictures
             },
             new PhysicalItems
             {
@@ -332,6 +394,7 @@ public class AdvertsControllerTests : IDisposable
                 NotificationDate = DateTime.UtcNow,
                 Condition = Condition.NEW,
                 ProductCategoryId = productCategory2.ProductCategoryId,
+                Pictures = pictures2
             },
             new PhysicalItems
             {
@@ -346,18 +409,21 @@ public class AdvertsControllerTests : IDisposable
                 NotificationDate = DateTime.UtcNow,
                 Condition = Condition.USED,
                 ProductCategoryId = productCategory.ProductCategoryId,
+                Pictures = pictures3
             }
         };
         _context.Adverts.AddRange(adverts);
         await _context.SaveChangesAsync();
+
         // Act
         var result = await _controller.GetProducts(categoryId: productCategory.ProductCategoryId);
+
         // Assert
-        var okResult = result.Result as Microsoft.AspNetCore.Mvc.OkObjectResult;
-        okResult.Should().NotBeNull();
+        var okResult = result.Result as OkObjectResult;
+        okResult.Should().NotBeNull("The controller did not return an OkObjectResult");
 
         var value = okResult!.Value as IEnumerable<AdvertReadDto>;
-        value.Should().NotBeNull();
+        value.Should().NotBeNull("The controller did not return an AdvertReadDto");
         value.Should().HaveCount(2);
         value.Should().OnlyContain(ad => ad.type == "PRODUCT");
         value.Should().Contain(ad => ad.id == 1 && ad.title == "Guitar" && ad.price == 10);
@@ -365,11 +431,26 @@ public class AdvertsControllerTests : IDisposable
     }
 
     [Fact]
-    public async Task GetProducts_ReturnsAllProductsWithMaxPrice()
+    public async Task GetProducts_ReturnsAllProducts_WhenMaxPriceSpecified()
     {
         // Arrange
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+        List<Pictures> pictures = new List<Pictures>
+        {
+            new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
+            new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+        };
+        List<Pictures> pictures2 = new List<Pictures>
+        {
+            new Pictures { PictureId = 3, Label = "http://example.com/pic1.jpg", AdvertId = 2 }
+        };
+        List<Pictures> pictures3 = new List<Pictures>
+        {
+            new Pictures { PictureId = 4, Label = "http://example.com/pic1.jpg", AdvertId = 3 },
+            new Pictures { PictureId = 5, Label = "http://example.com/pic2.jpg", AdvertId = 3 },
+            new Pictures { PictureId = 6, Label = "http://example.com/pic3.jpg", AdvertId = 3 }
+        };
         var adverts = new List<Adverts>
         {
             new PhysicalItems
@@ -384,6 +465,7 @@ public class AdvertsControllerTests : IDisposable
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
                 Condition = Condition.NEW,
+                Pictures = pictures
             },
             new PhysicalItems
             {
@@ -397,6 +479,7 @@ public class AdvertsControllerTests : IDisposable
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
                 Condition = Condition.NEW,
+                Pictures = pictures2
             },
             new PhysicalItems
             {
@@ -410,18 +493,21 @@ public class AdvertsControllerTests : IDisposable
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
                 Condition = Condition.USED,
+                Pictures = pictures3
             }
         };
         _context.Adverts.AddRange(adverts);
         await _context.SaveChangesAsync();
+
         // Act
         var result = await _controller.GetProducts(maxPrice: 20);
+
         // Assert
-        var okResult = result.Result as Microsoft.AspNetCore.Mvc.OkObjectResult;
-        okResult.Should().NotBeNull();
+        var okResult = result.Result as OkObjectResult;
+        okResult.Should().NotBeNull("The controller did not return an OkObjectResult");
 
         var value = okResult!.Value as IEnumerable<AdvertReadDto>;
-        value.Should().NotBeNull();
+        value.Should().NotBeNull("The controller did not return an AdvertReadDto");
         value.Should().HaveCount(2);
         value.Should().OnlyContain(ad => ad.type == "PRODUCT");
         value.Should().Contain(ad => ad.id == 1 && ad.title == "Guitar" && ad.price == 10);
@@ -429,13 +515,28 @@ public class AdvertsControllerTests : IDisposable
     }
 
     [Fact]
-    public async Task GetProducts_ReturnsAllProductsWithCategoryIdAndMaxPrice()
+    public async Task GetProducts_ReturnsAllProducts_WhenCategoryIdAndMaxPriceSpecified()
     {
         // Arrange
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
         var productCategory = new ProductCategories { ProductCategoryId = 1, Name = "Instruments" };
         var productCategory2 = new ProductCategories { ProductCategoryId = 2, Name = "Books" };
+        List<Pictures> pictures = new List<Pictures>
+        {
+            new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
+            new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+        };
+        List<Pictures> pictures2 = new List<Pictures>
+        {
+            new Pictures { PictureId = 3, Label = "http://example.com/pic1.jpg", AdvertId = 2 }
+        };
+        List<Pictures> pictures3 = new List<Pictures>
+        {
+            new Pictures { PictureId = 4, Label = "http://example.com/pic1.jpg", AdvertId = 3 },
+            new Pictures { PictureId = 5, Label = "http://example.com/pic2.jpg", AdvertId = 3 },
+            new Pictures { PictureId = 6, Label = "http://example.com/pic3.jpg", AdvertId = 3 }
+        };
         var adverts = new List<Adverts>
         {
             new PhysicalItems
@@ -451,6 +552,7 @@ public class AdvertsControllerTests : IDisposable
                 NotificationDate = DateTime.UtcNow,
                 Condition = Condition.NEW,
                 ProductCategoryId = productCategory.ProductCategoryId,
+                Pictures = pictures
             },
             new PhysicalItems
             {
@@ -465,6 +567,7 @@ public class AdvertsControllerTests : IDisposable
                 NotificationDate = DateTime.UtcNow,
                 Condition = Condition.NEW,
                 ProductCategoryId = productCategory2.ProductCategoryId,
+                Pictures = pictures2
             },
             new PhysicalItems
             {
@@ -479,18 +582,21 @@ public class AdvertsControllerTests : IDisposable
                 NotificationDate = DateTime.UtcNow,
                 Condition = Condition.USED,
                 ProductCategoryId = productCategory.ProductCategoryId,
+                Pictures = pictures3
             }
         };
         _context.Adverts.AddRange(adverts);
         await _context.SaveChangesAsync();
+
         // Act
         var result = await _controller.GetProducts(categoryId: productCategory.ProductCategoryId, maxPrice: 20);
+
         // Assert
-        var okResult = result.Result as Microsoft.AspNetCore.Mvc.OkObjectResult;
-        okResult.Should().NotBeNull();
+        var okResult = result.Result as OkObjectResult;
+        okResult.Should().NotBeNull("The controller did not return an OkObjectResult");
 
         var value = okResult!.Value as IEnumerable<AdvertReadDto>;
-        value.Should().NotBeNull();
+        value.Should().NotBeNull("The controller did not return an AdvertReadDto");
         value.Should().HaveCount(1);
         value.Should().OnlyContain(ad => ad.type == "PRODUCT");
         value.Should().Contain(ad => ad.id == 1 && ad.title == "Guitar" && ad.price == 10);
@@ -502,14 +608,16 @@ public class AdvertsControllerTests : IDisposable
         // Arrange
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+
         // Act
         var result = await _controller.GetProducts();
+
         // Assert
-        var okResult = result.Result as Microsoft.AspNetCore.Mvc.OkObjectResult;
-        okResult.Should().NotBeNull();
+        var okResult = result.Result as OkObjectResult;
+        okResult.Should().NotBeNull("The controller did not return an OkObjectResult");
         var value = okResult!.Value as IEnumerable<AdvertReadDto>;
-        value.Should().NotBeNull();
-        value.Should().BeEmpty();
+        value.Should().NotBeNull("The controller did not return an AdvertReadDto");
+        value.Should().BeEmpty("The controller did not return an empty list");
     }
     #endregion
 
@@ -520,6 +628,11 @@ public class AdvertsControllerTests : IDisposable
         // Arrange
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+        List<Pictures> pictures = new List<Pictures>
+        {
+            new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
+            new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+        };
         var adverts = new List<Adverts>
         {
             new PhysicalItems
@@ -534,6 +647,7 @@ public class AdvertsControllerTests : IDisposable
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
                 Condition = Condition.NEW,
+                Pictures = pictures
             },
             new AdvertServices
             {
@@ -568,14 +682,16 @@ public class AdvertsControllerTests : IDisposable
         };
         _context.Adverts.AddRange(adverts);
         await _context.SaveChangesAsync();
+
         // Act
         var result = await _controller.GetServices();
+
         // Assert
-        var okResult = result.Result as Microsoft.AspNetCore.Mvc.OkObjectResult;
-        okResult.Should().NotBeNull();
+        var okResult = result.Result as OkObjectResult;
+        okResult.Should().NotBeNull("The controller did not return an OkObjectResult");
 
         var value = okResult!.Value as IEnumerable<AdvertReadDto>;
-        value.Should().NotBeNull();
+        value.Should().NotBeNull("The controller did not return an AdvertReadDto");
         value.Should().HaveCount(2);
         value.Should().OnlyContain(ad => ad.type == "SERVICE");
         value.Should().Contain(ad => ad.id == 2 && ad.title == "Lesson de français" && ad.price == 15.3m);
@@ -583,11 +699,16 @@ public class AdvertsControllerTests : IDisposable
     }
 
     [Fact]
-    public async Task GetServices_ReturnsAllProductsWithResearchKeyword()
+    public async Task GetServices_ReturnsAllProducts_WhenResearchKeyword()
     {
         // Arrange
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+        List<Pictures> pictures = new List<Pictures>
+        {
+            new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
+            new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+        };
         var adverts = new List<Adverts>
         {
             new PhysicalItems
@@ -602,6 +723,7 @@ public class AdvertsControllerTests : IDisposable
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
                 Condition = Condition.NEW,
+                Pictures = pictures
             },
             new AdvertServices
             {
@@ -636,25 +758,32 @@ public class AdvertsControllerTests : IDisposable
         };
         _context.Adverts.AddRange(adverts);
         await _context.SaveChangesAsync();
+
         // Act
         var result = await _controller.GetServices(q: "français");
+
         // Assert
-        var okResult = result.Result as Microsoft.AspNetCore.Mvc.OkObjectResult;
-        okResult.Should().NotBeNull();
+        var okResult = result.Result as OkObjectResult;
+        okResult.Should().NotBeNull("The controller did not return an OkObjectResult");
 
         var value = okResult!.Value as IEnumerable<AdvertReadDto>;
-        value.Should().NotBeNull();
+        value.Should().NotBeNull("The controller did not return an AdvertReadDto");
         value.Should().HaveCount(1);
         value.Should().OnlyContain(ad => ad.type == "SERVICE");
         value.Should().Contain(ad => ad.id == 2 && ad.title == "Lesson de français" && ad.price == 15.3m);
     }
 
     [Fact]
-    public async Task GetServices_ReturnsAllProductsWithResearchKeywordNotMatching()
+    public async Task GetServices_ReturnEmptyList_WhenResearchKeywordNotMatching()
     {
         // Arrange
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+        List<Pictures> pictures = new List<Pictures>
+        {
+            new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
+            new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+        };
         var adverts = new List<Adverts>
         {
             new PhysicalItems
@@ -669,6 +798,7 @@ public class AdvertsControllerTests : IDisposable
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
                 Condition = Condition.NEW,
+                Pictures = pictures
             },
             new AdvertServices
             {
@@ -703,15 +833,17 @@ public class AdvertsControllerTests : IDisposable
         };
         _context.Adverts.AddRange(adverts);
         await _context.SaveChangesAsync();
+
         // Act
         var result = await _controller.GetServices(q: "Anglais");
+
         // Assert
-        var okResult = result.Result as Microsoft.AspNetCore.Mvc.OkObjectResult;
-        okResult.Should().NotBeNull();
+        var okResult = result.Result as OkObjectResult;
+        okResult.Should().NotBeNull("The controller did not return an OkObjectResult");
 
         var value = okResult!.Value as IEnumerable<AdvertReadDto>;
-        value.Should().NotBeNull();
-        value.Should().BeEmpty();
+        value.Should().NotBeNull("The controller did not return an AdvertReadDto");
+        value.Should().BeEmpty("The controller did not return an empty list");
     }
 
     [Fact]
@@ -720,14 +852,1366 @@ public class AdvertsControllerTests : IDisposable
         // Arrange
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+
         // Act
         var result = await _controller.GetServices();
+
         // Assert
-        var okResult = result.Result as Microsoft.AspNetCore.Mvc.OkObjectResult;
-        okResult.Should().NotBeNull();
+        var okResult = result.Result as OkObjectResult;
+        okResult.Should().NotBeNull("The controller did not return an OkObjectResult");
         var value = okResult!.Value as IEnumerable<AdvertReadDto>;
-        value.Should().NotBeNull();
-        value.Should().BeEmpty();
+        value.Should().NotBeNull("The controller did not return an AdvertReadDto");
+        value.Should().BeEmpty("The controller did not return an empty list");
+    }
+    #endregion
+
+    #region Tests for Details
+    [Fact]
+    public async Task Details_ReturnsAdvert_WhenAdvertExists()
+    {
+        // Arrange
+        var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
+        _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+        List<Pictures> pictures = new List<Pictures>
+        {
+            new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
+            new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+        };
+        var advert = new Books
+        {
+            AdvertId = 1,
+            Title = "Book Title",
+            Description = "Book Descr",
+            Price = 10,
+            UserId = existingUser.Id,
+            User = existingUser,
+            Status = AdvertStatus.ACTIVE,
+            CreatedAt = DateTime.UtcNow,
+            NotificationDate = DateTime.UtcNow,
+            Condition = Condition.NEW,
+            ISBN = "12345",
+            Author = "John",
+            Publisher = "Pub",
+            Edition = "1st",
+            WrittenLanguage = Language.FR,
+            Pictures = pictures
+        };
+        _context.Adverts.Add(advert);
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _controller.Details(1);
+
+        // Assert
+        var okResult = result.Result as OkObjectResult;
+        okResult.Should().NotBeNull("The controller did not return an OkObjectResult");
+
+        var value = okResult!.Value as AdvertReadDto;
+        value.Should().NotBeNull("The controller did not return an AdvertReadDto");
+        value!.id.Should().Be(1);
+        value.title.Should().Be("Book Title");
+        value.price.Should().Be(10);
+    }
+
+    [Fact]
+    public async Task Details_ReturnsNotFound_WhenAdvertDoesNotExist()
+    {
+        // Arrange
+        var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
+        _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+        // Act
+        var result = await _controller.Details(999); // Non-existing ID
+        // Assert
+        var notFoundResult = result.Result as NotFoundResult;
+        notFoundResult.Should().NotBeNull("The controller did not return a NotFoundResult");
+    }
+    #endregion
+
+    #region Tests for GetBookById
+    [Fact]
+    public async Task GetBookById_ReturnsBook_WhenBookExists()
+    {
+        // Arrange
+        var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
+        _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+
+        var grade = new BookCategories { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
+        _context.Set<BookCategories>().Add(grade);
+
+        List<Pictures> pictures = new List<Pictures>
+        {
+            new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
+            new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+        };
+        var advert = new Books
+        {
+            AdvertId = 1,
+            Title = "Book Title",
+            Description = "Book Descr",
+            Price = 10,
+            UserId = existingUser.Id,
+            User = existingUser,
+            Status = AdvertStatus.ACTIVE,
+            CreatedAt = DateTime.UtcNow,
+            NotificationDate = DateTime.UtcNow,
+            Condition = Condition.NEW,
+            ISBN = "12345",
+            Author = "John",
+            Publisher = "Pub",
+            Edition = "1st",
+            WrittenLanguage = Language.FR,
+            BookCategoryId = 1,
+            Pictures = pictures
+        };
+        _context.Adverts.Add(advert);
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _controller.GetBookById(1);
+
+        // Assert
+        var okResult = result.Result as OkObjectResult;
+        okResult.Should().NotBeNull("The controller did not return a NotFoundResult");
+
+        var value = okResult!.Value as BookReadDto;
+        value.Should().NotBeNull("The controller did not return a BookReadDto");
+        value!.id.Should().Be(1);
+        value.title.Should().Be("Book Title");
+        value.price.Should().Be(10);
+    }
+
+    [Fact]
+    public async Task GetBookById_ReturnsNotFound_WhenBookDoesNotExist()
+    {
+        // Arrange
+        var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
+        _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+        // Act
+        var result = await _controller.GetBookById(999); // Non-existing ID
+        // Assert
+        var notFoundResult = result.Result as NotFoundResult;
+        notFoundResult.Should().NotBeNull("The controller did not return a NotFoundResult");
+    }
+
+    [Fact]
+    public async Task GetBookById_ReturnsNotFound_WhenIdIsWrong()
+    {
+        // Arrange
+        var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
+        _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+        List<Pictures> pictures = new List<Pictures>
+        {
+            new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
+            new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+        };
+        var advert = new AdvertServices
+        {
+            AdvertId = 1,
+            Title = "Lesson de math",
+            Description = "Cours de math pour lycéens",
+            Price = 30,
+            UserId = existingUser.Id,
+            User = existingUser,
+            Status = AdvertStatus.ACTIVE,
+            CreatedAt = DateTime.UtcNow,
+            NotificationDate = DateTime.UtcNow,
+            StudyLevel = "Lycée",
+            SubjectId = 1,
+            SchoolGradeId = 1,
+        };
+        _context.Adverts.Add(advert);
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _controller.GetBookById(1);
+
+        // Assert
+        var okResult = result.Result as NotFoundResult;
+        okResult.Should().NotBeNull("The controller did not return a NotFoundResult");
+    }
+    #endregion
+
+    #region Tests for GetProductById
+    [Fact]
+    public async Task GetProductById_ReturnsProduct_WhenProductExists()
+    {
+        // Arrange
+        var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
+        _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+        List<Pictures> pictures = new List<Pictures>
+        {
+            new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
+            new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+        };
+        var advert = new PhysicalItems
+        {
+            AdvertId = 1,
+            Title = "Guitar",
+            Description = "Guitar for sale",
+            Price = 40,
+            UserId = existingUser.Id,
+            User = existingUser,
+            Status = AdvertStatus.ACTIVE,
+            CreatedAt = DateTime.UtcNow,
+            NotificationDate = DateTime.UtcNow,
+            Condition = Condition.NEW,
+            Pictures = pictures
+        };
+        _context.Adverts.Add(advert);
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _controller.GetProductById(1);
+
+        // Assert
+        var okResult = result.Result as OkObjectResult;
+        okResult.Should().NotBeNull("The controller did not return an OkObjectResult");
+
+        var value = okResult!.Value as ProductReadDto;
+        value.Should().NotBeNull("The controller did not return a ProductReadDto");
+        value!.id.Should().Be(1);
+        value.title.Should().Be("Guitar");
+        value.price.Should().Be(40);
+    }
+
+    [Fact]
+    public async Task GetProductById_ReturnsNotFound_WhenProductDoesNotExist()
+    {
+        // Arrange
+        var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
+        _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+        // Act
+        var result = await _controller.GetProductById(999); // Non-existing ID
+        // Assert
+        var notFoundResult = result.Result as NotFoundResult;
+        notFoundResult.Should().NotBeNull("The controller did not return a NotFoundResult");
+    }
+
+    [Fact]
+    public async Task GetProductById_ReturnsNotFound_WhenIdIsWrong()
+    {
+        // Arrange
+        var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
+        _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+
+        var advert = new AdvertServices
+        {
+            AdvertId = 1,
+            Title = "Lesson de math",
+            Description = "Cours de math pour lycéens",
+            Price = 30,
+            UserId = existingUser.Id,
+            User = existingUser,
+            Status = AdvertStatus.ACTIVE,
+            CreatedAt = DateTime.UtcNow,
+            NotificationDate = DateTime.UtcNow,
+            StudyLevel = "Lycée",
+            SubjectId = 1,
+            SchoolGradeId = 1,
+        };
+        _context.Adverts.Add(advert);
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _controller.GetProductById(1);
+
+        // Assert
+        var okResult = result.Result as NotFoundResult;
+        okResult.Should().NotBeNull("The controller did not return a NotFoundResult");
+    }
+    #endregion
+
+    #region Tests for GetServiceById
+    [Fact]
+    public async Task GetServiceById_ReturnsService_WhenServiceExists()
+    {
+        // Arrange
+        var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
+        _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+        var subject = new Subjects { SubjectId = 1, Name = "Mathématiques", Subject = "Maths" };
+        var grade = new SchoolGrades { SchoolGradeId = 1, Name = "Terminale", SchoolGrade = "Lycée" };
+
+        _context.Set<Subjects>().Add(subject);
+        _context.Set<SchoolGrades>().Add(grade);
+        var advert = new AdvertServices
+        {
+            AdvertId = 1,
+            Title = "Lesson de math",
+            Description = "Cours de math pour lycéens",
+            Price = 30,
+            UserId = existingUser.Id,
+            User = existingUser,
+            Status = AdvertStatus.ACTIVE,
+            CreatedAt = DateTime.UtcNow,
+            NotificationDate = DateTime.UtcNow,
+            StudyLevel = "Lycée",
+            SubjectId = 1,
+            SchoolGradeId = 1,
+        };
+        _context.Adverts.Add(advert);
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _controller.GetServiceById(1);
+
+        // Assert
+        var okResult = result.Result as OkObjectResult;
+        okResult.Should().NotBeNull("The controller did not return an OkObjectResult");
+
+        var value = okResult!.Value as ServiceReadDto;
+        value.Should().NotBeNull("The controller did not return a ServiceReadDto");
+        value!.id.Should().Be(1);
+        value.title.Should().Be("Lesson de math");
+        value.price.Should().Be(30);
+    }
+
+    [Fact]
+    public async Task GetServiceById_ReturnsNotFound_WhenServiceDoesNotExist()
+    {
+        // Arrange
+        var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
+        _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+        // Act
+        var result = await _controller.GetServiceById(999); // Non-existing ID
+        // Assert
+        var notFoundResult = result.Result as NotFoundResult;
+        notFoundResult.Should().NotBeNull("The controller did not return a NotFoundResult");
+    }
+
+    [Fact]
+    public async Task GetServiceById_ReturnsNotFound_WhenIdIsWrong()
+    {
+        // Arrange
+        var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
+        _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+        List<Pictures> pictures = new List<Pictures>
+        {
+            new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
+            new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+        };
+        var advert = new PhysicalItems
+        {
+            AdvertId = 1,
+            Title = "Book Title",
+            Description = "Book Descr",
+            Price = 10,
+            UserId = existingUser.Id,
+            User = existingUser,
+            Status = AdvertStatus.ACTIVE,
+            CreatedAt = DateTime.UtcNow,
+            NotificationDate = DateTime.UtcNow,
+            Condition = Condition.NEW,
+            Pictures = pictures
+        };
+        _context.Adverts.Add(advert);
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _controller.GetServiceById(1);
+
+        // Assert
+        var okResult = result.Result as NotFoundResult;
+        okResult.Should().NotBeNull("The controller did not return a NotFoundResult");
+    }
+    #endregion
+
+    #region Tests for GetSummaries
+    [Fact]
+    public async Task GetSummaries_ReturnsOk_WithListOfSummaries()
+    {
+        // Arrange
+        var query = new AdvertSearchQuery { Q = "Math" };
+        var expectedSummaries = new List<AdvertSummaryDto> { new AdvertSummaryDto { Id = Guid.NewGuid() } };
+
+        _searchService.SearchSummariesAsync(query, Arg.Any<CancellationToken>())
+            .Returns(expectedSummaries);
+
+        // Act
+        var result = await _controller.GetSummaries(query, CancellationToken.None);
+
+        // Assert
+        var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+        okResult.Value.Should().BeEquivalentTo(expectedSummaries);
+    }
+    #endregion
+
+    #region Tests for GetSummaryDetail
+    public async Task GetSummaryDetail_ReturnsOk_WhenItemExists()
+    {
+        // Arrange
+        var id = Guid.NewGuid();
+        var expectedDetail = new AdvertDetailDto { Id = id };
+
+        _searchService.GetDetailAsync(id, Arg.Any<CancellationToken>())
+            .Returns(expectedDetail);
+
+        // Act
+        var result = await _controller.GetSummaryDetail(id, CancellationToken.None);
+
+        // Assert
+        var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+        okResult.Value.Should().Be(expectedDetail);
+    }
+
+    [Fact]
+    public async Task GetSummaryDetail_ReturnsNotFound_WhenItemDoesNotExist()
+    {
+        // Arrange
+        var id = Guid.NewGuid();
+        _searchService.GetDetailAsync(id, Arg.Any<CancellationToken>())
+            .Returns((AdvertDetailDto?)null);
+
+        // Act
+        var result = await _controller.GetSummaryDetail(id, CancellationToken.None);
+
+        // Assert
+        result.Should().BeOfType<NotFoundResult>();
+    }
+    #endregion
+
+    #region Tests for CreateBook
+    [Fact]
+    public async Task CreateBook_ReturnsCreatedBook_WhenDataIsValid()
+    {
+        // Arrange
+        var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
+        _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+
+        var bookCategory = new BookCategories { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
+        _context.Set<BookCategories>().Add(bookCategory);
+        await _context.SaveChangesAsync();
+
+        var bookCreateDto = new BookCreateDto(
+            Title: "New Book",
+            Description: "Description of the new book",
+            Price: 20m,
+            UserId: existingUser.Id,
+            Images: new Pictures[] {
+                new Pictures { Label = "http://example.com/newpic1.jpg" },
+                new Pictures { Label = "http://example.com/newpic2.jpg" }
+            },
+            Condition: Condition.NEW,
+            CategoryId: 1,
+            Isbn: "54321",
+            Author: "Jane",
+            Publisher: "New Pub",
+            Edition: "2nd",
+            WrittenLanguage: Language.FR
+        );
+
+        // Act
+        var result = await _controller.CreateBook(bookCreateDto);
+
+        // Assert
+        var createdAtActionResult = result.Result as CreatedAtActionResult;
+        createdAtActionResult.Should().NotBeNull("The controller did not return a CreatedAtActionResult");
+
+        var value = createdAtActionResult!.Value as AdvertReadDto;
+        value.Should().NotBeNull("The controller did not return an AdvertReadDto");
+        value!.title.Should().Be("New Book");
+        value.price.Should().Be(20);
+    }
+
+    [Fact]
+    public async Task CreateBook_ReturnsBadRequest_WhenDataIsInvalid()
+    {
+        // Arrange
+        var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
+        _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+
+        var bookCategory = new BookCategories { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
+        _context.Set<BookCategories>().Add(bookCategory);
+        await _context.SaveChangesAsync();
+
+        var bookCreateDto = new BookCreateDto(
+            Title: "", // Invalid
+            Description: "Description of the new book",
+            Price: 20m,
+            UserId: existingUser.Id,
+            Images: new Pictures[] {
+            new Pictures { Label = "http://example.com/newpic1.jpg" },
+            new Pictures { Label = "http://example.com/newpic2.jpg" }
+            },
+            Condition: Condition.NEW,
+            CategoryId: 1,
+            Isbn: "54321",
+            Author: "Jane",
+            Publisher: "New Pub",
+            Edition: "2nd",
+            WrittenLanguage: Language.FR
+        );
+
+        // FORCE VALIDATION ERROR
+        _controller.ModelState.AddModelError("Title", "The Title field is required.");
+
+        // Act
+        var result = await _controller.CreateBook(bookCreateDto);
+
+        // Assert
+        var badRequestResult = result.Result as BadRequestObjectResult;
+        badRequestResult.Should().NotBeNull("The controller should have returned a BadRequest result.");
+
+        var errors = badRequestResult!.Value as SerializableError;
+        errors.Should().ContainKey("Title");
+    }
+    #endregion
+
+    #region Tests for CreateProduct
+    [Fact]
+    public async Task CreateProduct_ReturnsCreatedProduct_WhenDataIsValid()
+    {
+        // Arrange
+        var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
+        _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+
+        var Category = new ProductCategories{ ProductCategoryId = 1, Name = "Guitare", Description = "Guitares" };
+        _context.Set<ProductCategories>().Add(Category);
+        await _context.SaveChangesAsync();
+
+        var productCreateDto = new ProductCreateDto(
+            Title: "New Product",
+            Description: "Description of the new product",
+            Price: 20m,
+            UserId: existingUser.Id,
+            Images: new Pictures[] {
+                new Pictures { Label = "http://example.com/newpic1.jpg" },
+                new Pictures { Label = "http://example.com/newpic2.jpg" }
+            },
+            Condition: Condition.NEW,
+            ProductCategoryId: 1
+        );
+
+        // Act
+        var result = await _controller.CreateProduct(productCreateDto);
+
+        // Assert
+        var createdAtActionResult = result.Result as CreatedAtActionResult;
+        createdAtActionResult.Should().NotBeNull("The controller did not return a CreatedAtActionResult");
+
+        var value = createdAtActionResult!.Value as AdvertReadDto;
+        value.Should().NotBeNull("The controller did not return an AdvertReadDto");
+        value!.title.Should().Be("New Product");
+        value.price.Should().Be(20);
+    }
+
+    [Fact]
+    public async Task CreateProduct_ReturnsBadRequest_WhenDataIsInvalid()
+    {
+        // Arrange
+        var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
+        _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+
+        var productCategory = new ProductCategories { ProductCategoryId = 1, Name = "Guitare", Description = "Guitares" };
+        _context.Set<ProductCategories>().Add(productCategory);
+        await _context.SaveChangesAsync();
+
+        var productCreateDto = new ProductCreateDto(
+            Title: "", // Invalid
+            Description: "Description of the new product",
+            Price: 20m,
+            UserId: existingUser.Id,
+            Images: new Pictures[] {
+            new Pictures { Label = "http://example.com/newpic1.jpg" },
+            new Pictures { Label = "http://example.com/newpic2.jpg" }
+            },
+            Condition: Condition.NEW,
+            ProductCategoryId: 1
+        );
+
+        // FORCE VALIDATION ERROR
+        _controller.ModelState.AddModelError("Title", "The Title field is required.");
+
+        // Act
+        var result = await _controller.CreateProduct(productCreateDto);
+
+        // Assert
+        var badRequestResult = result.Result as BadRequestObjectResult;
+        badRequestResult.Should().NotBeNull("The controller should have returned a BadRequest result.");
+
+        var errors = badRequestResult!.Value as SerializableError;
+        errors.Should().ContainKey("Title");
+    }
+    #endregion
+
+    #region Tests for CreateService
+    [Fact]
+    public async Task CreateService_ReturnsCreatedService_WhenDataIsValid()
+    {
+        // Arrange
+        var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
+        _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+
+        var subject = new Subjects { SubjectId = 1, Name = "Math", Subject = "Mathématiques" };
+        _context.Set<Subjects>().Add(subject);
+
+        var grade = new SchoolGrades { SchoolGradeId = 1, Name = "Terminale", SchoolGrade = "Lycée" };
+        _context.Set<SchoolGrades>().Add(grade);
+        await _context.SaveChangesAsync();
+
+        var serviceCreateDto = new ServiceCreateDto(
+            Title: "New Service",
+            Description: "Description of the new service",
+            Price: 20m,
+            UserId: existingUser.Id,
+            SubjectId: 1,
+            SchoolLevelId: 1,
+            TeachingLanguage: Language.FR,
+            SpecificStudyLevel: "Diplôme en Mathématiques"
+        );
+
+        // Act
+        var result = await _controller.CreateService(serviceCreateDto);
+
+        // Assert
+        var createdAtActionResult = result.Result as CreatedAtActionResult;
+        createdAtActionResult.Should().NotBeNull("The controller did not return a CreatedAtActionResult");
+
+        var value = createdAtActionResult!.Value as AdvertReadDto;
+        value.Should().NotBeNull("The controller did not return an AdvertReadDto");
+        value!.title.Should().Be("New Service");
+        value.price.Should().Be(20);
+    }
+
+    [Fact]
+    public async Task CreateService_ReturnsBadRequest_WhenDataIsInvalid()
+    {
+        // Arrange
+        var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
+        _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+
+        var subject = new Subjects { SubjectId = 1, Name = "Math", Subject = "Mathématiques" };
+        _context.Set<Subjects>().Add(subject);
+
+        var grade = new SchoolGrades { SchoolGradeId = 1, Name = "Terminale", SchoolGrade = "Lycée" };
+        _context.Set<SchoolGrades>().Add(grade);
+        await _context.SaveChangesAsync();
+
+        var serviceCreateDto = new ServiceCreateDto(
+            Title: "", // Invalid
+            Description: "Description of the new service",
+            Price: 20m,
+            UserId: existingUser.Id,
+            SubjectId: 1,
+            SchoolLevelId: 1,
+            TeachingLanguage: Language.FR,
+            SpecificStudyLevel: "Diplôme en Mathématiques"
+        );
+
+        // FORCE VALIDATION ERROR
+        _controller.ModelState.AddModelError("Title", "The Title field is required.");
+
+        // Act
+        var result = await _controller.CreateService(serviceCreateDto);
+
+        // Assert
+        var badRequestResult = result.Result as BadRequestObjectResult;
+        badRequestResult.Should().NotBeNull("The controller should have returned a BadRequest result.");
+
+        var errors = badRequestResult!.Value as SerializableError;
+        errors.Should().ContainKey("Title");
+    }
+    #endregion
+
+    #region Tests for EditBook
+    [Fact]
+    public async Task EditBook_ReturnsUpdatedBook_WhenDataIsValid()
+    {
+        // Arrange
+        var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
+        _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+        var bookCategory = new BookCategories { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
+        _context.Set<BookCategories>().Add(bookCategory);
+        await _context.SaveChangesAsync();
+
+        List<Pictures> pictures = new List<Pictures>
+        {
+            new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
+            new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+        };
+
+        var advert = new Books
+        {
+            AdvertId = 1,
+            Title = "Book Title",
+            Description = "Book Descr",
+            Price = 10,
+            UserId = existingUser.Id,
+            User = existingUser,
+            Status = AdvertStatus.ACTIVE,
+            CreatedAt = DateTime.UtcNow,
+            NotificationDate = DateTime.UtcNow,
+            Condition = Condition.NEW,
+            ISBN = "12345",
+            Author = "John",
+            Publisher = "Pub",
+            Edition = "1st",
+            WrittenLanguage = Language.FR,
+            BookCategoryId = 1,
+            Pictures = pictures
+        };
+        _context.Adverts.Add(advert);
+        await _context.SaveChangesAsync();
+
+        var bookUpdateDto = new BookCreateDto(
+            Title: "New Book Title",
+            Description: "New description for the book",
+            Price: 20m,
+            UserId: existingUser.Id,
+            Images: new Pictures[] {
+                new Pictures { Label = "http://example.com/newpic1.jpg" },
+                new Pictures { Label = "http://example.com/newpic2.jpg" }
+            },
+            Condition: Condition.NEW,
+            CategoryId: 1,
+            Isbn: "54321",
+            Author: "Jane",
+            Publisher: "New Pub",
+            Edition: "2nd",
+            WrittenLanguage: Language.FR
+        );
+
+        // Act
+        var result = await _controller.EditBook(1, bookUpdateDto);
+
+        // Assert
+        var noContentResult = result as NoContentResult;
+        noContentResult.Should().NotBeNull("An update without content should return a NoContentResult.");
+
+        var updatedBook = await _context.Books.FindAsync((long)1);
+        updatedBook.Should().NotBeNull("The updated book should exist in the database");
+
+        updatedBook.Title.Should().Be("New Book Title");
+        updatedBook.Description.Should().Be("New description for the book");
+        updatedBook.Price.Should().Be(20m);
+        updatedBook.Author.Should().Be("Jane");
+        updatedBook.ISBN.Should().Be("54321");
+        updatedBook.Edition.Should().Be("2nd");
+    }
+
+    [Fact]
+    public async Task EditBook_ReturnsBadRequest_WhenDataIsInvalid()
+    {
+        // Arrange
+        var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
+        _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+        var bookCategory = new BookCategories { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
+        _context.Set<BookCategories>().Add(bookCategory);
+        await _context.SaveChangesAsync();
+
+        List<Pictures> pictures = new List<Pictures>
+        {
+            new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
+            new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+        };
+
+        var advert = new Books
+        {
+            AdvertId = 1,
+            Title = "Book Title",
+            Description = "Book Descr",
+            Price = 10,
+            UserId = existingUser.Id,
+            User = existingUser,
+            Status = AdvertStatus.ACTIVE,
+            CreatedAt = DateTime.UtcNow,
+            NotificationDate = DateTime.UtcNow,
+            Condition = Condition.NEW,
+            ISBN = "12345",
+            Author = "John",
+            Publisher = "Pub",
+            Edition = "1st",
+            WrittenLanguage = Language.FR,
+            BookCategoryId = 1,
+            Pictures = pictures
+        };
+        _context.Adverts.Add(advert);
+        await _context.SaveChangesAsync();
+
+        var bookUpdateDto = new BookCreateDto(
+            Title: "", // Invalid
+            Description: "New description for the book",
+            Price: 20m,
+            UserId: existingUser.Id,
+            Images: new Pictures[] {
+                new Pictures { Label = "http://example.com/newpic1.jpg" },
+                new Pictures { Label = "http://example.com/newpic2.jpg" }
+            },
+            Condition: Condition.NEW,
+            CategoryId: 1,
+            Isbn: "54321",
+            Author: "Jane",
+            Publisher: "New Pub",
+            Edition: "2nd",
+            WrittenLanguage: Language.FR
+        );
+
+        _controller.ModelState.AddModelError("Title", "The Title field is required.");
+
+        // Act
+        var result = await _controller.EditBook(1, bookUpdateDto);
+
+        // Assert
+        var badRequestResult = result as BadRequestObjectResult;
+        badRequestResult.Should().NotBeNull("The controller should have returned a BadRequest result.");
+
+        var errors = badRequestResult!.Value as SerializableError;
+        errors.Should().ContainKey("Title");
+    }
+
+    [Fact]
+    public async Task EditBook_ReturnsNotFound_WhenBookDoesNotExist()
+    {
+        // Arrange
+        var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
+        _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+        var bookUpdateDto = new BookCreateDto(
+            Title: "New Book Title",
+            Description: "New description for the book",
+            Price: 20m,
+            UserId: existingUser.Id,
+            Images: new Pictures[] {
+                new Pictures { Label = "http://example.com/newpic1.jpg" },
+                new Pictures { Label = "http://example.com/newpic2.jpg" }
+            },
+            Condition: Condition.NEW,
+            CategoryId: 1,
+            Isbn: "54321",
+            Author: "Jane",
+            Publisher: "New Pub",
+            Edition: "2nd",
+            WrittenLanguage: Language.FR
+        );
+
+        // Act
+        var result = await _controller.EditBook(999, bookUpdateDto); // Non-existing ID
+
+        // Assert
+        var notFoundResult = result as NotFoundResult;
+        notFoundResult.Should().NotBeNull("The controller did not return a NotFoundResult");
+    }
+    #endregion
+
+    #region Tests for EditProduct
+    [Fact]
+    public async Task EditProduct_ReturnsUpdatedProduct_WhenDataIsValid()
+    {
+        // Arrange
+        var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
+        _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+        await _context.SaveChangesAsync();
+
+        List<Pictures> pictures = new List<Pictures>
+        {
+            new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
+            new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+        };
+
+        var advert = new PhysicalItems
+        {
+            AdvertId = 1,
+            Title = "Guitare",
+            Description = "Guitare",
+            Price = 10,
+            UserId = existingUser.Id,
+            User = existingUser,
+            Status = AdvertStatus.ACTIVE,
+            CreatedAt = DateTime.UtcNow,
+            NotificationDate = DateTime.UtcNow,
+            Condition = Condition.NEW,
+            Pictures = pictures
+        };
+        _context.Adverts.Add(advert);
+        await _context.SaveChangesAsync();
+
+        var ProductUpdateDto = new ProductCreateDto(
+            Title: "Guitare électrique",
+            Description: "Guitare électrique",
+            Price: 20m,
+            UserId: existingUser.Id,
+            Images: new Pictures[] {
+                new Pictures { Label = "http://example.com/newpic1.jpg" },
+                new Pictures { Label = "http://example.com/newpic2.jpg" }
+            },
+            Condition: Condition.NEW
+        );
+
+        // Act
+        var result = await _controller.EditProduct(1, ProductUpdateDto);
+
+        // Assert
+        var noContentResult = result as NoContentResult;
+        noContentResult.Should().NotBeNull("An update without content should return a NoContentResult.");
+
+        var updatedProduct = await _context.Products.FindAsync((long)1);
+        updatedProduct.Should().NotBeNull("The updated product should exist in the database");
+
+        updatedProduct.Title.Should().Be("Guitare électrique");
+        updatedProduct.Description.Should().Be("Guitare électrique");
+        updatedProduct.Price.Should().Be(20m);
+    }
+
+    [Fact]
+    public async Task EditProduct_ReturnsBadRequest_WhenDataIsInvalid()
+    {
+        // Arrange
+        var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
+        _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+        await _context.SaveChangesAsync();
+
+        List<Pictures> pictures = new List<Pictures>
+        {
+            new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
+            new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+        };
+
+        var advert = new PhysicalItems
+        {
+            AdvertId = 1,
+            Title = "Product Title",
+            Description = "Product Description",
+            Price = 10,
+            UserId = existingUser.Id,
+            User = existingUser,
+            Status = AdvertStatus.ACTIVE,
+            CreatedAt = DateTime.UtcNow,
+            NotificationDate = DateTime.UtcNow,
+            Condition = Condition.NEW,
+            Pictures = pictures
+        };
+        _context.Adverts.Add(advert);
+        await _context.SaveChangesAsync();
+
+        var productUpdateDto = new ProductCreateDto(
+            Title: "", // Invalid
+            Description: "New description for the product",
+            Price: 20m,
+            UserId: existingUser.Id,
+            Images: new Pictures[] {
+                new Pictures { Label = "http://example.com/newpic1.jpg" },
+                new Pictures { Label = "http://example.com/newpic2.jpg" }
+            },
+            Condition: Condition.NEW
+        );
+
+        _controller.ModelState.AddModelError("Title", "The Title field is required.");
+
+        // Act
+        var result = await _controller.EditProduct(1, productUpdateDto);
+
+        // Assert
+        var badRequestResult = result as BadRequestObjectResult;
+        badRequestResult.Should().NotBeNull("The controller should have returned a BadRequest result.");
+
+        var errors = badRequestResult!.Value as SerializableError;
+        errors.Should().ContainKey("Title");
+    }
+
+    [Fact]
+    public async Task EditProduct_ReturnsNotFound_WhenProductDoesNotExist()
+    {
+        // Arrange
+        var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
+        _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+        var productUpdateDto = new ProductCreateDto(
+            Title: "New Product Title",
+            Description: "New description for the product",
+            Price: 20m,
+            UserId: existingUser.Id,
+            Images: new Pictures[] {
+                new Pictures { Label = "http://example.com/newpic1.jpg" },
+                new Pictures { Label = "http://example.com/newpic2.jpg" }
+            },
+            Condition: Condition.NEW
+        );
+
+        // Act
+        var result = await _controller.EditProduct(999, productUpdateDto); // Non-existing ID
+
+        // Assert
+        var notFoundResult = result as NotFoundResult;
+        notFoundResult.Should().NotBeNull("The controller did not return a NotFoundResult");
+    }
+    #endregion
+
+    #region Tests for EditService
+    [Fact]
+    public async Task EditService_ReturnsUpdatedService_WhenDataIsValid()
+    {
+        // Arrange
+        var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
+        _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+
+        var subject = new Subjects { SubjectId = 1, Name = "Mathématiques", Subject = "Maths" };
+        var subject2 = new Subjects { SubjectId = 2, Name = "Français", Subject = "Français" };
+        var grade = new SchoolGrades { SchoolGradeId = 1, Name = "Terminale", SchoolGrade = "Lycée" };
+
+        _context.Set<Subjects>().Add(subject);
+        _context.Set<SchoolGrades>().Add(grade);
+        await _context.SaveChangesAsync();
+
+        var advert = new AdvertServices
+        {
+            AdvertId = 1,
+            Title = "Lesson de math",
+            Description = "Cours de math pour lycéens",
+            Price = 30,
+            UserId = existingUser.Id,
+            User = existingUser,
+            Status = AdvertStatus.ACTIVE,
+            CreatedAt = DateTime.UtcNow,
+            NotificationDate = DateTime.UtcNow,
+            StudyLevel = "Lycée",
+            SubjectId = 1,
+            SchoolGradeId = 1,
+        };
+        _context.Adverts.Add(advert);
+        await _context.SaveChangesAsync();
+
+        var serviceUpdateDto = new ServiceCreateDto(
+            Title: "Lesson de français",
+            Description: "Cours de français pour lycéens",
+            Price: 40m,
+            UserId: existingUser.Id,
+            SubjectId: 2,
+            SchoolLevelId: 1,
+            TeachingLanguage: Language.FR,
+            SpecificStudyLevel: "Diplôme en Langue Française"
+
+        );
+
+        // Act
+        var result = await _controller.EditService(1, serviceUpdateDto);
+
+        // Assert
+        var noContentResult = result as NoContentResult;
+        noContentResult.Should().NotBeNull("An update without content should return a NoContentResult.");
+
+        var updatedService = await _context.Services.FindAsync((long)1);
+        updatedService.Should().NotBeNull("The updated service should exist in the database");
+
+        updatedService.Title.Should().Be("Lesson de français");
+        updatedService.Description.Should().Be("Cours de français pour lycéens");
+        updatedService.Price.Should().Be(40m);
+        updatedService.SubjectId.Should().Be(2);
+    }
+
+    [Fact]
+    public async Task EditService_ReturnsBadRequest_WhenDataIsInvalid()
+    {
+        // Arrange
+        var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
+        _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+
+        var subject = new Subjects { SubjectId = 1, Name = "Mathématiques", Subject = "Maths" };
+        var grade = new SchoolGrades { SchoolGradeId = 1, Name = "Terminale", SchoolGrade = "Lycée" };
+
+        _context.Set<Subjects>().Add(subject);
+        _context.Set<SchoolGrades>().Add(grade);
+        var advert = new AdvertServices
+        {
+            AdvertId = 1,
+            Title = "Lesson de math",
+            Description = "Cours de math pour lycéens",
+            Price = 30,
+            UserId = existingUser.Id,
+            User = existingUser,
+            Status = AdvertStatus.ACTIVE,
+            CreatedAt = DateTime.UtcNow,
+            NotificationDate = DateTime.UtcNow,
+            StudyLevel = "Lycée",
+            SubjectId = 1,
+            SchoolGradeId = 1,
+        };
+        _context.Adverts.Add(advert);
+        await _context.SaveChangesAsync();
+
+        var serviceUpdateDto = new ServiceCreateDto(
+            Title: "", // Invalid
+            Description: "Cours de français pour lycéens",
+            Price: 40m,
+            UserId: existingUser.Id,
+            SubjectId: 1,
+            SchoolLevelId: 1,
+            TeachingLanguage: Language.FR,
+            SpecificStudyLevel: "Diplôme en Langue Française"
+
+        );
+
+        _controller.ModelState.AddModelError("Title", "The Title field is required.");
+
+        // Act
+        var result = await _controller.EditService(1, serviceUpdateDto);
+
+        // Assert
+        var badRequestResult = result as BadRequestObjectResult;
+        badRequestResult.Should().NotBeNull("The controller should have returned a BadRequest result.");
+
+        var errors = badRequestResult!.Value as SerializableError;
+        errors.Should().ContainKey("Title");
+    }
+
+    [Fact]
+    public async Task EditService_ReturnsNotFound_WhenServiceDoesNotExist()
+    {
+        // Arrange
+        var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
+        _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+        var serviceUpdateDto = new ServiceCreateDto(
+            Title: "Lesson de français",
+            Description: "Cours de français pour lycéens",
+            Price: 40m,
+            UserId: existingUser.Id,
+            SubjectId: 1,
+            SchoolLevelId: 1,
+            TeachingLanguage: Language.FR,
+            SpecificStudyLevel: "Diplôme en Langue Française"
+
+        );
+
+        // Act
+        var result = await _controller.EditService(999, serviceUpdateDto); // Non-existing ID
+
+        // Assert
+        var notFoundResult = result as NotFoundResult;
+        notFoundResult.Should().NotBeNull("The controller did not return a NotFoundResult");
+    }
+    #endregion
+
+    #region Tests for UpdateAdvertStatus
+    [Fact]
+    public async Task UpdateAdvertStatus_ReturnsNoContent_WhenStatusIsUpdated()
+    {
+        // Arrange
+        var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
+        _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+
+        var grade = new BookCategories { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
+        _context.Set<BookCategories>().Add(grade);
+
+        List<Pictures> pictures = new List<Pictures>
+        {
+            new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
+            new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+        };
+        var advert = new Books
+        {
+            AdvertId = 1,
+            Title = "Book Title",
+            Description = "Book Descr",
+            Price = 10,
+            UserId = existingUser.Id,
+            User = existingUser,
+            Status = AdvertStatus.ACTIVE,
+            CreatedAt = DateTime.UtcNow,
+            NotificationDate = DateTime.UtcNow,
+            Condition = Condition.NEW,
+            ISBN = "12345",
+            Author = "John",
+            Publisher = "Pub",
+            Edition = "1st",
+            WrittenLanguage = Language.FR,
+            BookCategoryId = 1,
+            Pictures = pictures
+        };
+        _context.Adverts.Add(advert);
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _controller.UpdateAdvertStatus(1, AdvertStatus.SOLD);
+
+        // Assert
+        var noContentResult = result as NoContentResult;
+        noContentResult.Should().NotBeNull("An update without content should return a NoContentResult.");
+
+        var updatedBook = await _context.Books.FindAsync((long)1);
+        updatedBook.Should().NotBeNull("The updated book should exist in the database");
+        updatedBook.Status.Should().Be(AdvertStatus.SOLD);
+    }
+
+    [Fact]
+    public async Task UpdateAdvertStatus_ReturnsNotFound_WhenAdvertDoesNotExist()
+    {
+        // Arrange
+        // None
+
+        // Act
+        var result = await _controller.UpdateAdvertStatus(999, AdvertStatus.SOLD); // Non-existing ID
+        // Assert
+        var notFoundResult = result as NotFoundResult;
+        notFoundResult.Should().NotBeNull("The controller did not return a NotFoundResult");
+    }
+    #endregion
+
+    #region Tests for DeleteAdvert
+    [Fact]
+    public async Task DeleteAdvert_ReturnsNoContent_WhenAdvertIsDeleted()
+    {
+        // Arrange
+        var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
+        _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+
+        var grade = new BookCategories { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
+        _context.Set<BookCategories>().Add(grade);
+
+        List<Pictures> pictures = new List<Pictures>
+        {
+            new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
+            new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+        };
+        var advert = new Books
+        {
+            AdvertId = 1,
+            Title = "Book Title",
+            Description = "Book Descr",
+            Price = 10,
+            UserId = existingUser.Id,
+            User = existingUser,
+            Status = AdvertStatus.ACTIVE,
+            CreatedAt = DateTime.UtcNow,
+            NotificationDate = DateTime.UtcNow,
+            Condition = Condition.NEW,
+            ISBN = "12345",
+            Author = "John",
+            Publisher = "Pub",
+            Edition = "1st",
+            WrittenLanguage = Language.FR,
+            BookCategoryId = 1,
+            Pictures = pictures
+        };
+        _context.Adverts.Add(advert);
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _controller.DeleteAdvert(1);
+
+        // Assert
+        var noContentResult = result as NoContentResult;
+        noContentResult.Should().NotBeNull("A successful deletion should return a NoContentResult.");
+
+        var deletedAdvert = await _context.Adverts.FindAsync((long)1);
+        deletedAdvert.Should().BeNull("The deleted advert should not exist in the database");
+    }
+
+    [Fact]
+    public async Task DeleteAdvert_ReturnsNotFound_WhenAdvertDoesNotExist()
+    {
+        // Arrange
+        // None
+
+        // Act
+        var result = await _controller.DeleteAdvert(999); // Non-existing ID
+
+        // Assert
+        var notFoundResult = result as NotFoundResult;
+        notFoundResult.Should().NotBeNull("The controller did not return a NotFoundResult");
+    }
+    #endregion
+
+    #region Tests for RemoveAdvertImage
+    [Fact]
+    public async Task RemoveAdvertImage_ReturnsNoContent_WhenImageIsRemoved()
+    {
+        // Arrange
+        var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
+        _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+        var grade = new BookCategories { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
+        _context.Set<BookCategories>().Add(grade);
+        List<Pictures> pictures = new List<Pictures>
+        {
+            new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
+            new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+        };
+        var advert = new Books
+        {
+            AdvertId = 1,
+            Title = "Book Title",
+            Description = "Book Descr",
+            Price = 10,
+            UserId = existingUser.Id,
+            User = existingUser,
+            Status = AdvertStatus.ACTIVE,
+            CreatedAt = DateTime.UtcNow,
+            NotificationDate = DateTime.UtcNow,
+            Condition = Condition.NEW,
+            ISBN = "12345",
+            Author = "John",
+            Publisher = "Pub",
+            Edition = "1st",
+            WrittenLanguage = Language.FR,
+            BookCategoryId = 1,
+            Pictures = pictures
+        };
+        _context.Adverts.Add(advert);
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _controller.RemoveAdvertImages(1, ["http://example.com/pic1.jpg"]); // Remove first image
+
+        // Assert
+        var noContentResult = result as NoContentResult;
+        noContentResult.Should().NotBeNull("A successful image removal should return a NoContentResult.");
+        var updatedAdvert = await _context.Books.Include(b => b.Pictures).FirstOrDefaultAsync(b => b.AdvertId == 1);
+        updatedAdvert.Should().NotBeNull("The advert should exist in the database");
+        updatedAdvert.Pictures.Should().HaveCount(1, "One image should have been removed");
+        updatedAdvert.Pictures.First().PictureId.Should().Be(2, "The remaining image should be the second one");
+    }
+
+    [Fact]
+    public async Task RemoveAdvertImage_ReturnsNotFound_WhenAdvertDoesNotExist()
+    {
+        // Arrange
+        // None
+
+        // Act
+        var result = await _controller.RemoveAdvertImages(999, ["http://example.com/pic1.jpg"]); // Non-existing ID
+
+        // Assert
+        var notFoundResult = result as NotFoundResult;
+        notFoundResult.Should().NotBeNull("The controller did not return a NotFoundResult");
+    }
+
+    [Fact]
+    public async Task RemoveAdvertImage_ReturnsNotFound_WhenPictureDoesNotExist()
+    {
+        // Arrange
+        var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
+        _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+        var grade = new BookCategories { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
+        _context.Set<BookCategories>().Add(grade);
+        List<Pictures> pictures = new List<Pictures>
+        {
+            new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
+            new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+        };
+        var advert = new Books
+        {
+            AdvertId = 1,
+            Title = "Book Title",
+            Description = "Book Descr",
+            Price = 10,
+            UserId = existingUser.Id,
+            User = existingUser,
+            Status = AdvertStatus.ACTIVE,
+            CreatedAt = DateTime.UtcNow,
+            NotificationDate = DateTime.UtcNow,
+            Condition = Condition.NEW,
+            ISBN = "12345",
+            Author = "John",
+            Publisher = "Pub",
+            Edition = "1st",
+            WrittenLanguage = Language.FR,
+            BookCategoryId = 1,
+            Pictures = pictures
+        };
+        _context.Adverts.Add(advert);
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _controller.RemoveAdvertImages(1, ["http://example.com/nonexistent.jpg"]); // Non-existing picture
+
+        // Assert
+        var notFoundResult = result as BadRequestObjectResult;
+        notFoundResult.Should().NotBeNull("The controller did not return a BadRequestObjectResult");
     }
     #endregion
 }

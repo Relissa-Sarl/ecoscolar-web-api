@@ -37,7 +37,7 @@ namespace EcoscolarWebApi.Utils.DTOs.Advert
     /// <param name="Images">The array of image URLs for the product advert</param>
     /// <param name="Condition">The condition of the product advert</param>
     /// <param name="ProductCategoryId">The ID of the product category to which the product advert belongs</param>
-    public record ProductCreateDto(string Title, string Description, decimal Price, string UserId, string[] Images, Condition Condition, long? ProductCategoryId = null)
+    public record ProductCreateDto(string Title, string Description, decimal Price, string UserId, Pictures[] Images, Condition Condition, long? ProductCategoryId = null)
         : AdvertCreateDto(Title, Description, Price, UserId)
     {
         /// <summary>
@@ -62,7 +62,7 @@ namespace EcoscolarWebApi.Utils.DTOs.Advert
             {
                 product.Condition = Condition;
                 product.ProductCategoryId = ProductCategoryId;
-                product.Pictures = Images.Select(url => new Pictures { Label = url }).ToList();
+                product.Pictures = Images.Select(img => new Pictures { Label = img.Label }).ToList();
             }
         }
     }

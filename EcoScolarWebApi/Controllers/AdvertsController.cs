@@ -326,6 +326,11 @@ namespace EcoscolarWebApi.Controllers
         {
             if (bookDto == null) return BadRequest();
 
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             Books book = bookDto.ToEntity();
 
             _context.Books.Add(book);
@@ -348,6 +353,11 @@ namespace EcoscolarWebApi.Controllers
         {
             if (productDto == null) return BadRequest();
 
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             PhysicalItems product = productDto.ToEntity();
 
             _context.Products.Add(product);
@@ -369,6 +379,11 @@ namespace EcoscolarWebApi.Controllers
         public async Task<ActionResult<AdvertReadDto>> CreateService([FromBody] ServiceCreateDto serviceDto)
         {
             if (serviceDto == null) return BadRequest();
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
             AdvertServices service = serviceDto.ToEntity();
 
@@ -394,6 +409,11 @@ namespace EcoscolarWebApi.Controllers
         [HttpPut("books/{id}")]
         public async Task<IActionResult> EditBook(long id, [FromBody] BookCreateDto bookDto)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             Books? existingBook = await _context.Books
                 .Include(b => b.Pictures)
                 .FirstOrDefaultAsync(b => b.AdvertId == id);
@@ -427,6 +447,11 @@ namespace EcoscolarWebApi.Controllers
         [HttpPut("products/{id}")]
         public async Task<IActionResult> EditProduct(long id, [FromBody] ProductCreateDto productDto)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             PhysicalItems? existingProduct = await _context.Products
                 .Include(p => p.Pictures)
                 .FirstOrDefaultAsync(p => p.AdvertId == id);
@@ -460,6 +485,11 @@ namespace EcoscolarWebApi.Controllers
         [HttpPut("services/{id}")]
         public async Task<IActionResult> EditService(long id, [FromBody] ServiceCreateDto serviceDto)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             AdvertServices? existingService = await _context.Services
                 .FirstOrDefaultAsync(s => s.AdvertId == id);
 

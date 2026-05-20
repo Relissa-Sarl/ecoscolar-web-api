@@ -47,7 +47,7 @@ namespace EcoscolarWebApi.Utils.DTOs.Advert
     /// <param name="Publisher">The publisher of the book advert</param>
     /// <param name="Edition">The edition of the book advert</param>
     public record BookCreateDto(
-        string Title, string Description, decimal Price, string UserId, string[] Images, Condition Condition,
+        string Title, string Description, decimal Price, string UserId, Pictures[] Images, Condition Condition,
         long CategoryId, string Isbn, string Author, string Publisher, string Edition, Language WrittenLanguage
     ) : ProductCreateDto(Title, Description, Price, UserId, Images, Condition, ProductCategoryId: null)
     {
