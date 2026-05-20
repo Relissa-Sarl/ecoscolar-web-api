@@ -1,4 +1,4 @@
-namespace EcoScolarWebApi.DTOs
+namespace EcoScolarWebApi.DTOs.Adverts
 {
     /// <summary>
     /// Query parameters for Adverts search (summary list).

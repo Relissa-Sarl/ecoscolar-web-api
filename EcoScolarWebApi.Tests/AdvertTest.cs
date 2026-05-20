@@ -11,9 +11,9 @@ using NSubstitute;
 using System.Security.Claims;
 using Xunit;
 using Language = EcoScolarWebApi.Enums.Language;
-using EcoScolarWebApi.DTOs;
 using EcoScolarWebApi.DTOs.AdvertDtos;
 using EcoScolarWebApi.Enums;
+using EcoScolarWebApi.DTOs.Adverts;
 
 namespace EcoScolarWebApi.Tests.Controllers;
 

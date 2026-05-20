@@ -1,11 +1,11 @@
-﻿using EcoScolarWebApi.Controllers;
+﻿using EcoScolarWebApi.Commun;
+using EcoScolarWebApi.Controllers;
 using EcoScolarWebApi.Data;
-using EcoScolarWebApi.DTOs;
 using EcoScolarWebApi.DTOs.AdvertDtos;
+using EcoScolarWebApi.DTOs.Users;
 using EcoScolarWebApi.Enums;
 using EcoScolarWebApi.Models;
 using EcoScolarWebApi.Services.Contracts;
-using EcoScolarWebApi.Utils;
 using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;

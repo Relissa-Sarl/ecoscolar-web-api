@@ -1,5 +1,5 @@
 ﻿using EcoScolarWebApi.Data;
-using EcoScolarWebApi.DTOs;
+using EcoScolarWebApi.DTOs.Adverts;
 using EcoScolarWebApi.Models;
 using Microsoft.EntityFrameworkCore;
 

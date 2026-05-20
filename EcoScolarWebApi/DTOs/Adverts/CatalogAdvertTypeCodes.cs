@@ -1,7 +1,6 @@
 using EcoScolarWebApi.DTOs.AdvertDtos;
-using EcoScolarWebApi.DTOs.Adverts;
 
-namespace EcoScolarWebApi.DTOs;
+namespace EcoScolarWebApi.DTOs.Adverts;
 
 /// <summary>
 /// Chaînes identiques au champ <c>type</c> de <see cref="AdvertReadDto"/> (mapping dans <c>FromEntity</c>, fichier Adverts/AdvertDto.cs).

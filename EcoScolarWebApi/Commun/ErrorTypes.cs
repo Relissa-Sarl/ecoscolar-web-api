@@ -1,4 +1,4 @@
-﻿namespace EcoScolarWebApi.Utils
+﻿namespace EcoScolarWebApi.Commun
 {
     public enum ErrorType
     {

@@ -1,6 +1,6 @@
 using EcoScolarWebApi.Data;
-using EcoScolarWebApi.DTOs;
 using EcoScolarWebApi.DTOs.AdvertDtos;
+using EcoScolarWebApi.DTOs.Adverts;
 using EcoScolarWebApi.Enums;
 using EcoScolarWebApi.Models;
 using EcoScolarWebApi.Services;
