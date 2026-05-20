@@ -16,14 +16,14 @@ public class BookCategoriesController : ControllerBase
 
     // GET: api/BookCategories
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<BookCategories>>> GetBookCategories()
+    public async Task<ActionResult<IEnumerable<BookCategory>>> GetBookCategories()
     {
         return await _context.BookCategories.ToListAsync();
     }
 
     // GET: api/BookCategories/5
     [HttpGet("{bookcategoryid}")]
-    public async Task<ActionResult<BookCategories>> GetBookCategories(long bookcategoryid)
+    public async Task<ActionResult<BookCategory>> GetBookCategories(long bookcategoryid)
     {
         var bookcategories = await _context.BookCategories.FindAsync(bookcategoryid);
 
@@ -72,9 +72,9 @@ public class BookCategoriesController : ControllerBase
     // POST: api/BookCategories
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPost]
-    public async Task<ActionResult<BookCategories>> PostBookCategories(BookCategoryCreateUpdateDto dto)
+    public async Task<ActionResult<BookCategory>> PostBookCategories(BookCategoryCreateUpdateDto dto)
     {
-        var bookcategory = new BookCategories
+        var bookcategory = new BookCategory
         {
             Name = dto.Name,
             Description = dto.Description

@@ -6,7 +6,7 @@ namespace EcoScolarWebApi.DTOs.AdvertDtos
     public record ProductReadDto(long id, string title, string description, decimal price, DateTime publicationDate, DateTime notificationDate, AdvertStatus status, string userId, string sellerPseudo, 
         List<string> pictures, Condition condition, decimal? weight, long? productCategoryId, string? productCategoryLabel)
     {
-        public static ProductReadDto FromEntity(PhysicalItems entity)
+        public static ProductReadDto FromEntity(PhysicalItem entity)
         {
             return new ProductReadDto(
                 id: entity.AdvertId,
@@ -37,16 +37,16 @@ namespace EcoScolarWebApi.DTOs.AdvertDtos
     /// <param name="Images">The array of image URLs for the product advert</param>
     /// <param name="Condition">The condition of the product advert</param>
     /// <param name="ProductCategoryId">The ID of the product category to which the product advert belongs</param>
-    public record ProductCreateDto(string Title, string Description, decimal Price, string UserId, Pictures[] Images, Condition Condition, long? ProductCategoryId = null)
+    public record ProductCreateDto(string Title, string Description, decimal Price, string UserId, Picture[] Images, Condition Condition, long? ProductCategoryId = null)
         : AdvertCreateDto(Title, Description, Price, UserId)
     {
         /// <summary>
         /// Converts the ProductCreateDto to a PhysicalItems entity.
         /// </summary>
         /// <returns>The PhysicalItems entity</returns>
-        public PhysicalItems ToEntity()
+        public PhysicalItem ToEntity()
         {
-            var product = new PhysicalItems();
+            var product = new PhysicalItem();
             this.MapToEntity(product);
             return product;
         }
@@ -58,11 +58,11 @@ namespace EcoScolarWebApi.DTOs.AdvertDtos
         public override void MapToEntity(Advert entity)
         {
             base.MapToEntity(entity);
-            if (entity is PhysicalItems product)
+            if (entity is PhysicalItem product)
             {
                 product.Condition = Condition;
                 product.ProductCategoryId = ProductCategoryId;
-                product.Pictures = Images.Select(img => new Pictures { Label = img.Label }).ToList();
+                product.Pictures = Images.Select(img => new Picture { Label = img.Label }).ToList();
             }
         }
     }

@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace EcoScolarWebApi.Models
 {
     [Table("Services")]
-    public class AdvertServices : Advert
+    public class AdvertService : Advert
     {
         [Required]
         [StringLength(50)]
@@ -20,9 +20,9 @@ namespace EcoScolarWebApi.Models
         public Enums.Language TeachingLanguage { get; set; }
 
         [ForeignKey("SubjectId")]
-        public virtual Subjects Subjects { get; set; }
+        public virtual Subject Subjects { get; set; }
 
         [ForeignKey("SchoolGradeId")]
-        public virtual SchoolGrades SchoolGrades { get; set; }
+        public virtual SchoolGrade SchoolGrades { get; set; }
     }
 }

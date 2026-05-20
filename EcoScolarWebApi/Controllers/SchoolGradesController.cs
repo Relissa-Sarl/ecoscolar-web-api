@@ -16,14 +16,14 @@ public class SchoolGradesController : ControllerBase
 
     // GET: api/SchoolGrades
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<SchoolGrades>>> GetSchoolGrades()
+    public async Task<ActionResult<IEnumerable<SchoolGrade>>> GetSchoolGrades()
     {
         return await _context.SchoolGrades.ToListAsync();
     }
 
     // GET: api/SchoolGrades/5
     [HttpGet("{schoolgradeid}")]
-    public async Task<ActionResult<SchoolGrades>> GetSchoolGrades(long schoolgradeid)
+    public async Task<ActionResult<SchoolGrade>> GetSchoolGrades(long schoolgradeid)
     {
         var schoolgrades = await _context.SchoolGrades.FindAsync(schoolgradeid);
 
@@ -48,7 +48,7 @@ public class SchoolGradesController : ControllerBase
         }
 
         existingGrade.Name = dto.Name;
-        existingGrade.SchoolGrade = dto.SchoolGrade;
+        existingGrade.Code = dto.SchoolGrade;
 
         try
         {
@@ -72,12 +72,12 @@ public class SchoolGradesController : ControllerBase
     // POST: api/SchoolGrades
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPost]
-    public async Task<ActionResult<SchoolGrades>> PostSchoolGrades(SchoolGradeCreateUpdateDto dto)
+    public async Task<ActionResult<SchoolGrade>> PostSchoolGrades(SchoolGradeCreateUpdateDto dto)
     {
-        var schoolgrade = new SchoolGrades
+        var schoolgrade = new SchoolGrade
         {
             Name = dto.Name,
-            SchoolGrade = dto.SchoolGrade
+            Code = dto.SchoolGrade
         };
 
         _context.SchoolGrades.Add(schoolgrade);

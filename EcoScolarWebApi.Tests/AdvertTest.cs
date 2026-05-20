@@ -59,20 +59,20 @@ public class AdvertsControllerTests : IDisposable
         // Arrange
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
-        List<Pictures> pictures = new List<Pictures>
+        List<Picture> pictures = new List<Picture>
         {
-            new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
-            new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
+            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
         };
-        List<Pictures> pictures2 = new List<Pictures>
+        List<Picture> pictures2 = new List<Picture>
         {
-            new Pictures { PictureId = 3, Label = "http://example.com/pic1.jpg", AdvertId = 2 },
-            new Pictures { PictureId = 4, Label = "http://example.com/pic2.jpg", AdvertId = 2 }
+            new Picture { PictureId = 3, Label = "http://example.com/pic1.jpg", AdvertId = 2 },
+            new Picture { PictureId = 4, Label = "http://example.com/pic2.jpg", AdvertId = 2 }
         };
 
         var adverts = new List<Advert>
         {
-            new Books 
+            new Book 
             {
                 AdvertId = 1,
                 Title = "Book Title",
@@ -91,7 +91,7 @@ public class AdvertsControllerTests : IDisposable
                 WrittenLanguage = Language.FR,
                 Pictures = pictures
             },
-            new PhysicalItems
+            new PhysicalItem
             {
                 AdvertId = 2,
                 Title = "Guitar",
@@ -105,7 +105,7 @@ public class AdvertsControllerTests : IDisposable
                 Condition = Condition.LIKE_NEW,
                 Pictures = pictures2
             },
-            new AdvertServices
+            new AdvertService
             {
                 AdvertId = 3,
                 Title = "Lesson de math",
@@ -162,18 +162,18 @@ public class AdvertsControllerTests : IDisposable
         // Arrange
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
-        List<Pictures> pictures = new List<Pictures>
+        List<Picture> pictures = new List<Picture>
         {
-            new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
-            new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
+            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
         };
-        List<Pictures> pictures2 = new List<Pictures>
+        List<Picture> pictures2 = new List<Picture>
         {
-            new Pictures { PictureId = 3, Label = "http://example.com/pic1.jpg", AdvertId = 2 }
+            new Picture { PictureId = 3, Label = "http://example.com/pic1.jpg", AdvertId = 2 }
         };
         var adverts = new List<Advert>
         {
-            new Books
+            new Book
             {
                 AdvertId = 1,
                 Title = "Book Title",
@@ -192,7 +192,7 @@ public class AdvertsControllerTests : IDisposable
                 WrittenLanguage = Language.FR,
                 Pictures = pictures
             },
-            new Books
+            new Book
             {
                 AdvertId = 2,
                 Title = "Book Title 2",
@@ -211,7 +211,7 @@ public class AdvertsControllerTests : IDisposable
                 WrittenLanguage = Language.FR,
                 Pictures = pictures2
             },
-            new AdvertServices
+            new AdvertService
             {
                 AdvertId = 3,
                 Title = "Lesson de math",
@@ -269,18 +269,18 @@ public class AdvertsControllerTests : IDisposable
         // Arrange
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
-        List<Pictures> pictures = new List<Pictures>
+        List<Picture> pictures = new List<Picture>
         {
-            new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
-            new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
+            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
         };
-        List<Pictures> pictures2 = new List<Pictures>
+        List<Picture> pictures2 = new List<Picture>
         {
-            new Pictures { PictureId = 3, Label = "http://example.com/pic1.jpg", AdvertId = 2 }
+            new Picture { PictureId = 3, Label = "http://example.com/pic1.jpg", AdvertId = 2 }
         };
         var adverts = new List<Advert>
         {
-            new PhysicalItems
+            new PhysicalItem
             {
                 AdvertId = 1,
                 Title = "Guitar",
@@ -294,7 +294,7 @@ public class AdvertsControllerTests : IDisposable
                 Condition = Condition.NEW,
                 Pictures = pictures
             },
-            new PhysicalItems
+            new PhysicalItem
             {
                 AdvertId = 2,
                 Title = "Guitar 2",
@@ -308,7 +308,7 @@ public class AdvertsControllerTests : IDisposable
                 Condition = Condition.NEW,
                 Pictures = pictures2
             },
-            new AdvertServices
+            new AdvertService
             {
                 AdvertId = 3,
                 Title = "Lesson de math",
@@ -348,26 +348,26 @@ public class AdvertsControllerTests : IDisposable
         // Arrange
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
-        var productCategory = new ProductCategories { ProductCategoryId = 1, Name = "Instruments" };
-        var productCategory2 = new ProductCategories { ProductCategoryId = 2, Name = "Books" };
-        List<Pictures> pictures = new List<Pictures>
+        var productCategory = new ProductCategory { ProductCategoryId = 1, Name = "Instruments" };
+        var productCategory2 = new ProductCategory { ProductCategoryId = 2, Name = "Books" };
+        List<Picture> pictures = new List<Picture>
         {
-            new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
-            new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
+            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
         };
-        List<Pictures> pictures2 = new List<Pictures>
+        List<Picture> pictures2 = new List<Picture>
         {
-            new Pictures { PictureId = 3, Label = "http://example.com/pic1.jpg", AdvertId = 2 }
+            new Picture { PictureId = 3, Label = "http://example.com/pic1.jpg", AdvertId = 2 }
         };
-        List<Pictures> pictures3 = new List<Pictures>
+        List<Picture> pictures3 = new List<Picture>
         {
-            new Pictures { PictureId = 4, Label = "http://example.com/pic1.jpg", AdvertId = 3 },
-            new Pictures { PictureId = 5, Label = "http://example.com/pic2.jpg", AdvertId = 3 },
-            new Pictures { PictureId = 6, Label = "http://example.com/pic3.jpg", AdvertId = 3 }
+            new Picture { PictureId = 4, Label = "http://example.com/pic1.jpg", AdvertId = 3 },
+            new Picture { PictureId = 5, Label = "http://example.com/pic2.jpg", AdvertId = 3 },
+            new Picture { PictureId = 6, Label = "http://example.com/pic3.jpg", AdvertId = 3 }
         };
         var adverts = new List<Advert>
         {
-            new PhysicalItems
+            new PhysicalItem
             {
                 AdvertId = 1,
                 Title = "Guitar",
@@ -382,7 +382,7 @@ public class AdvertsControllerTests : IDisposable
                 ProductCategoryId = productCategory.ProductCategoryId,
                 Pictures = pictures
             },
-            new PhysicalItems
+            new PhysicalItem
             {
                 AdvertId = 2,
                 Title = "Guitar 2",
@@ -397,7 +397,7 @@ public class AdvertsControllerTests : IDisposable
                 ProductCategoryId = productCategory2.ProductCategoryId,
                 Pictures = pictures2
             },
-            new PhysicalItems
+            new PhysicalItem
             {
                 AdvertId = 3,
                 Title = "Guitar 3",
@@ -437,24 +437,24 @@ public class AdvertsControllerTests : IDisposable
         // Arrange
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
-        List<Pictures> pictures = new List<Pictures>
+        List<Picture> pictures = new List<Picture>
         {
-            new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
-            new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
+            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
         };
-        List<Pictures> pictures2 = new List<Pictures>
+        List<Picture> pictures2 = new List<Picture>
         {
-            new Pictures { PictureId = 3, Label = "http://example.com/pic1.jpg", AdvertId = 2 }
+            new Picture { PictureId = 3, Label = "http://example.com/pic1.jpg", AdvertId = 2 }
         };
-        List<Pictures> pictures3 = new List<Pictures>
+        List<Picture> pictures3 = new List<Picture>
         {
-            new Pictures { PictureId = 4, Label = "http://example.com/pic1.jpg", AdvertId = 3 },
-            new Pictures { PictureId = 5, Label = "http://example.com/pic2.jpg", AdvertId = 3 },
-            new Pictures { PictureId = 6, Label = "http://example.com/pic3.jpg", AdvertId = 3 }
+            new Picture { PictureId = 4, Label = "http://example.com/pic1.jpg", AdvertId = 3 },
+            new Picture { PictureId = 5, Label = "http://example.com/pic2.jpg", AdvertId = 3 },
+            new Picture { PictureId = 6, Label = "http://example.com/pic3.jpg", AdvertId = 3 }
         };
         var adverts = new List<Advert>
         {
-            new PhysicalItems
+            new PhysicalItem
             {
                 AdvertId = 1,
                 Title = "Guitar",
@@ -468,7 +468,7 @@ public class AdvertsControllerTests : IDisposable
                 Condition = Condition.NEW,
                 Pictures = pictures
             },
-            new PhysicalItems
+            new PhysicalItem
             {
                 AdvertId = 2,
                 Title = "Guitar 2",
@@ -482,7 +482,7 @@ public class AdvertsControllerTests : IDisposable
                 Condition = Condition.NEW,
                 Pictures = pictures2
             },
-            new PhysicalItems
+            new PhysicalItem
             {
                 AdvertId = 3,
                 Title = "Guitar 3",
@@ -521,26 +521,26 @@ public class AdvertsControllerTests : IDisposable
         // Arrange
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
-        var productCategory = new ProductCategories { ProductCategoryId = 1, Name = "Instruments" };
-        var productCategory2 = new ProductCategories { ProductCategoryId = 2, Name = "Books" };
-        List<Pictures> pictures = new List<Pictures>
+        var productCategory = new ProductCategory { ProductCategoryId = 1, Name = "Instruments" };
+        var productCategory2 = new ProductCategory { ProductCategoryId = 2, Name = "Books" };
+        List<Picture> pictures = new List<Picture>
         {
-            new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
-            new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
+            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
         };
-        List<Pictures> pictures2 = new List<Pictures>
+        List<Picture> pictures2 = new List<Picture>
         {
-            new Pictures { PictureId = 3, Label = "http://example.com/pic1.jpg", AdvertId = 2 }
+            new Picture { PictureId = 3, Label = "http://example.com/pic1.jpg", AdvertId = 2 }
         };
-        List<Pictures> pictures3 = new List<Pictures>
+        List<Picture> pictures3 = new List<Picture>
         {
-            new Pictures { PictureId = 4, Label = "http://example.com/pic1.jpg", AdvertId = 3 },
-            new Pictures { PictureId = 5, Label = "http://example.com/pic2.jpg", AdvertId = 3 },
-            new Pictures { PictureId = 6, Label = "http://example.com/pic3.jpg", AdvertId = 3 }
+            new Picture { PictureId = 4, Label = "http://example.com/pic1.jpg", AdvertId = 3 },
+            new Picture { PictureId = 5, Label = "http://example.com/pic2.jpg", AdvertId = 3 },
+            new Picture { PictureId = 6, Label = "http://example.com/pic3.jpg", AdvertId = 3 }
         };
         var adverts = new List<Advert>
         {
-            new PhysicalItems
+            new PhysicalItem
             {
                 AdvertId = 1,
                 Title = "Guitar",
@@ -555,7 +555,7 @@ public class AdvertsControllerTests : IDisposable
                 ProductCategoryId = productCategory.ProductCategoryId,
                 Pictures = pictures
             },
-            new PhysicalItems
+            new PhysicalItem
             {
                 AdvertId = 2,
                 Title = "Guitar 2",
@@ -570,7 +570,7 @@ public class AdvertsControllerTests : IDisposable
                 ProductCategoryId = productCategory2.ProductCategoryId,
                 Pictures = pictures2
             },
-            new PhysicalItems
+            new PhysicalItem
             {
                 AdvertId = 3,
                 Title = "Guitar 3",
@@ -629,14 +629,14 @@ public class AdvertsControllerTests : IDisposable
         // Arrange
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
-        List<Pictures> pictures = new List<Pictures>
+        List<Picture> pictures = new List<Picture>
         {
-            new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
-            new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
+            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
         };
         var adverts = new List<Advert>
         {
-            new PhysicalItems
+            new PhysicalItem
             {
                 AdvertId = 1,
                 Title = "Guitar",
@@ -650,7 +650,7 @@ public class AdvertsControllerTests : IDisposable
                 Condition = Condition.NEW,
                 Pictures = pictures
             },
-            new AdvertServices
+            new AdvertService
             {
                 AdvertId = 2,
                 Title = "Lesson de français",
@@ -665,7 +665,7 @@ public class AdvertsControllerTests : IDisposable
                 SubjectId = 2,
                 SchoolGradeId = 3,
             },
-            new AdvertServices
+            new AdvertService
             {
                 AdvertId = 3,
                 Title = "Lesson de math",
@@ -705,14 +705,14 @@ public class AdvertsControllerTests : IDisposable
         // Arrange
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
-        List<Pictures> pictures = new List<Pictures>
+        List<Picture> pictures = new List<Picture>
         {
-            new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
-            new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
+            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
         };
         var adverts = new List<Advert>
         {
-            new PhysicalItems
+            new PhysicalItem
             {
                 AdvertId = 1,
                 Title = "Guitar",
@@ -726,7 +726,7 @@ public class AdvertsControllerTests : IDisposable
                 Condition = Condition.NEW,
                 Pictures = pictures
             },
-            new AdvertServices
+            new AdvertService
             {
                 AdvertId = 2,
                 Title = "Lesson de français",
@@ -741,7 +741,7 @@ public class AdvertsControllerTests : IDisposable
                 SubjectId = 2,
                 SchoolGradeId = 3,
             },
-            new AdvertServices
+            new AdvertService
             {
                 AdvertId = 3,
                 Title = "Lesson de math",
@@ -780,14 +780,14 @@ public class AdvertsControllerTests : IDisposable
         // Arrange
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
-        List<Pictures> pictures = new List<Pictures>
+        List<Picture> pictures = new List<Picture>
         {
-            new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
-            new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
+            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
         };
         var adverts = new List<Advert>
         {
-            new PhysicalItems
+            new PhysicalItem
             {
                 AdvertId = 1,
                 Title = "Guitar",
@@ -801,7 +801,7 @@ public class AdvertsControllerTests : IDisposable
                 Condition = Condition.NEW,
                 Pictures = pictures
             },
-            new AdvertServices
+            new AdvertService
             {
                 AdvertId = 2,
                 Title = "Lesson de français",
@@ -816,7 +816,7 @@ public class AdvertsControllerTests : IDisposable
                 SubjectId = 2,
                 SchoolGradeId = 3,
             },
-            new AdvertServices
+            new AdvertService
             {
                 AdvertId = 3,
                 Title = "Lesson de math",
@@ -873,12 +873,12 @@ public class AdvertsControllerTests : IDisposable
         // Arrange
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
-        List<Pictures> pictures = new List<Pictures>
+        List<Picture> pictures = new List<Picture>
         {
-            new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
-            new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
+            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
         };
-        var advert = new Books
+        var advert = new Book
         {
             AdvertId = 1,
             Title = "Book Title",
@@ -936,15 +936,15 @@ public class AdvertsControllerTests : IDisposable
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-        var grade = new BookCategories { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
-        _context.Set<BookCategories>().Add(grade);
+        var grade = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
+        _context.Set<BookCategory>().Add(grade);
 
-        List<Pictures> pictures = new List<Pictures>
+        List<Picture> pictures = new List<Picture>
         {
-            new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
-            new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
+            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
         };
-        var advert = new Books
+        var advert = new Book
         {
             AdvertId = 1,
             Title = "Book Title",
@@ -1000,12 +1000,12 @@ public class AdvertsControllerTests : IDisposable
         // Arrange
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
-        List<Pictures> pictures = new List<Pictures>
+        List<Picture> pictures = new List<Picture>
         {
-            new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
-            new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
+            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
         };
-        var advert = new AdvertServices
+        var advert = new AdvertService
         {
             AdvertId = 1,
             Title = "Lesson de math",
@@ -1039,12 +1039,12 @@ public class AdvertsControllerTests : IDisposable
         // Arrange
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
-        List<Pictures> pictures = new List<Pictures>
+        List<Picture> pictures = new List<Picture>
         {
-            new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
-            new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
+            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
         };
-        var advert = new PhysicalItems
+        var advert = new PhysicalItem
         {
             AdvertId = 1,
             Title = "Guitar",
@@ -1095,7 +1095,7 @@ public class AdvertsControllerTests : IDisposable
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-        var advert = new AdvertServices
+        var advert = new AdvertService
         {
             AdvertId = 1,
             Title = "Lesson de math",
@@ -1129,12 +1129,12 @@ public class AdvertsControllerTests : IDisposable
         // Arrange
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
-        var subject = new Subjects { SubjectId = 1, Name = "Mathématiques", Subject = "Maths" };
-        var grade = new SchoolGrades { SchoolGradeId = 1, Name = "Terminale", SchoolGrade = "Lycée" };
+        var subject = new Subject { SubjectId = 1, Name = "Mathématiques", Code = "Maths" };
+        var grade = new SchoolGrade { SchoolGradeId = 1, Name = "Terminale", Code = "Lycée" };
 
-        _context.Set<Subjects>().Add(subject);
-        _context.Set<SchoolGrades>().Add(grade);
-        var advert = new AdvertServices
+        _context.Set<Subject>().Add(subject);
+        _context.Set<SchoolGrade>().Add(grade);
+        var advert = new AdvertService
         {
             AdvertId = 1,
             Title = "Lesson de math",
@@ -1185,12 +1185,12 @@ public class AdvertsControllerTests : IDisposable
         // Arrange
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
-        List<Pictures> pictures = new List<Pictures>
+        List<Picture> pictures = new List<Picture>
         {
-            new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
-            new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
+            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
         };
-        var advert = new PhysicalItems
+        var advert = new PhysicalItem
         {
             AdvertId = 1,
             Title = "Book Title",
@@ -1279,8 +1279,8 @@ public class AdvertsControllerTests : IDisposable
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-        var bookCategory = new BookCategories { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
-        _context.Set<BookCategories>().Add(bookCategory);
+        var bookCategory = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
+        _context.Set<BookCategory>().Add(bookCategory);
         await _context.SaveChangesAsync();
 
         var bookCreateDto = new BookCreateDto(
@@ -1288,9 +1288,9 @@ public class AdvertsControllerTests : IDisposable
             Description: "Description of the new book",
             Price: 20m,
             UserId: existingUser.Id,
-            Images: new Pictures[] {
-                new Pictures { Label = "http://example.com/newpic1.jpg" },
-                new Pictures { Label = "http://example.com/newpic2.jpg" }
+            Images: new Picture[] {
+                new Picture { Label = "http://example.com/newpic1.jpg" },
+                new Picture { Label = "http://example.com/newpic2.jpg" }
             },
             Condition: Condition.NEW,
             CategoryId: 1,
@@ -1321,8 +1321,8 @@ public class AdvertsControllerTests : IDisposable
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-        var bookCategory = new BookCategories { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
-        _context.Set<BookCategories>().Add(bookCategory);
+        var bookCategory = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
+        _context.Set<BookCategory>().Add(bookCategory);
         await _context.SaveChangesAsync();
 
         var bookCreateDto = new BookCreateDto(
@@ -1330,9 +1330,9 @@ public class AdvertsControllerTests : IDisposable
             Description: "Description of the new book",
             Price: 20m,
             UserId: existingUser.Id,
-            Images: new Pictures[] {
-            new Pictures { Label = "http://example.com/newpic1.jpg" },
-            new Pictures { Label = "http://example.com/newpic2.jpg" }
+            Images: new Picture[] {
+            new Picture { Label = "http://example.com/newpic1.jpg" },
+            new Picture { Label = "http://example.com/newpic2.jpg" }
             },
             Condition: Condition.NEW,
             CategoryId: 1,
@@ -1366,8 +1366,8 @@ public class AdvertsControllerTests : IDisposable
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-        var Category = new ProductCategories{ ProductCategoryId = 1, Name = "Guitare", Description = "Guitares" };
-        _context.Set<ProductCategories>().Add(Category);
+        var Category = new ProductCategory{ ProductCategoryId = 1, Name = "Guitare", Description = "Guitares" };
+        _context.Set<ProductCategory>().Add(Category);
         await _context.SaveChangesAsync();
 
         var productCreateDto = new ProductCreateDto(
@@ -1375,9 +1375,9 @@ public class AdvertsControllerTests : IDisposable
             Description: "Description of the new product",
             Price: 20m,
             UserId: existingUser.Id,
-            Images: new Pictures[] {
-                new Pictures { Label = "http://example.com/newpic1.jpg" },
-                new Pictures { Label = "http://example.com/newpic2.jpg" }
+            Images: new Picture[] {
+                new Picture { Label = "http://example.com/newpic1.jpg" },
+                new Picture { Label = "http://example.com/newpic2.jpg" }
             },
             Condition: Condition.NEW,
             ProductCategoryId: 1
@@ -1403,8 +1403,8 @@ public class AdvertsControllerTests : IDisposable
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-        var productCategory = new ProductCategories { ProductCategoryId = 1, Name = "Guitare", Description = "Guitares" };
-        _context.Set<ProductCategories>().Add(productCategory);
+        var productCategory = new ProductCategory { ProductCategoryId = 1, Name = "Guitare", Description = "Guitares" };
+        _context.Set<ProductCategory>().Add(productCategory);
         await _context.SaveChangesAsync();
 
         var productCreateDto = new ProductCreateDto(
@@ -1412,9 +1412,9 @@ public class AdvertsControllerTests : IDisposable
             Description: "Description of the new product",
             Price: 20m,
             UserId: existingUser.Id,
-            Images: new Pictures[] {
-            new Pictures { Label = "http://example.com/newpic1.jpg" },
-            new Pictures { Label = "http://example.com/newpic2.jpg" }
+            Images: new Picture[] {
+            new Picture { Label = "http://example.com/newpic1.jpg" },
+            new Picture { Label = "http://example.com/newpic2.jpg" }
             },
             Condition: Condition.NEW,
             ProductCategoryId: 1
@@ -1443,11 +1443,11 @@ public class AdvertsControllerTests : IDisposable
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-        var subject = new Subjects { SubjectId = 1, Name = "Math", Subject = "Mathématiques" };
-        _context.Set<Subjects>().Add(subject);
+        var subject = new Subject { SubjectId = 1, Name = "Math", Code = "Mathématiques" };
+        _context.Set<Subject>().Add(subject);
 
-        var grade = new SchoolGrades { SchoolGradeId = 1, Name = "Terminale", SchoolGrade = "Lycée" };
-        _context.Set<SchoolGrades>().Add(grade);
+        var grade = new SchoolGrade { SchoolGradeId = 1, Name = "Terminale", Code = "Lycée" };
+        _context.Set<SchoolGrade>().Add(grade);
         await _context.SaveChangesAsync();
 
         var serviceCreateDto = new ServiceCreateDto(
@@ -1481,11 +1481,11 @@ public class AdvertsControllerTests : IDisposable
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-        var subject = new Subjects { SubjectId = 1, Name = "Math", Subject = "Mathématiques" };
-        _context.Set<Subjects>().Add(subject);
+        var subject = new Subject { SubjectId = 1, Name = "Math", Code = "Mathématiques" };
+        _context.Set<Subject>().Add(subject);
 
-        var grade = new SchoolGrades { SchoolGradeId = 1, Name = "Terminale", SchoolGrade = "Lycée" };
-        _context.Set<SchoolGrades>().Add(grade);
+        var grade = new SchoolGrade { SchoolGradeId = 1, Name = "Terminale", Code = "Lycée" };
+        _context.Set<SchoolGrade>().Add(grade);
         await _context.SaveChangesAsync();
 
         var serviceCreateDto = new ServiceCreateDto(
@@ -1521,17 +1521,17 @@ public class AdvertsControllerTests : IDisposable
         // Arrange
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
-        var bookCategory = new BookCategories { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
-        _context.Set<BookCategories>().Add(bookCategory);
+        var bookCategory = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
+        _context.Set<BookCategory>().Add(bookCategory);
         await _context.SaveChangesAsync();
 
-        List<Pictures> pictures = new List<Pictures>
+        List<Picture> pictures = new List<Picture>
         {
-            new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
-            new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
+            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
         };
 
-        var advert = new Books
+        var advert = new Book
         {
             AdvertId = 1,
             Title = "Book Title",
@@ -1559,9 +1559,9 @@ public class AdvertsControllerTests : IDisposable
             Description: "New description for the book",
             Price: 20m,
             UserId: existingUser.Id,
-            Images: new Pictures[] {
-                new Pictures { Label = "http://example.com/newpic1.jpg" },
-                new Pictures { Label = "http://example.com/newpic2.jpg" }
+            Images: new Picture[] {
+                new Picture { Label = "http://example.com/newpic1.jpg" },
+                new Picture { Label = "http://example.com/newpic2.jpg" }
             },
             Condition: Condition.NEW,
             CategoryId: 1,
@@ -1596,17 +1596,17 @@ public class AdvertsControllerTests : IDisposable
         // Arrange
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
-        var bookCategory = new BookCategories { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
-        _context.Set<BookCategories>().Add(bookCategory);
+        var bookCategory = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
+        _context.Set<BookCategory>().Add(bookCategory);
         await _context.SaveChangesAsync();
 
-        List<Pictures> pictures = new List<Pictures>
+        List<Picture> pictures = new List<Picture>
         {
-            new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
-            new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
+            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
         };
 
-        var advert = new Books
+        var advert = new Book
         {
             AdvertId = 1,
             Title = "Book Title",
@@ -1634,9 +1634,9 @@ public class AdvertsControllerTests : IDisposable
             Description: "New description for the book",
             Price: 20m,
             UserId: existingUser.Id,
-            Images: new Pictures[] {
-                new Pictures { Label = "http://example.com/newpic1.jpg" },
-                new Pictures { Label = "http://example.com/newpic2.jpg" }
+            Images: new Picture[] {
+                new Picture { Label = "http://example.com/newpic1.jpg" },
+                new Picture { Label = "http://example.com/newpic2.jpg" }
             },
             Condition: Condition.NEW,
             CategoryId: 1,
@@ -1671,9 +1671,9 @@ public class AdvertsControllerTests : IDisposable
             Description: "New description for the book",
             Price: 20m,
             UserId: existingUser.Id,
-            Images: new Pictures[] {
-                new Pictures { Label = "http://example.com/newpic1.jpg" },
-                new Pictures { Label = "http://example.com/newpic2.jpg" }
+            Images: new Picture[] {
+                new Picture { Label = "http://example.com/newpic1.jpg" },
+                new Picture { Label = "http://example.com/newpic2.jpg" }
             },
             Condition: Condition.NEW,
             CategoryId: 1,
@@ -1702,13 +1702,13 @@ public class AdvertsControllerTests : IDisposable
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
         await _context.SaveChangesAsync();
 
-        List<Pictures> pictures = new List<Pictures>
+        List<Picture> pictures = new List<Picture>
         {
-            new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
-            new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
+            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
         };
 
-        var advert = new PhysicalItems
+        var advert = new PhysicalItem
         {
             AdvertId = 1,
             Title = "Guitare",
@@ -1730,9 +1730,9 @@ public class AdvertsControllerTests : IDisposable
             Description: "Guitare électrique",
             Price: 20m,
             UserId: existingUser.Id,
-            Images: new Pictures[] {
-                new Pictures { Label = "http://example.com/newpic1.jpg" },
-                new Pictures { Label = "http://example.com/newpic2.jpg" }
+            Images: new Picture[] {
+                new Picture { Label = "http://example.com/newpic1.jpg" },
+                new Picture { Label = "http://example.com/newpic2.jpg" }
             },
             Condition: Condition.NEW
         );
@@ -1760,13 +1760,13 @@ public class AdvertsControllerTests : IDisposable
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
         await _context.SaveChangesAsync();
 
-        List<Pictures> pictures = new List<Pictures>
+        List<Picture> pictures = new List<Picture>
         {
-            new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
-            new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
+            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
         };
 
-        var advert = new PhysicalItems
+        var advert = new PhysicalItem
         {
             AdvertId = 1,
             Title = "Product Title",
@@ -1788,9 +1788,9 @@ public class AdvertsControllerTests : IDisposable
             Description: "New description for the product",
             Price: 20m,
             UserId: existingUser.Id,
-            Images: new Pictures[] {
-                new Pictures { Label = "http://example.com/newpic1.jpg" },
-                new Pictures { Label = "http://example.com/newpic2.jpg" }
+            Images: new Picture[] {
+                new Picture { Label = "http://example.com/newpic1.jpg" },
+                new Picture { Label = "http://example.com/newpic2.jpg" }
             },
             Condition: Condition.NEW
         );
@@ -1819,9 +1819,9 @@ public class AdvertsControllerTests : IDisposable
             Description: "New description for the product",
             Price: 20m,
             UserId: existingUser.Id,
-            Images: new Pictures[] {
-                new Pictures { Label = "http://example.com/newpic1.jpg" },
-                new Pictures { Label = "http://example.com/newpic2.jpg" }
+            Images: new Picture[] {
+                new Picture { Label = "http://example.com/newpic1.jpg" },
+                new Picture { Label = "http://example.com/newpic2.jpg" }
             },
             Condition: Condition.NEW
         );
@@ -1843,15 +1843,15 @@ public class AdvertsControllerTests : IDisposable
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-        var subject = new Subjects { SubjectId = 1, Name = "Mathématiques", Subject = "Maths" };
-        var subject2 = new Subjects { SubjectId = 2, Name = "Français", Subject = "Français" };
-        var grade = new SchoolGrades { SchoolGradeId = 1, Name = "Terminale", SchoolGrade = "Lycée" };
+        var subject = new Subject { SubjectId = 1, Name = "Mathématiques", Code = "Maths" };
+        var subject2 = new Subject { SubjectId = 2, Name = "Français", Code = "Français" };
+        var grade = new SchoolGrade { SchoolGradeId = 1, Name = "Terminale", Code = "Lycée" };
 
-        _context.Set<Subjects>().Add(subject);
-        _context.Set<SchoolGrades>().Add(grade);
+        _context.Set<Subject>().Add(subject);
+        _context.Set<SchoolGrade>().Add(grade);
         await _context.SaveChangesAsync();
 
-        var advert = new AdvertServices
+        var advert = new AdvertService
         {
             AdvertId = 1,
             Title = "Lesson de math",
@@ -1904,12 +1904,12 @@ public class AdvertsControllerTests : IDisposable
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-        var subject = new Subjects { SubjectId = 1, Name = "Mathématiques", Subject = "Maths" };
-        var grade = new SchoolGrades { SchoolGradeId = 1, Name = "Terminale", SchoolGrade = "Lycée" };
+        var subject = new Subject { SubjectId = 1, Name = "Mathématiques", Code = "Maths" };
+        var grade = new SchoolGrade { SchoolGradeId = 1, Name = "Terminale", Code = "Lycée" };
 
-        _context.Set<Subjects>().Add(subject);
-        _context.Set<SchoolGrades>().Add(grade);
-        var advert = new AdvertServices
+        _context.Set<Subject>().Add(subject);
+        _context.Set<SchoolGrade>().Add(grade);
+        var advert = new AdvertService
         {
             AdvertId = 1,
             Title = "Lesson de math",
@@ -1987,15 +1987,15 @@ public class AdvertsControllerTests : IDisposable
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-        var grade = new BookCategories { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
-        _context.Set<BookCategories>().Add(grade);
+        var grade = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
+        _context.Set<BookCategory>().Add(grade);
 
-        List<Pictures> pictures = new List<Pictures>
+        List<Picture> pictures = new List<Picture>
         {
-            new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
-            new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
+            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
         };
-        var advert = new Books
+        var advert = new Book
         {
             AdvertId = 1,
             Title = "Book Title",
@@ -2052,15 +2052,15 @@ public class AdvertsControllerTests : IDisposable
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-        var grade = new BookCategories { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
-        _context.Set<BookCategories>().Add(grade);
+        var grade = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
+        _context.Set<BookCategory>().Add(grade);
 
-        List<Pictures> pictures = new List<Pictures>
+        List<Picture> pictures = new List<Picture>
         {
-            new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
-            new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
+            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
         };
-        var advert = new Books
+        var advert = new Book
         {
             AdvertId = 1,
             Title = "Book Title",
@@ -2116,14 +2116,14 @@ public class AdvertsControllerTests : IDisposable
         // Arrange
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
-        var grade = new BookCategories { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
-        _context.Set<BookCategories>().Add(grade);
-        List<Pictures> pictures = new List<Pictures>
+        var grade = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
+        _context.Set<BookCategory>().Add(grade);
+        List<Picture> pictures = new List<Picture>
         {
-            new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
-            new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
+            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
         };
-        var advert = new Books
+        var advert = new Book
         {
             AdvertId = 1,
             Title = "Book Title",
@@ -2178,14 +2178,14 @@ public class AdvertsControllerTests : IDisposable
         // Arrange
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
-        var grade = new BookCategories { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
-        _context.Set<BookCategories>().Add(grade);
-        List<Pictures> pictures = new List<Pictures>
+        var grade = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
+        _context.Set<BookCategory>().Add(grade);
+        List<Picture> pictures = new List<Picture>
         {
-            new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
-            new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
+            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
         };
-        var advert = new Books
+        var advert = new Book
         {
             AdvertId = 1,
             Title = "Book Title",

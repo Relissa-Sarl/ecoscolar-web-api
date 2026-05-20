@@ -16,14 +16,14 @@ public class SubjectsController : ControllerBase
 
     // GET: api/Subjects
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Subjects>>> GetSubjects()
+    public async Task<ActionResult<IEnumerable<Subject>>> GetSubjects()
     {
         return await _context.Subjects.ToListAsync();
     }
 
     // GET: api/Subjects/5
     [HttpGet("{subjectid}")]
-    public async Task<ActionResult<Subjects>> GetSubjects(long subjectid)
+    public async Task<ActionResult<Subject>> GetSubjects(long subjectid)
     {
         var subjects = await _context.Subjects.FindAsync(subjectid);
 
@@ -48,7 +48,7 @@ public class SubjectsController : ControllerBase
         }
 
         existingSubject.Name = dto.Name;
-        existingSubject.Subject = dto.Subject;
+        existingSubject.Code = dto.Subject;
 
         try
         {
@@ -72,12 +72,12 @@ public class SubjectsController : ControllerBase
     // POST: api/Subjects
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPost]
-    public async Task<ActionResult<Subjects>> PostSubjects(SubjectCreateUpdateDto dto)
+    public async Task<ActionResult<Subject>> PostSubjects(SubjectCreateUpdateDto dto)
     {
-        var subject = new Subjects
+        var subject = new Subject
         {
             Name = dto.Name,
-            Subject = dto.Subject
+            Code = dto.Subject
         };
 
         _context.Subjects.Add(subject);

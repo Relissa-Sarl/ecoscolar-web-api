@@ -6,7 +6,7 @@ namespace EcoScolarWebApi.DTOs.AdvertDtos
     public record BookReadDto(long id, string title, string description, decimal price, DateTime publicationDate, DateTime notificationDate, AdvertStatus status, string userId, string sellerPseudo,
         List<string> pictures, Condition condition, long bookCategoryId, string bookCategoryLabel, string isbn, string author, string publisher, string edition, Enums.Language writtenLanguage, decimal? weight = null)
     {
-        public static BookReadDto FromEntity(Books entity)
+        public static BookReadDto FromEntity(Book entity)
         {
             return new BookReadDto(
                 id: entity.AdvertId,
@@ -47,7 +47,7 @@ namespace EcoScolarWebApi.DTOs.AdvertDtos
     /// <param name="Publisher">The publisher of the Books Adverts</param>
     /// <param name="Edition">The edition of the Books Adverts</param>
     public record BookCreateDto(
-        string Title, string Description, decimal Price, string UserId, Pictures[] Images, Condition Condition,
+        string Title, string Description, decimal Price, string UserId, Picture[] Images, Condition Condition,
         long CategoryId, string Isbn, string Author, string Publisher, string Edition, Enums.Language WrittenLanguage
     ) : ProductCreateDto(Title, Description, Price, UserId, Images, Condition, ProductCategoryId: null)
     {
@@ -55,9 +55,9 @@ namespace EcoScolarWebApi.DTOs.AdvertDtos
         /// Converts the BookCreateDto to a Books entity.
         /// </summary>
         /// <returns>The Books entity</returns>
-        public Books ToEntity()
+        public Book ToEntity()
         {
-            var Books = new Books();
+            var Books = new Book();
             this.MapToEntity(Books);
             return Books;
         }
@@ -69,7 +69,7 @@ namespace EcoScolarWebApi.DTOs.AdvertDtos
         public override void MapToEntity(Advert entity)
         {
             base.MapToEntity(entity);
-            if (entity is Books Books)
+            if (entity is Book Books)
             {
                 Books.Author = Author;
                 Books.Publisher = Publisher;

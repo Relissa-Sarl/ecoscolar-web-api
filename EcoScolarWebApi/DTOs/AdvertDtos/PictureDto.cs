@@ -8,7 +8,7 @@
     /// <param name="label">The label of the Pictures</param>
     public record PictureDto(string label)
     {
-        public static PictureDto FromEntity(Models.Pictures entity) =>
+        public static PictureDto FromEntity(Models.Picture entity) =>
             new PictureDto(label: entity.Label);
     }
 }

@@ -117,7 +117,7 @@ namespace EcoScolarWebApi.Controllers
                 .Where(a => a.UserId == currentUser.Id)
                 .Include(a => a.User)
                 .ToListAsync();
-            List<long> physicalItemIds = adverts.OfType<PhysicalItems>()
+            List<long> physicalItemIds = adverts.OfType<PhysicalItem>()
                 .Select(item => item.AdvertId)
                 .ToList();
             if (physicalItemIds.Any())
@@ -150,7 +150,7 @@ namespace EcoScolarWebApi.Controllers
                 .Select(uf => uf.Adverts)
                 .ToListAsync();
 
-            List<long> physicalItemIds = [.. favorites.OfType<PhysicalItems>().Select(item => item.AdvertId)];
+            List<long> physicalItemIds = [.. favorites.OfType<PhysicalItem>().Select(item => item.AdvertId)];
 
             if (physicalItemIds.Any())
             {

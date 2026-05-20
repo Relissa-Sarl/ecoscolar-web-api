@@ -16,14 +16,14 @@ public class ProductCategoriesController : ControllerBase
 
     // GET: api/ProductCategories
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<ProductCategories>>> GetProductCategories()
+    public async Task<ActionResult<IEnumerable<ProductCategory>>> GetProductCategories()
     {
         return await _context.ProductCategories.ToListAsync();
     }
 
     // GET: api/ProductCategories/5
     [HttpGet("{productcategoryid}")]
-    public async Task<ActionResult<ProductCategories>> GetProductCategories(long productcategoryid)
+    public async Task<ActionResult<ProductCategory>> GetProductCategories(long productcategoryid)
     {
         var productcategories = await _context.ProductCategories.FindAsync(productcategoryid);
 
@@ -72,9 +72,9 @@ public class ProductCategoriesController : ControllerBase
     // POST: api/ProductCategories
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPost]
-    public async Task<ActionResult<ProductCategories>> PostProductCategories(ProductCategoryCreateUpdateDto dto)
+    public async Task<ActionResult<ProductCategory>> PostProductCategories(ProductCategoryCreateUpdateDto dto)
     {
-        var productcategory = new ProductCategories
+        var productcategory = new ProductCategory
         {
             Name = dto.Name,
             Description = dto.Description

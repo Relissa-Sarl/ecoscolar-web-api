@@ -3,18 +3,18 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EcoScolarWebApi.Models
 {
-    [Table("BookCategories")]
-    public class BookCategories
+    [Table("SchoolGrades")]
+    public class SchoolGrade
     {
         [Key]
-        public long BookCategoryId { get; set; }
+        public long SchoolGradeId { get; set; }
 
         [Required]
         [StringLength(100)]
         public string Name { get; set; }
 
         [Required]
-        [StringLength(1000)]
-        public string Description { get; set; }
+        [StringLength(100)]
+        public string Code { get; set; }
     }
 }

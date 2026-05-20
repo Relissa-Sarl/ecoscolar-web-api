@@ -3,11 +3,11 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EcoScolarWebApi.Models
 {
-    [Table("ProductCategories")]
-    public class ProductCategories
+    [Table("BookCategories")]
+    public class BookCategory
     {
         [Key]
-        public long ProductCategoryId { get; set; }
+        public long BookCategoryId { get; set; }
 
         [Required]
         [StringLength(100)]

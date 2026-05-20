@@ -32,13 +32,13 @@ namespace EcoScolarWebApi.DTOs.AdvertDtos
         {
             string type = entity switch
             {
-                Models.Books => "BOOK",
-                Models.PhysicalItems => "PRODUCT",
-                Models.AdvertServices => "SERVICE",
+                Models.Book => "BOOK",
+                Models.PhysicalItem => "PRODUCT",
+                Models.AdvertService => "SERVICE",
                 _ => throw new InvalidOperationException("Unknown Adverts type")
             };
             
-            string? primaryImage = (entity as Models.PhysicalItems)?.Pictures?.FirstOrDefault()?.Label;
+            string? primaryImage = (entity as Models.PhysicalItem)?.Pictures?.FirstOrDefault()?.Label;
 
             return new AdvertReadDto(
                 id: entity.AdvertId,

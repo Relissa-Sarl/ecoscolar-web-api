@@ -58,10 +58,10 @@ public class DataSeeder
 		var userIds = users.Select(u => u.Id).ToList();
 		users = context.Users.Where(u => userIds.Contains(u.Id)).ToList();
 
-		var bookCategories = context.Set<BookCategories>().AsNoTracking().ToList();
-		var subjects = context.Set<Subjects>().AsNoTracking().ToList();
-		var schoolGrades = context.Set<SchoolGrades>().AsNoTracking().ToList();
-		var productCategories = context.Set<ProductCategories>().AsNoTracking().ToList();
+		var bookCategories = context.Set<BookCategory>().AsNoTracking().ToList();
+		var subjects = context.Set<Subject>().AsNoTracking().ToList();
+		var schoolGrades = context.Set<SchoolGrade>().AsNoTracking().ToList();
+		var productCategories = context.Set<ProductCategory>().AsNoTracking().ToList();
 
 		if (!bookCategories.Any() || !subjects.Any() || !schoolGrades.Any() || !productCategories.Any())
 		{
@@ -73,7 +73,7 @@ public class DataSeeder
 		var schoolGradeList = schoolGrades.ToList();
 		var productCategoryIds = productCategories.Select(category => category.ProductCategoryId).ToList();
 
-		var physicalItemsFaker = new Faker<PhysicalItems>("fr_CH")
+		var physicalItemsFaker = new Faker<PhysicalItem>("fr_CH")
 			.RuleFor(p => p.Title, f => f.Commerce.ProductName())
 			.RuleFor(p => p.Description, f => f.Lorem.Paragraphs(2))
 			.RuleFor(p => p.Price, f => decimal.Round(f.Random.Decimal(5m, 250m), 2))
@@ -87,7 +87,7 @@ public class DataSeeder
 
 		var physicalItems = physicalItemsFaker.Generate(25);
 
-		var booksFaker = new Faker<Books>("fr_CH")
+		var booksFaker = new Faker<Book>("fr_CH")
 			.RuleFor(b => b.Title, f => $"Manuel de {f.Commerce.Department()}")
 			.RuleFor(b => b.Description, f => f.Lorem.Paragraphs(2))
 			.RuleFor(b => b.Price, f => decimal.Round(f.Random.Decimal(8m, 120m), 2))
@@ -107,7 +107,7 @@ public class DataSeeder
 
 		var books = booksFaker.Generate(15);
 
-		var servicesFaker = new Faker<AdvertServices>("fr_CH")
+		var servicesFaker = new Faker<AdvertService>("fr_CH")
 			.RuleFor(s => s.Title, f => $"Cours de {f.Random.ListItem(subjectList).Name}")
 			.RuleFor(s => s.Description, f => f.Lorem.Paragraphs(2))
 			.RuleFor(s => s.Price, f => decimal.Round(f.Random.Decimal(20m, 90m), 2))
@@ -127,13 +127,13 @@ public class DataSeeder
 		context.Services.AddRange(services);
 		context.SaveChanges();
 
-        var pictures = new List<Pictures>();
-        foreach (var item in physicalItems.Cast<PhysicalItems>().Concat(books))
+        var pictures = new List<Picture>();
+        foreach (var item in physicalItems.Cast<PhysicalItem>().Concat(books))
         {
             var count = faker.Random.Int(1, 3);
             for (var i = 1; i <= count; i++)
             {
-                pictures.Add(new Pictures
+                pictures.Add(new Picture
                 {
                     Label = $"https://picsum.photos/seed/{item.AdvertId}-{i}/800/600",
                     AdvertId = item.AdvertId

@@ -6,7 +6,7 @@ namespace EcoScolarWebApi.DTOs.AdvertDtos
     public record ServiceReadDto(long id, string title, string description, decimal price, DateTime publicationDate, DateTime notificationDate, AdvertStatus status, string userId, string sellerPseudo,
         long subjectId, string subjectLabel, long schoolGradeId, string schoolGradeLabel, Enums.Language teachingLanguage, string studyLevel)
     {
-        public static ServiceReadDto FromEntity(AdvertServices entity)
+        public static ServiceReadDto FromEntity(AdvertService entity)
         {
             return new ServiceReadDto(
                 id: entity.AdvertId,
@@ -46,9 +46,9 @@ namespace EcoScolarWebApi.DTOs.AdvertDtos
         /// Converts the ServiceCreateDto to an AdvertServices entity.
         /// </summary>
         /// <returns>The AdvertServices entity</returns>
-        public AdvertServices ToEntity()
+        public AdvertService ToEntity()
         {
-            var service = new AdvertServices();
+            var service = new AdvertService();
             this.MapToEntity(service);
             return service;
         }
@@ -60,7 +60,7 @@ namespace EcoScolarWebApi.DTOs.AdvertDtos
         public override void MapToEntity(Advert entity)
         {
             base.MapToEntity(entity);
-            if (entity is AdvertServices service)
+            if (entity is AdvertService service)
             {
                 service.SubjectId = SubjectId;
                 service.SchoolGradeId = SchoolLevelId;
