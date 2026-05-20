@@ -298,4 +298,87 @@ public class UsersControllerTests
 	}
 
 	#endregion
-}
+
+	#region Tests for GetMyAdverts
+	[Fact]
+    public async Task GetMyAdverts_ShouldReturnNotFound_WhenUserDoesNotExist()
+	{
+        // Arrange
+        _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns((User?)null);
+
+        // Act
+        var result = await _controller.GetMyAdverts();
+
+        // Assert
+        result.Should().BeOfType<NotFoundObjectResult>();
+    }
+
+	[Fact]
+	public async Task GetMyAdverts_ShouldReturnOk_WithData_WhenUserExistsAndHasAdverts()
+	{
+		// Arrange
+		var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
+		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+		var advert1 = new Books
+		{
+			AdvertId = 1,
+			Title = "Book Title",
+			Description = "Book Descr",
+			Price = 10,
+			UserId = existingUser.Id,
+			User = existingUser,
+			Status = Utils.Enums.AdvertStatus.ACTIVE,
+			CreatedAt = DateTime.UtcNow,
+			NotificationDate = DateTime.UtcNow,
+			ISBN = "12345",
+			Author = "John",
+			Publisher = "Pub",
+			Edition = "1st",
+			WrittenLanguage = Utils.Enums.Language.FR
+		};
+		var advert2 = new PhysicalItems
+		{
+			AdvertId = 2,
+			Title = "Guitar",
+			Description = "Acoustic",
+			Price = 120,
+			UserId = existingUser.Id,
+			User = existingUser,
+			Status = Utils.Enums.AdvertStatus.ACTIVE,
+			CreatedAt = DateTime.UtcNow,
+			NotificationDate = DateTime.UtcNow,
+			Condition = Utils.Enums.Condition.LIKE_NEW
+		};
+		_context.Adverts.AddRange(advert1, advert2);
+		await _context.SaveChangesAsync();
+
+		// Act
+		var result = await _controller.GetMyAdverts();
+
+		// Assert
+		var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+		var returnedAdverts = okResult.Value as IEnumerable<AdvertReadDto>;
+		returnedAdverts.Should().NotBeNull();
+		returnedAdverts.Should().HaveCount(2);
+		returnedAdverts.Should().Contain(a => a.id == advert1.AdvertId && a.type == "BOOK");
+		returnedAdverts.Should().Contain(a => a.id == advert2.AdvertId && a.type == "PRODUCT");
+	}
+
+	[Fact]
+	public async Task GetMyAdverts_ShouldReturnOk_WithEmptyList_WhenUserExistsButHasNoAdverts()
+	{
+		// Arrange
+		var existingUser = new User { Id = "guid-456", UserName = "jane_doe", FirstName = "Jane", LastName = "Doe" };
+		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+
+		// Act
+		var result = await _controller.GetMyAdverts();
+
+		// Assert
+		var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+		var returnedAdverts = okResult.Value as IEnumerable<AdvertReadDto>;
+		returnedAdverts.Should().NotBeNull();
+		returnedAdverts.Should().BeEmpty();
+	}
+    #endregion
+    }

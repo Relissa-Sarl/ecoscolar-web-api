@@ -62,7 +62,7 @@ namespace EcoscolarWebApi.Utils.DTOs.Advert
     /// <param name="Description">The description of the advert</param>
     /// <param name="Price">The price of the advert</param>
     /// <param name="UserId">The ID of the user who is creating the advert</param>
-    public record AdvertBaseCreateDto(string Title, string Description, decimal Price, string UserId)
+    public record AdvertCreateDto(string Title, string Description, decimal Price, string UserId)
     {
         /// <summary>
         /// Converts the AdvertBaseCreateDto to an Adverts entity. 

@@ -28,7 +28,7 @@ namespace EcoscolarWebApi.Controllers
             _advertSearchService = advertSearchService;
         }
 
-        // GET METHODS
+        #region GET METHODS
 
         /// <summary>
         /// Get all adverts whatever their type is (book, product or service)
@@ -38,7 +38,7 @@ namespace EcoscolarWebApi.Controllers
         /// </summary>
         /// <returns>List of all formatted adverts</returns>
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<AdvertReadDto>>> Index()
+        public async Task<ActionResult<IEnumerable<AdvertDetailDto>>> Index()
         {
             IEnumerable<Advert> adverts;
             try
@@ -96,11 +96,13 @@ namespace EcoscolarWebApi.Controllers
         /// GET: AdvertsController/GetProducts
         /// Url: /api/v1/adverts/products
         /// </summary>
+        /// <param name="categoryId">The category ID to filter products by</param>
+        /// <param name="maxPrice">The maximum price to filter products by</param>
         /// <returns>List of formatted product adverts</returns>
         [HttpGet("products")]
         public async Task<ActionResult<IEnumerable<AdvertReadDto>>> GetProducts(
-                [FromQuery] long? categoryId,
-                [FromQuery] decimal? maxPrice)
+                [FromQuery] long? categoryId = null,
+                [FromQuery] decimal? maxPrice = null)
         {
             IEnumerable<PhysicalItem> products;
             try
@@ -128,14 +130,15 @@ namespace EcoscolarWebApi.Controllers
 
         /// <summary>
         /// Get all services adverts
+        /// q query parameter allows to filter services by title or description containing the provided keyword (case-insensitive)
         /// 
         /// GET: AdvertsController/GetServices
         /// Url: /api/v1/adverts/services
-        /// q query parameter allows to filter services by title or description containing the provided keyword (case-insensitive)
         /// </summary>
+        /// <param name="q">The keyword to search for</param>
         /// <returns>List of formatted service adverts</returns>
         [HttpGet("services")]
-        public async Task<ActionResult<IEnumerable<AdvertReadDto>>> GetServices([FromQuery] string? q)
+        public async Task<ActionResult<IEnumerable<AdvertReadDto>>> GetServices([FromQuery] string? q = null)
         {
             IEnumerable<AdvertService> services;
             try
@@ -196,6 +199,90 @@ namespace EcoscolarWebApi.Controllers
         }
 
         /// <summary>
+        /// Get the details of a specific book by its ID.
+        /// 
+        /// GET: AdvertsController/GetBookById/5
+        /// Url: /api/v1/adverts/books/5
+        /// </summary>
+        /// <param name="id">The ID of the book to retrieve</param>
+        /// <returns>The formatted book details</returns>
+        [HttpGet("books/{id}")]
+        public async Task<ActionResult<BookReadDto>> GetBookById(long id)
+        {
+            Books? book;
+            try
+            {
+                book = await _context.Books
+                    .Include(b => b.User)
+                    .Include(b => b.Pictures)
+                    .Include(b => b.BookCategory)
+                    .FirstOrDefaultAsync(b => b.AdvertId == id);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(new { error = e.Message });
+            }
+            if (book == null) return NotFound();
+            return Ok(BookReadDto.FromEntity(book));
+        }
+
+        /// <summary>
+        /// Get the details of a specific product by its ID.
+        /// 
+        /// GET: AdvertsController/GetProductById/5
+        /// Url: /api/v1/adverts/products/5
+        /// </summary>
+        /// <param name="id">The ID of the product to retrieve</param>
+        /// <returns>The formatted product details</returns>
+        [HttpGet("products/{id}")]
+        public async Task<ActionResult<ProductReadDto>> GetProductById(long id)
+        {
+            PhysicalItems? product;
+            try
+            {
+                product = await _context.Products
+                    .Include(p => p.User)
+                    .Include(p => p.Pictures)
+                    .Where(p => !_context.Set<Books>().Any(b => b.AdvertId == p.AdvertId))
+                    .FirstOrDefaultAsync(p => p.AdvertId == id);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(new { error = e.Message });
+            }
+            if (product == null) return NotFound();
+            return Ok(ProductReadDto.FromEntity(product));
+        }
+
+        /// <summary>
+        /// Get the details of a specific service by its ID.
+        /// 
+        /// GET: AdvertsController/GetServiceById/5
+        /// Url: /api/v1/adverts/services/5
+        /// </summary>
+        /// <param name="id">The ID of the service to retrieve</param>
+        /// <returns>The formatted service details</returns>
+        [HttpGet("services/{id}")]
+        public async Task<ActionResult<ServiceReadDto>> GetServiceById(long id)
+        {
+            AdvertServices? service;
+            try
+            {
+                service = await _context.Services
+                    .Include(s => s.User)
+                    .Include(s => s.Subject)
+                    .Include(s => s.SchoolGrade)
+                    .FirstOrDefaultAsync(s => s.AdvertId == id);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(new { error = e.Message });
+            }
+            if (service == null) return NotFound();
+            return Ok(ServiceReadDto.FromEntity(service));
+        }
+
+        /// <summary>
         /// Mock catalogue summaries (T5-1: book-only filters <c>isbn</c> / <c>q</c>). GET api/v1/adverts/summary
         /// </summary>
         [HttpGet("summary")]
@@ -221,8 +308,9 @@ namespace EcoscolarWebApi.Controllers
 
             return Ok(detail);
         }
+        #endregion
 
-        // POST METHODS
+        #region POST METHODS
 
         /// <summary>
         /// Create a new book advert with the provided details in the request body.
@@ -290,8 +378,9 @@ namespace EcoscolarWebApi.Controllers
             AdvertReadDto readDto = AdvertReadDto.FromEntity(service);
             return CreatedAtAction("GetServices", new { id = service.AdvertId }, readDto);
         }
+        #endregion
 
-        // PUT METHODS
+        #region PUT METHODS
 
         /// <summary>
         /// Edit an existing book advert with the provided details in the request body.
@@ -390,8 +479,9 @@ namespace EcoscolarWebApi.Controllers
 
             return NoContent();
         }
+        #endregion
 
-        // PATCH METHODS
+        #region PATCH METHODS
 
         /// <summary>
         /// Update the status of an existing advert.
@@ -421,8 +511,9 @@ namespace EcoscolarWebApi.Controllers
             await _context.SaveChangesAsync();
             return NoContent();
         }
+        #endregion
 
-        // DELETE METHODS
+        #region DELETE METHODS
 
         /// <summary>
         /// Delete an existing advert.
@@ -494,5 +585,6 @@ namespace EcoscolarWebApi.Controllers
             }
             return BadRequest("No matching images found to remove.");
         }
+        #endregion
     }
 }
