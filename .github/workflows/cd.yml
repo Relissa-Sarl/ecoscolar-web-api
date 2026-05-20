@@ -2,8 +2,7 @@ name: CD Pipeline - EcoScolar backend
 
 on:
   push:
-    branches: [ "main" ]
-
+    branches: [ "main", "develop" ]
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
@@ -16,6 +15,14 @@ jobs:
       # Step 1: Checkout the repository code onto the runner
       - name: Code Checkout
         uses: actions/checkout@v4
+
+      # Set up QEMU for multi-architecture builds
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      # Set up Docker Buildx which supports multi-platform builds
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       # Step 2: Authenticate with the GitHub Container Registry
       - name: GitHub Container Registry Login
@@ -36,32 +43,3 @@ jobs:
           tags: |
             ghcr.io/relissa-sarl/ecoscolar-web-api:latest
             ghcr.io/relissa-sarl/ecoscolar-web-api:${{ github.sha }}
-
-  # -------------------------------------------------------------------------
-  # Deployment Job (Currently commented out)
-  # Uncomment the lines below to enable automated deployment to a remote server
-  # -------------------------------------------------------------------------
-  # deploy-to-server:
-  #   needs: build-and-push # Ensure the build finishes before deploying
-  #   runs-on: ubuntu-latest
-  #
-  #   steps:
-  #     - name: Deployment on the server via SSH
-  #       uses: appleboy/ssh-action@v1.0.3
-  #       with:
-  #         host: ${{ secrets.SERVER_HOST }}
-  #         username: ${{ secrets.SERVER_USER }}
-  #         key: ${{ secrets.SERVER_SSH_KEY }}
-  #         script: |
-  #           # 1. Connect to the server and log in to GitHub Container Registry
-  #           echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-  #           
-  #           # 2. Get the latest image from the registry
-  #           docker pull ghcr.io/${{ github.repository_owner }}/ecoscolar-web-api:latest
-  #           
-  #           # 3. Stop and Remove the old container if it exists
-  #           docker rm -f ecoscolar-web-api || true
-  #           
-  #           # 4. Run the new container with the latest image, mapping port 8080 on the host to 80 in the container
-  #           # Note: The image name below seems to point to frontend, it should likely be ecoscolar-web-api
-  #           docker run -d --name ecoscolar-web-api -p 8080:80 ghcr.io/${{ github.repository_owner }}/ecoscolar-frontend:latest
