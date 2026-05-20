@@ -179,15 +179,15 @@ namespace EcoScolarWebApi.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<AdvertReadDto>> Details(long id)
         {
-            Advert? Adverts;
+            Advert? adverts;
             try
             {
-                Adverts = await _context.Adverts
+                adverts = await _context.Adverts
                     .Include(a => a.User)
                     .FirstOrDefaultAsync(a => a.AdvertId == id);
-                if (Adverts is PhysicalItem PhysicalItems)
+                if (adverts is PhysicalItem physicalItems)
                 {
-                    await _context.Entry(PhysicalItems)
+                    await _context.Entry(physicalItems)
                         .Collection(item => item.Pictures)
                         .LoadAsync();
                 }
@@ -195,9 +195,9 @@ namespace EcoScolarWebApi.Controllers
             {
                 return BadRequest(new { error = e.Message });
             }
-            if (Adverts == null) return NotFound();
+            if (adverts == null) return NotFound();
             
-            return Ok(AdvertReadDto.FromEntity(Adverts));
+            return Ok(AdvertReadDto.FromEntity(adverts));
         }
 
         /// <summary>
@@ -211,10 +211,10 @@ namespace EcoScolarWebApi.Controllers
         [HttpGet("books/{id}")]
         public async Task<ActionResult<BookReadDto>> GetBookById(long id)
         {
-            Book? Books;
+            Book? books;
             try
             {
-                Books = await _context.Books
+                books = await _context.Books
                     .Include(b => b.User)
                     .Include(b => b.Pictures)
                     .Include(b => b.BookCategories)
@@ -224,8 +224,8 @@ namespace EcoScolarWebApi.Controllers
             {
                 return BadRequest(new { error = e.Message });
             }
-            if (Books == null) return NotFound();
-            return Ok(BookReadDto.FromEntity(Books));
+            if (books == null) return NotFound();
+            return Ok(BookReadDto.FromEntity(books));
         }
 
         /// <summary>

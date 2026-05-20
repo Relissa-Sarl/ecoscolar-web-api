@@ -10,7 +10,7 @@ public class DataSeeder
 {
 	public static async Task Seed(EcoscolarDbContext context, UserManager<User> userManager)
 	{
-		if (context.User.Any())
+		if (context.Users.Any())
 		{
 			return; // DB has already been seeded
 		}
