@@ -62,7 +62,7 @@ namespace EcoscolarWebApi.Utils.DTOs.Advert
     /// <param name="Description">The description of the advert</param>
     /// <param name="Price">The price of the advert</param>
     /// <param name="UserId">The ID of the user who is creating the advert</param>
-    public record AdvertBaseCreateDto(string Title, string Description, decimal Price, string UserId)
+    public record AdvertCreateDto(string Title, string Description, decimal Price, string UserId)
     {
         /// <summary>
         /// Converts the AdvertBaseCreateDto to an Adverts entity. 
@@ -88,138 +88,6 @@ namespace EcoscolarWebApi.Utils.DTOs.Advert
             entity.Status = AdvertStatus.ACTIVE;
             entity.UserId = UserId;
             entity.NotificationDate = DateTime.UtcNow.AddMonths(3);
-        }
-    }
-
-
-    /// <summary>
-    /// DTO used for creating new service adverts, inheriting from AdvertBaseCreateDto and adding specific properties related to services, such as subject ID, school level ID, teaching language, and specific study level.
-    /// </summary>
-    /// <param name="Title">The title of the service advert</param>
-    /// <param name="Description">The description of the service advert</param>
-    /// <param name="Price">The price of the service advert</param>
-    /// <param name="UserId">The ID of the user who is creating the service advert</param>
-    /// <param name="SubjectId">The ID of the subject related to the service advert</param>
-    /// <param name="SchoolLevelId">The ID of the school level related to the service advert</param>
-    /// <param name="TeachingLanguage">The language in which the service will be taught</param>
-    /// <param name="SpecificStudyLevel">The specific study level related to the service advert</param>
-    public record ServiceCreateDto(string Title, string Description, decimal Price, string UserId, long SubjectId, long SchoolLevelId, Language TeachingLanguage, string SpecificStudyLevel)
-        : AdvertBaseCreateDto(Title, Description, Price, UserId)
-    {
-        /// <summary>
-        /// Converts the ServiceCreateDto to an AdvertServices entity.
-        /// </summary>
-        /// <returns>The AdvertServices entity</returns>
-        public AdvertServices ToEntity()
-        {
-            var service = new AdvertServices();
-            this.MapToEntity(service);
-            return service;
-        }
-
-        /// <summary>
-        /// Maps the properties of the ServiceCreateDto to an existing Adverts entity, specifically to an AdvertServices entity.
-        /// </summary>
-        /// <param name="entity">The Adverts entity to map to</param>
-        public override void MapToEntity(Adverts entity)
-        {
-            base.MapToEntity(entity);
-            if (entity is AdvertServices service)
-            {
-                service.SubjectId = SubjectId;
-                service.SchoolGradeId = SchoolLevelId;
-                service.TeachingLanguage = TeachingLanguage;
-                service.StudyLevel = SpecificStudyLevel;
-            }
-        }
-    }
-
-    /// <summary>
-    /// DTO used for creating new product adverts, inheriting from AdvertBaseCreateDto and adding specific properties related to products, such as an array of image URLs and the condition of the product.
-    /// </summary>
-    /// <param name="Title">The title of the product advert</param>
-    /// <param name="Description">The description of the product advert</param>
-    /// <param name="Price">The price of the product advert</param>
-    /// <param name="UserId">The ID of the user who is creating the product advert</param>
-    /// <param name="Images">The array of image URLs for the product advert</param>
-    /// <param name="Condition">The condition of the product advert</param>
-    /// <param name="ProductCategoryId">The ID of the product category to which the product advert belongs</param>
-    public record ProductCreateDto(string Title, string Description, decimal Price, string UserId, string[] Images, Condition Condition, long? ProductCategoryId=null)
-        : AdvertBaseCreateDto(Title, Description, Price, UserId)
-    {
-        /// <summary>
-        /// Converts the ProductCreateDto to a PhysicalItems entity.
-        /// </summary>
-        /// <returns>The PhysicalItems entity</returns>
-        public PhysicalItems ToEntity()
-        {
-            var product = new PhysicalItems();
-            this.MapToEntity(product);
-            return product;
-        }
-
-        /// <summary>
-        /// Maps the properties of the ProductCreateDto to an existing Adverts entity, specifically to a PhysicalItems entity.
-        /// </summary>
-        /// <param name="entity">The Adverts entity to map to</param>
-        public override void MapToEntity(Adverts entity)
-        {
-            base.MapToEntity(entity);
-            if (entity is PhysicalItems product)
-            {
-                product.Condition = Condition;
-                product.ProductCategoryId = ProductCategoryId;
-                product.Pictures = Images.Select(url => new Pictures { Label = url }).ToList();
-            }
-        }
-    }
-
-    /// <summary>
-    /// DTO used for creating new book adverts, inheriting from ProductCreateDto and adding specific properties related to books, such as category ID, ISBN, author, publisher, and edition.
-    /// </summary>
-    /// <param name="Title">The title of the book advert</param>
-    /// <param name="Description">The description of the book advert</param>
-    /// <param name="Price">The price of the book advert</param>
-    /// <param name="UserId">The ID of the user who is creating the book advert</param>
-    /// <param name="Images">The array of image URLs for the book advert</param>
-    /// <param name="Condition">The condition of the book advert</param>
-    /// <param name="CategoryId">The ID of the category to which the book advert belongs</param>
-    /// <param name="Isbn">The ISBN of the book advert</param>
-    /// <param name="Author">The author of the book advert</param>
-    /// <param name="Publisher">The publisher of the book advert</param>
-    /// <param name="Edition">The edition of the book advert</param>
-    public record BookCreateDto(
-        string Title, string Description, decimal Price, string UserId, string[] Images, Condition Condition,
-        long CategoryId, string Isbn, string Author, string Publisher, string Edition, Language WrittenLanguage
-    ) : ProductCreateDto(Title, Description, Price, UserId, Images, Condition, ProductCategoryId: null)
-    {
-        /// <summary>
-        /// Converts the BookCreateDto to a Books entity.
-        /// </summary>
-        /// <returns>The Books entity</returns>
-        public Books ToEntity()
-        {
-            var book = new Books();
-            this.MapToEntity(book);
-            return book;
-        }
-
-        /// <summary>
-        /// Maps the properties of the BookCreateDto to an existing Adverts entity, specifically to a Books entity.
-        /// </summary>
-        /// <param name="entity">The Adverts entity to map to</param>
-        public override void MapToEntity(Adverts entity)
-        {
-            base.MapToEntity(entity);
-            if (entity is Books book)
-            {
-                book.Author = Author;
-                book.Publisher = Publisher;
-                book.Edition = Edition;
-                book.ISBN = Isbn;
-                book.BookCategoryId = CategoryId;
-                book.WrittenLanguage = WrittenLanguage;
-            }
         }
     }
 }
