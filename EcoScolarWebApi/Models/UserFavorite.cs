@@ -18,5 +18,5 @@ public class UserFavorite
 	public long AdvertId { get; set; }
 
 	[ForeignKey("AdvertId")]
-	public virtual Advert? Advert { get; set; }
+	public virtual Adverts? Adverts { get; set; }
 }

@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace EcoscolarWebApi.Models
 {
     [Table("Pictures")]
-    public class Picture
+    public class Pictures
     {
         [Key]
         public long PictureId { get; set; }
@@ -17,6 +17,6 @@ namespace EcoscolarWebApi.Models
         public long AdvertId { get; set; }
 
         [ForeignKey("AdvertId")]
-        public virtual PhysicalItem Advert { get; set; } = null!;
+        public virtual PhysicalItems Adverts { get; set; } = null!;
     }
 }

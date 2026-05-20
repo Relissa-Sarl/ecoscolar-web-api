@@ -25,7 +25,7 @@ namespace EcoScolarWebApi.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("EcoscolarWebApi.Models.Advert", b =>
+            modelBuilder.Entity("EcoscolarWebApi.Models.Adverts", b =>
                 {
                     b.Property<long>("AdvertId")
                         .ValueGeneratedOnAdd()
@@ -68,7 +68,7 @@ namespace EcoScolarWebApi.Migrations
                     b.UseTptMappingStrategy();
                 });
 
-            modelBuilder.Entity("EcoscolarWebApi.Models.BookCategory", b =>
+            modelBuilder.Entity("EcoscolarWebApi.Models.BookCategories", b =>
                 {
                     b.Property<long>("BookCategoryId")
                         .ValueGeneratedOnAdd()
@@ -232,7 +232,7 @@ namespace EcoScolarWebApi.Migrations
                         });
                 });
 
-            modelBuilder.Entity("EcoscolarWebApi.Models.Picture", b =>
+            modelBuilder.Entity("EcoscolarWebApi.Models.Pictures", b =>
                 {
                     b.Property<long>("PictureId")
                         .ValueGeneratedOnAdd()
@@ -255,7 +255,7 @@ namespace EcoScolarWebApi.Migrations
                     b.ToTable("Pictures");
                 });
 
-            modelBuilder.Entity("EcoscolarWebApi.Models.ProductCategory", b =>
+            modelBuilder.Entity("EcoscolarWebApi.Models.ProductCategories", b =>
                 {
                     b.Property<long>("ProductCategoryId")
                         .ValueGeneratedOnAdd()
@@ -340,7 +340,7 @@ namespace EcoScolarWebApi.Migrations
                         });
                 });
 
-            modelBuilder.Entity("EcoscolarWebApi.Models.SchoolGrade", b =>
+            modelBuilder.Entity("EcoscolarWebApi.Models.SchoolGrades", b =>
                 {
                     b.Property<long>("SchoolGradeId")
                         .ValueGeneratedOnAdd()
@@ -407,7 +407,7 @@ namespace EcoScolarWebApi.Migrations
                         });
                 });
 
-            modelBuilder.Entity("EcoscolarWebApi.Models.Subject", b =>
+            modelBuilder.Entity("EcoscolarWebApi.Models.Subjects", b =>
                 {
                     b.Property<long>("SubjectId")
                         .ValueGeneratedOnAdd()
@@ -765,9 +765,9 @@ namespace EcoScolarWebApi.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("EcoscolarWebApi.Models.AdvertService", b =>
+            modelBuilder.Entity("EcoscolarWebApi.Models.AdvertServices", b =>
                 {
-                    b.HasBaseType("EcoscolarWebApi.Models.Advert");
+                    b.HasBaseType("EcoscolarWebApi.Models.Adverts");
 
                     b.Property<long>("SchoolGradeId")
                         .HasColumnType("bigint");
@@ -790,9 +790,9 @@ namespace EcoScolarWebApi.Migrations
                     b.ToTable("Services");
                 });
 
-            modelBuilder.Entity("EcoscolarWebApi.Models.PhysicalItem", b =>
+            modelBuilder.Entity("EcoscolarWebApi.Models.PhysicalItems", b =>
                 {
-                    b.HasBaseType("EcoscolarWebApi.Models.Advert");
+                    b.HasBaseType("EcoscolarWebApi.Models.Adverts");
 
                     b.Property<int>("Condition")
                         .HasColumnType("int");
@@ -808,9 +808,9 @@ namespace EcoScolarWebApi.Migrations
                     b.ToTable("PhysicalItems");
                 });
 
-            modelBuilder.Entity("EcoscolarWebApi.Models.Book", b =>
+            modelBuilder.Entity("EcoscolarWebApi.Models.Books", b =>
                 {
-                    b.HasBaseType("EcoscolarWebApi.Models.PhysicalItem");
+                    b.HasBaseType("EcoscolarWebApi.Models.PhysicalItems");
 
                     b.Property<string>("Author")
                         .IsRequired()
@@ -843,7 +843,7 @@ namespace EcoScolarWebApi.Migrations
                     b.ToTable("Books");
                 });
 
-            modelBuilder.Entity("EcoscolarWebApi.Models.Advert", b =>
+            modelBuilder.Entity("EcoscolarWebApi.Models.Adverts", b =>
                 {
                     b.HasOne("EcoscolarWebApi.Models.User", "User")
                         .WithMany()
@@ -854,15 +854,15 @@ namespace EcoScolarWebApi.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("EcoscolarWebApi.Models.Picture", b =>
+            modelBuilder.Entity("EcoscolarWebApi.Models.Pictures", b =>
                 {
-                    b.HasOne("EcoscolarWebApi.Models.PhysicalItem", "Advert")
+                    b.HasOne("EcoscolarWebApi.Models.PhysicalItems", "Adverts")
                         .WithMany("Pictures")
                         .HasForeignKey("AdvertId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Advert");
+                    b.Navigation("Adverts");
                 });
 
             modelBuilder.Entity("EcoscolarWebApi.Models.User", b =>
@@ -877,7 +877,7 @@ namespace EcoScolarWebApi.Migrations
 
             modelBuilder.Entity("EcoscolarWebApi.Models.UserFavorite", b =>
                 {
-                    b.HasOne("EcoscolarWebApi.Models.Advert", "Advert")
+                    b.HasOne("EcoscolarWebApi.Models.Adverts", "Adverts")
                         .WithMany()
                         .HasForeignKey("AdvertId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -889,7 +889,7 @@ namespace EcoScolarWebApi.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.Navigation("Advert");
+                    b.Navigation("Adverts");
 
                     b.Navigation("User");
                 });
@@ -964,65 +964,65 @@ namespace EcoScolarWebApi.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("EcoscolarWebApi.Models.AdvertService", b =>
+            modelBuilder.Entity("EcoscolarWebApi.Models.AdvertServices", b =>
                 {
-                    b.HasOne("EcoscolarWebApi.Models.Advert", null)
+                    b.HasOne("EcoscolarWebApi.Models.Adverts", null)
                         .WithOne()
-                        .HasForeignKey("EcoscolarWebApi.Models.AdvertService", "AdvertId")
+                        .HasForeignKey("EcoscolarWebApi.Models.AdvertServices", "AdvertId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("EcoscolarWebApi.Models.SchoolGrade", "SchoolGrade")
+                    b.HasOne("EcoscolarWebApi.Models.SchoolGrades", "SchoolGrades")
                         .WithMany("AdvertServices")
                         .HasForeignKey("SchoolGradeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("EcoscolarWebApi.Models.Subject", "Subject")
+                    b.HasOne("EcoscolarWebApi.Models.Subjects", "Subjects")
                         .WithMany("AdvertServices")
                         .HasForeignKey("SubjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("SchoolGrade");
+                    b.Navigation("SchoolGrades");
 
-                    b.Navigation("Subject");
+                    b.Navigation("Subjects");
                 });
 
-            modelBuilder.Entity("EcoscolarWebApi.Models.PhysicalItem", b =>
+            modelBuilder.Entity("EcoscolarWebApi.Models.PhysicalItems", b =>
                 {
-                    b.HasOne("EcoscolarWebApi.Models.Advert", null)
+                    b.HasOne("EcoscolarWebApi.Models.Adverts", null)
                         .WithOne()
-                        .HasForeignKey("EcoscolarWebApi.Models.PhysicalItem", "AdvertId")
+                        .HasForeignKey("EcoscolarWebApi.Models.PhysicalItems", "AdvertId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("EcoscolarWebApi.Models.ProductCategory", "ProductCategory")
+                    b.HasOne("EcoscolarWebApi.Models.ProductCategories", "ProductCategories")
                         .WithMany("PhysicalItems")
                         .HasForeignKey("ProductCategoryId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.Navigation("ProductCategory");
+                    b.Navigation("ProductCategories");
                 });
 
-            modelBuilder.Entity("EcoscolarWebApi.Models.Book", b =>
+            modelBuilder.Entity("EcoscolarWebApi.Models.Books", b =>
                 {
-                    b.HasOne("EcoscolarWebApi.Models.PhysicalItem", null)
+                    b.HasOne("EcoscolarWebApi.Models.PhysicalItems", null)
                         .WithOne()
-                        .HasForeignKey("EcoscolarWebApi.Models.Book", "AdvertId")
+                        .HasForeignKey("EcoscolarWebApi.Models.Books", "AdvertId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("EcoscolarWebApi.Models.BookCategory", "BookCategory")
+                    b.HasOne("EcoscolarWebApi.Models.BookCategories", "BookCategories")
                         .WithMany("Books")
                         .HasForeignKey("BookCategoryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("BookCategory");
+                    b.Navigation("BookCategories");
                 });
 
-            modelBuilder.Entity("EcoscolarWebApi.Models.BookCategory", b =>
+            modelBuilder.Entity("EcoscolarWebApi.Models.BookCategories", b =>
                 {
                     b.Navigation("Books");
                 });
@@ -1037,17 +1037,17 @@ namespace EcoScolarWebApi.Migrations
                     b.Navigation("Users");
                 });
 
-            modelBuilder.Entity("EcoscolarWebApi.Models.ProductCategory", b =>
+            modelBuilder.Entity("EcoscolarWebApi.Models.ProductCategories", b =>
                 {
                     b.Navigation("PhysicalItems");
                 });
 
-            modelBuilder.Entity("EcoscolarWebApi.Models.SchoolGrade", b =>
+            modelBuilder.Entity("EcoscolarWebApi.Models.SchoolGrades", b =>
                 {
                     b.Navigation("AdvertServices");
                 });
 
-            modelBuilder.Entity("EcoscolarWebApi.Models.Subject", b =>
+            modelBuilder.Entity("EcoscolarWebApi.Models.Subjects", b =>
                 {
                     b.Navigation("AdvertServices");
                 });
@@ -1059,7 +1059,7 @@ namespace EcoScolarWebApi.Migrations
                     b.Navigation("Languages");
                 });
 
-            modelBuilder.Entity("EcoscolarWebApi.Models.PhysicalItem", b =>
+            modelBuilder.Entity("EcoscolarWebApi.Models.PhysicalItems", b =>
                 {
                     b.Navigation("Pictures");
                 });

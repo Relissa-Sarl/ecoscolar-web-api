@@ -3,7 +3,7 @@ using EcoscolarWebApi.Models;
 using EcoscolarWebApi.Services.Contracts;
 using EcoscolarWebApi.Utils;
 using EcoscolarWebApi.Utils.DTOs;
-using EcoscolarWebApi.Utils.DTOs.Advert;
+using EcoscolarWebApi.Utils.DTOs.Adverts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -117,13 +117,13 @@ namespace EcoscolarWebApi.Controllers
                 .Where(a => a.UserId == currentUser.Id)
                 .Include(a => a.User)
                 .ToListAsync();
-            List<long> physicalItemIds = adverts.OfType<PhysicalItem>()
+            List<long> physicalItemIds = adverts.OfType<PhysicalItems>()
                 .Select(item => item.AdvertId)
                 .ToList();
             if (physicalItemIds.Any())
             {
                 await _context.Pictures
-                    .Where(picture => physicalItemIds.Contains(picture.AdvertId))
+                    .Where(Pictures => physicalItemIds.Contains(Pictures.AdvertId))
                     .LoadAsync();
             }
             return Ok(adverts.Select(AdvertReadDto.FromEntity));
@@ -145,17 +145,17 @@ namespace EcoscolarWebApi.Controllers
 
             var favorites = await _context.UserFavorites
                 .Where(uf => uf.UserId == currentUser.Id)
-                .Include(uf => uf.Advert)
+                .Include(uf => uf.Adverts)
                 .ThenInclude(a => a.User)
-                .Select(uf => uf.Advert)
+                .Select(uf => uf.Adverts)
                 .ToListAsync();
 
-            List<long> physicalItemIds = [.. favorites.OfType<PhysicalItem>().Select(item => item.AdvertId)];
+            List<long> physicalItemIds = [.. favorites.OfType<PhysicalItems>().Select(item => item.AdvertId)];
 
             if (physicalItemIds.Any())
             {
                 await _context.Pictures
-                    .Where(picture => physicalItemIds.Contains(picture.AdvertId))
+                    .Where(Pictures => physicalItemIds.Contains(Pictures.AdvertId))
                     .LoadAsync();
             }
 
@@ -163,12 +163,12 @@ namespace EcoscolarWebApi.Controllers
         }
 
         /// <summary>
-        /// Toggles a specific advert in the authenticated user's favorites list. Add to favorites if not present, otherwise remove it.
+        /// Toggles a specific Adverts in the authenticated user's favorites list. Add to favorites if not present, otherwise remove it.
         /// 
         /// Url: PATCH /api/v1/users/me/favorites/{advertId}
         /// </summary>
-        /// <param name="advertId">The ID of the advert to toggle in favorites</param>
-        /// <returns>A status indicating whether the advert is currently a favorite or not</returns>
+        /// <param name="advertId">The ID of the Adverts to toggle in favorites</param>
+        /// <returns>A status indicating whether the Adverts is currently a favorite or not</returns>
         [HttpPatch("me/favorites/{advertId}")]
         public async Task<IActionResult> ToggleFavorite(long advertId)
         {
@@ -176,9 +176,9 @@ namespace EcoscolarWebApi.Controllers
             if (currentUser == null)
                 return NotFound(new { message = "User not found." });
 
-            var advert = await _context.Adverts.FindAsync(advertId);
-            if (advert == null)
-                return NotFound(new { message = "Advert not found." });
+            var Adverts = await _context.Adverts.FindAsync(advertId);
+            if (Adverts == null)
+                return NotFound(new { message = "Adverts not found." });
 
             var favorite = await _context.UserFavorites
                 .FirstOrDefaultAsync(uf => uf.UserId == currentUser.Id && uf.AdvertId == advertId);

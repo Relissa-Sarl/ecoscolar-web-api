@@ -353,57 +353,57 @@ namespace EcoScolarWebApi.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("SchoolGrade")
+                    b.Property<string>("SchoolGrades")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
                     b.HasKey("SchoolGradeId");
 
-                    b.ToTable("SchoolGrade");
+                    b.ToTable("SchoolGrades");
 
                     b.HasData(
                         new
                         {
                             SchoolGradeId = 1L,
                             Name = "Cycle 1 (1H-4H)",
-                            SchoolGrade = "C1"
+                            SchoolGrades = "C1"
                         },
                         new
                         {
                             SchoolGradeId = 2L,
                             Name = "Cycle 2 (5H-8H)",
-                            SchoolGrade = "C2"
+                            SchoolGrades = "C2"
                         },
                         new
                         {
                             SchoolGradeId = 3L,
                             Name = "Cycle 3 (9H-11H)",
-                            SchoolGrade = "C3"
+                            SchoolGrades = "C3"
                         },
                         new
                         {
                             SchoolGradeId = 4L,
                             Name = "Secondaire II - Gymnase",
-                            SchoolGrade = "S2-GYM"
+                            SchoolGrades = "S2-GYM"
                         },
                         new
                         {
                             SchoolGradeId = 5L,
                             Name = "Secondaire II - Maturité professionnelle",
-                            SchoolGrade = "S2-MP"
+                            SchoolGrades = "S2-MP"
                         },
                         new
                         {
                             SchoolGradeId = 6L,
                             Name = "Secondaire II - CFC",
-                            SchoolGrade = "S2-CFC"
+                            SchoolGrades = "S2-CFC"
                         },
                         new
                         {
                             SchoolGradeId = 7L,
                             Name = "Secondaire II - ECG",
-                            SchoolGrade = "S2-ECG"
+                            SchoolGrades = "S2-ECG"
                         });
                 });
 
@@ -420,87 +420,87 @@ namespace EcoScolarWebApi.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("Subject")
+                    b.Property<string>("Subjects")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
                     b.HasKey("SubjectId");
 
-                    b.ToTable("Subject");
+                    b.ToTable("Subjects");
 
                     b.HasData(
                         new
                         {
                             SubjectId = 1L,
                             Name = "Français",
-                            Subject = "FR"
+                            Subjects = "FR"
                         },
                         new
                         {
                             SubjectId = 2L,
                             Name = "Allemand",
-                            Subject = "DE"
+                            Subjects = "DE"
                         },
                         new
                         {
                             SubjectId = 3L,
                             Name = "Anglais",
-                            Subject = "EN"
+                            Subjects = "EN"
                         },
                         new
                         {
                             SubjectId = 4L,
                             Name = "Mathématiques",
-                            Subject = "MATH"
+                            Subjects = "MATH"
                         },
                         new
                         {
                             SubjectId = 5L,
                             Name = "Sciences naturelles",
-                            Subject = "SCI"
+                            Subjects = "SCI"
                         },
                         new
                         {
                             SubjectId = 6L,
                             Name = "Histoire",
-                            Subject = "HIST"
+                            Subjects = "HIST"
                         },
                         new
                         {
                             SubjectId = 7L,
                             Name = "Géographie",
-                            Subject = "GEO"
+                            Subjects = "GEO"
                         },
                         new
                         {
                             SubjectId = 8L,
                             Name = "Éducation physique",
-                            Subject = "EPS"
+                            Subjects = "EPS"
                         },
                         new
                         {
                             SubjectId = 9L,
                             Name = "Arts visuels",
-                            Subject = "ARTS"
+                            Subjects = "ARTS"
                         },
                         new
                         {
                             SubjectId = 10L,
                             Name = "Musique",
-                            Subject = "MUS"
+                            Subjects = "MUS"
                         },
                         new
                         {
                             SubjectId = 11L,
                             Name = "Économie et droit",
-                            Subject = "ECO"
+                            Subjects = "ECO"
                         },
                         new
                         {
                             SubjectId = 12L,
                             Name = "Informatique",
-                            Subject = "INFO"
+                            Subjects = "INFO"
                         });
                 });
 
@@ -856,13 +856,13 @@ namespace EcoScolarWebApi.Migrations
 
             modelBuilder.Entity("EcoscolarWebApi.Models.Pictures", b =>
                 {
-                    b.HasOne("EcoscolarWebApi.Models.PhysicalItems", "Advert")
+                    b.HasOne("EcoscolarWebApi.Models.PhysicalItems", "Adverts")
                         .WithMany("Pictures")
                         .HasForeignKey("AdvertId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Advert");
+                    b.Navigation("Adverts");
                 });
 
             modelBuilder.Entity("EcoscolarWebApi.Models.User", b =>
@@ -877,7 +877,7 @@ namespace EcoScolarWebApi.Migrations
 
             modelBuilder.Entity("EcoscolarWebApi.Models.UserFavorite", b =>
                 {
-                    b.HasOne("EcoscolarWebApi.Models.Adverts", "Advert")
+                    b.HasOne("EcoscolarWebApi.Models.Adverts", "Adverts")
                         .WithMany()
                         .HasForeignKey("AdvertId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -889,7 +889,7 @@ namespace EcoScolarWebApi.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.Navigation("Advert");
+                    b.Navigation("Adverts");
 
                     b.Navigation("User");
                 });
@@ -972,21 +972,21 @@ namespace EcoScolarWebApi.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("EcoscolarWebApi.Models.SchoolGrades", "SchoolGrade")
+                    b.HasOne("EcoscolarWebApi.Models.SchoolGrades", "SchoolGrades")
                         .WithMany("AdvertServices")
                         .HasForeignKey("SchoolGradeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("EcoscolarWebApi.Models.Subjects", "Subject")
+                    b.HasOne("EcoscolarWebApi.Models.Subjects", "Subjects")
                         .WithMany("AdvertServices")
                         .HasForeignKey("SubjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("SchoolGrade");
+                    b.Navigation("SchoolGrades");
 
-                    b.Navigation("Subject");
+                    b.Navigation("Subjects");
                 });
 
             modelBuilder.Entity("EcoscolarWebApi.Models.PhysicalItems", b =>
@@ -997,12 +997,12 @@ namespace EcoScolarWebApi.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("EcoscolarWebApi.Models.ProductCategories", "ProductCategory")
+                    b.HasOne("EcoscolarWebApi.Models.ProductCategories", "ProductCategories")
                         .WithMany("PhysicalItems")
                         .HasForeignKey("ProductCategoryId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.Navigation("ProductCategory");
+                    b.Navigation("ProductCategories");
                 });
 
             modelBuilder.Entity("EcoscolarWebApi.Models.Books", b =>
@@ -1013,13 +1013,13 @@ namespace EcoScolarWebApi.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("EcoscolarWebApi.Models.BookCategories", "BookCategory")
+                    b.HasOne("EcoscolarWebApi.Models.BookCategories", "BookCategories")
                         .WithMany("Books")
                         .HasForeignKey("BookCategoryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("BookCategory");
+                    b.Navigation("BookCategories");
                 });
 
             modelBuilder.Entity("EcoscolarWebApi.Models.BookCategories", b =>

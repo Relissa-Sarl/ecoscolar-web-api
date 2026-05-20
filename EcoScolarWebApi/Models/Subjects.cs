@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace EcoscolarWebApi.Models
 {
     [Table("Subjects")]
-    public class Subject
+    public class Subjects
     {
         [Key]
         public long SubjectId { get; set; }
@@ -17,6 +17,6 @@ namespace EcoscolarWebApi.Models
         [StringLength(100)]
         public string Code { get; set; }
 
-        public virtual ICollection<AdvertService> AdvertServices { get; set; } = new List<AdvertService>();
+        public virtual ICollection<AdvertServices> AdvertServices { get; set; } = new List<AdvertServices>();
     }
 }

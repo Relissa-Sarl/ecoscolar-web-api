@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace EcoscolarWebApi.Models
 {
     [Table("Books")]
-    public class Book : PhysicalItem
+    public class Books : PhysicalItems
     {
         [Required]
         [StringLength(20)]
@@ -30,6 +30,6 @@ namespace EcoscolarWebApi.Models
         public long BookCategoryId { get; set; }
 
         [ForeignKey("BookCategoryId")]
-        public virtual BookCategory BookCategory { get; set; }
+        public virtual BookCategories BookCategories { get; set; }
     }
 }

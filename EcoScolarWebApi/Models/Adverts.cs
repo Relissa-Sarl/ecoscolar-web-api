@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace EcoscolarWebApi.Models
 {
     [Table("Adverts")]
-    public class Advert
+    public class Adverts
     {
         [Key]
         public long AdvertId { get; set; }
