@@ -16,6 +16,6 @@ namespace EcoscolarWebApi.Models
         public long? ProductCategoryId { get; set; }
 
         [ForeignKey(nameof(ProductCategoryId))]
-        public virtual ProductCategories? ProductCategory { get; set; }
+        public virtual ProductCategories? ProductCategories { get; set; }
     }
 }
