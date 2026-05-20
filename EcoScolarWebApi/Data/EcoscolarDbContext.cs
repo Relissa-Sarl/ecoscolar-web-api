@@ -16,7 +16,7 @@ public class EcoscolarDbContext(DbContextOptions<EcoscolarDbContext> options) : 
 {
 	public DbSet<Advert> Adverts { get; set; } = default!;
 	public DbSet<PhysicalItem> Products { get; set; } = default!;
-	public DbSet<AdvertService> Services { get; set; } = default!;
+	public DbSet<TutoringAdvert> Services { get; set; } = default!;
 	public DbSet<Book> Books { get; set; } = default!;
 	public DbSet<Picture> Pictures { get; set; } = default!;
 	public DbSet<ProductCategory> ProductCategories { get; set; } = default!;
