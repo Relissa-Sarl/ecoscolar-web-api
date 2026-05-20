@@ -101,7 +101,7 @@ public class DataSeeder
 			.RuleFor(b => b.Author, f => f.Name.FullName())
 			.RuleFor(b => b.Publisher, f => f.Company.CompanyName())
 			.RuleFor(b => b.Edition, f => $"{f.Random.Int(2019, 2025)}")
-			.RuleFor(b => b.WrittenLanguage, f => f.PickRandom<Language>())
+			.RuleFor(b => b.WrittenLanguage, f => f.PickRandom<Utils.Enums.Language>())
 			.RuleFor(b => b.BookCategoryId, f => f.Random.ListItem(bookCategoryIds))
 			.RuleFor(b => b.ProductCategoryId, f => f.Random.Bool(0.3f) ? f.Random.ListItem(productCategoryIds) : null);
 
@@ -115,7 +115,7 @@ public class DataSeeder
 			.RuleFor(s => s.NotificationDate, (f, s) => s.CreatedAt.AddDays(f.Random.Int(3, 20)))
 			.RuleFor(s => s.Status, f => f.PickRandom<AdvertStatus>())
 			.RuleFor(s => s.UserId, f => f.PickRandom(users).Id)
-			.RuleFor(s => s.TeachingLanguage, f => f.PickRandom<Language>())
+			.RuleFor(s => s.TeachingLanguage, f => f.PickRandom<Utils.Enums.Language>())
 			.RuleFor(s => s.StudyLevel, f => f.Random.ListItem(schoolGradeList).Name)
 			.RuleFor(s => s.SubjectId, f => f.Random.ListItem(subjectList).SubjectId)
 			.RuleFor(s => s.SchoolGradeId, f => f.Random.ListItem(schoolGradeList).SchoolGradeId);

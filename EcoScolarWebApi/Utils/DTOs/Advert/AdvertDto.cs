@@ -103,7 +103,7 @@ namespace EcoscolarWebApi.Utils.DTOs.Advert
     /// <param name="SchoolLevelId">The ID of the school level related to the service advert</param>
     /// <param name="TeachingLanguage">The language in which the service will be taught</param>
     /// <param name="SpecificStudyLevel">The specific study level related to the service advert</param>
-    public record ServiceCreateDto(string Title, string Description, decimal Price, string UserId, long SubjectId, long SchoolLevelId, Language TeachingLanguage, string SpecificStudyLevel)
+    public record ServiceCreateDto(string Title, string Description, decimal Price, string UserId, long SubjectId, long SchoolLevelId, Enums.Language TeachingLanguage, string SpecificStudyLevel)
         : AdvertBaseCreateDto(Title, Description, Price, UserId)
     {
         /// <summary>
@@ -190,7 +190,7 @@ namespace EcoscolarWebApi.Utils.DTOs.Advert
     /// <param name="Edition">The edition of the book advert</param>
     public record BookCreateDto(
         string Title, string Description, decimal Price, string UserId, string[] Images, Condition Condition,
-        long CategoryId, string Isbn, string Author, string Publisher, string Edition, Language WrittenLanguage
+        long CategoryId, string Isbn, string Author, string Publisher, string Edition, Enums.Language WrittenLanguage
     ) : ProductCreateDto(Title, Description, Price, UserId, Images, Condition, ProductCategoryId: null)
     {
         /// <summary>

@@ -1,7 +1,11 @@
-﻿using EcoscolarWebApi.Models;
+﻿using EcoscolarWebApi.Data;
+using EcoscolarWebApi.Models;
+using EcoscolarWebApi.Services.Contracts;
+using EcoscolarWebApi.Utils;
 using EcoscolarWebApi.Utils.DTOs;
 using EcoscolarWebApi.Utils.DTOs.Advert;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,16 +16,20 @@ namespace EcoscolarWebApi.Controllers
     [Authorize]
     public class UsersController : ControllerBase
     {
-        private readonly IUserService _userService;            // User service for handling user-related operations
+		private readonly UserManager<User> _userManager;
+		private readonly IUserService _userService;            // User service for handling user-related operations
+		private readonly EcoscolarDbContext _context;
 
-        /// <summary>
-        /// UsersController constructor
-        /// </summary>
-        /// <param name="userService">The user service for handling user-related operations</param>
-        public UsersController(IUserService userService)
+		/// <summary>
+		/// UsersController constructor
+		/// </summary>
+		/// <param name="userService">The user service for handling user-related operations</param>
+		public UsersController(IUserService userService, UserManager<User> userManager, EcoscolarDbContext context)
         {
             _userService = userService;
-        }
+            _userManager = userManager;
+			_context = context;
+		}
 
         #region Current user
 
@@ -78,34 +86,31 @@ namespace EcoscolarWebApi.Controllers
             return null;
         }
 
-        #endregion ===
+		#endregion ===
 
-        #region Public profiles
+		#region Public profiles
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetUserProfile(string id)
-        {
-            var result = await _userService.GetPublicProfileAsync(id);
+		[HttpGet("{id}")]
+		public async Task<IActionResult> GetUserProfile(string id)
+		{
+			var result = await _userService.GetPublicProfileAsync(id);
 
-            if (result.IsSuccess)
-                return Ok(result.Data);
+			if (result.IsSuccess)
+				return Ok(result.Data);
 
-            return result.ErrorType switch
-            {
-                ErrorType.NotFound => NotFound(new { result.Errors }),
+			return result.ErrorType switch
+			{
+				ErrorType.NotFound => NotFound(new { result.Errors }),
 
-                _ => BadRequest(new { result.Errors })
-            };
-        }
+				_ => BadRequest(new { result.Errors })
+			};
+		}
 
-            return Ok(userProfileDto);
-        }
-
-        [HttpGet("me/adverts")]
+		[HttpGet("me/adverts")]
         public async Task<IActionResult> GetMyAdverts()
         {
             var currentUser = await _userManager.GetUserAsync(User);
-            if (currentUser == null)
+			if (currentUser == null)
                 return NotFound(new { message = "User not found." });
 
             var adverts = await _context.Adverts

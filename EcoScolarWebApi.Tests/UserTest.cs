@@ -1,6 +1,8 @@
 ﻿using EcoscolarWebApi.Controllers;
 using EcoscolarWebApi.Data;
 using EcoscolarWebApi.Models;
+using EcoscolarWebApi.Services.Contracts;
+using EcoscolarWebApi.Utils;
 using EcoscolarWebApi.Utils.DTOs;
 using EcoscolarWebApi.Utils.DTOs.Advert;
 using FluentAssertions;
@@ -16,6 +18,7 @@ namespace EcoscolarWebApi.Tests.Controllers;
 public class UsersControllerTests
 {
 	private readonly UserManager<User> _userManagerMock;
+	private readonly IUserService _userServiceMock;
 	private readonly EcoscolarDbContext _context;
 	private readonly UsersController _controller;
 
@@ -30,47 +33,12 @@ public class UsersControllerTests
 			.Options;
 		_context = new EcoscolarDbContext(options);
 
+		_userServiceMock = Substitute.For<IUserService>();
+
 		// Simulate the dependency injection of UserManager and DbContext into the UsersController
-		_controller = new UsersController(_userManagerMock, _context);
+		_controller = new UsersController(_userServiceMock, _userManagerMock, _context);
 	}
 
-	#region Tests pour RegisterCustom
-
-	[Fact]
-	public async Task RegisterCustom_ShouldReturnOk_WhenCreationIsSuccessful()
-	{
-		// Arrange
-		var request = new UserDto { Email = "test@ecoscolar.ch", Password = "Password123!", FirstName = "Alexis", LastName = "Rojas" };
-
-		_userManagerMock.CreateAsync(Arg.Any<User>(), request.Password)
-			.Returns(IdentityResult.Success);
-
-		// Act
-		var result = await _controller.RegisterCustom(request);
-
-		// Assert
-		result.Should().BeOfType<OkObjectResult>();
-	}
-
-	[Fact]
-	public async Task RegisterCustom_ShouldReturnBadRequest_WhenCreationFails()
-	{
-		// Arrange
-		var request = new UserDto { Email = "invalid", Password = "123" };
-		var errors = new[] { new IdentityError { Description = "Password too short" } };
-
-		_userManagerMock.CreateAsync(Arg.Any<User>(), Arg.Any<string>())
-			.Returns(IdentityResult.Failed(errors));
-
-		// Act
-		var result = await _controller.RegisterCustom(request);
-
-		// Assert
-		var badRequest = result.Should().BeOfType<BadRequestObjectResult>().Subject;
-		badRequest.Value.Should().BeEquivalentTo(errors);
-	}
-
-	#endregion
 
 	#region Tests pour GetMyProfile
 
@@ -78,7 +46,8 @@ public class UsersControllerTests
 	public async Task GetMyProfile_ShouldReturnNotFound_WhenUserDoesNotExist()
 	{
 		// Arrange
-		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns((User?)null);
+		_userServiceMock.GetCurrentUserProfileAsync(Arg.Any<ClaimsPrincipal>())
+			.Returns(Result<UserReadDto>.Failure(new[] { "User not found" }, ErrorType.NotFound));
 
 		// Act
 		var result = await _controller.GetMyProfile();
@@ -91,16 +60,20 @@ public class UsersControllerTests
 	public async Task GetMyProfile_ShouldReturnOk_WithUserData_WhenUserExists()
 	{
 		// Arrange
-		var existingUser = new User
-		{
-			Id = "guid-123",
-			UserName = "alexis@etml.ch",
-			Email = "alexis@etml.ch",
-			FirstName = "Alexis",
-			LastName = "Rojas"
-		};
+		var userReadDto = new UserReadDto(
+			"guid-123",
+			"alexis",
+			"Alexis",
+			"Rojas",
+			"alexis@etml.ch",
+			null,
+			"2000-01-01",
+			true,
+			new List<SpokenLanguageDto>()
+		);
 
-		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+		_userServiceMock.GetCurrentUserProfileAsync(Arg.Any<ClaimsPrincipal>())
+			.Returns(Result<UserReadDto>.Success(userReadDto));
 
 		// Act
 		var result = await _controller.GetMyProfile();
@@ -109,14 +82,7 @@ public class UsersControllerTests
 		var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
 
 		// Vérification que les données retournées correspondent à l'utilisateur existant
-		okResult.Value.Should().BeEquivalentTo(new
-		{
-			Id = "guid-123",
-			UserName = "alexis@etml.ch",
-			FirstName = "Alexis",
-			LastName = "Rojas",
-			Email = "alexis@etml.ch"
-		});
+		okResult.Value.Should().BeEquivalentTo(userReadDto);
 	}
 
 	#endregion

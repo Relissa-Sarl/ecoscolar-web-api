@@ -85,8 +85,14 @@ namespace EcoscolarWebApi.Utils.DTOs
     {
         public static UserPublicReadDto fromEntity(User user) => new UserPublicReadDto(user.Id, user.Nickname);
     }
-
-    public record LocationReadDto(
+	public class UserDto
+	{
+		public string FirstName { get; set; }
+		public string LastName { get; set; }
+		public string Email { get; set; }
+		public string Password { get; set; }
+	}
+	public record LocationReadDto(
         [Required] string PostalCode,
         [Required] string City,
         [Required] string Region
