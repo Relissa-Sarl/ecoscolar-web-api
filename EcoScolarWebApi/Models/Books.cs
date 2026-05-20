@@ -24,12 +24,12 @@ namespace EcoscolarWebApi.Models
         public string Edition { get; set; }
 
         [Required]
-        public Language WrittenLanguage { get; set; }
+        public Utils.Enums.Language WrittenLanguage { get; set; }
         
         [Required]
         public long BookCategoryId { get; set; }
 
         [ForeignKey("BookCategoryId")]
-        public virtual BookCategories BookCategory { get; set; }
+        public virtual BookCategories BookCategories { get; set; }
     }
 }

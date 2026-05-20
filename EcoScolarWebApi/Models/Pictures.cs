@@ -17,6 +17,6 @@ namespace EcoscolarWebApi.Models
         public long AdvertId { get; set; }
 
         [ForeignKey("AdvertId")]
-        public virtual PhysicalItems Advert { get; set; } = null!;
+        public virtual PhysicalItems Adverts { get; set; } = null!;
     }
 }

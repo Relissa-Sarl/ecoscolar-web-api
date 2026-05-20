@@ -1,6 +1,8 @@
 ﻿using EcoscolarWebApi.Controllers;
 using EcoscolarWebApi.Data;
 using EcoscolarWebApi.Models;
+using EcoscolarWebApi.Services.Contracts;
+using EcoscolarWebApi.Utils;
 using EcoscolarWebApi.Utils.DTOs;
 using EcoscolarWebApi.Utils.DTOs.Advert;
 using FluentAssertions;
@@ -16,6 +18,7 @@ namespace EcoscolarWebApi.Tests.Controllers;
 public class UsersControllerTests
 {
 	private readonly UserManager<User> _userManagerMock;
+	private readonly IUserService _userServiceMock;
 	private readonly EcoscolarDbContext _context;
 	private readonly UsersController _controller;
 
@@ -30,47 +33,12 @@ public class UsersControllerTests
 			.Options;
 		_context = new EcoscolarDbContext(options);
 
+		_userServiceMock = Substitute.For<IUserService>();
+
 		// Simulate the dependency injection of UserManager and DbContext into the UsersController
-		_controller = new UsersController(_userManagerMock, _context);
+		_controller = new UsersController(_userServiceMock, _userManagerMock, _context);
 	}
 
-	#region Tests pour RegisterCustom
-
-	[Fact]
-	public async Task RegisterCustom_ShouldReturnOk_WhenCreationIsSuccessful()
-	{
-		// Arrange
-		var request = new UserDto { Email = "test@ecoscolar.ch", Password = "Password123!", FirstName = "Alexis", LastName = "Rojas" };
-
-		_userManagerMock.CreateAsync(Arg.Any<User>(), request.Password)
-			.Returns(IdentityResult.Success);
-
-		// Act
-		var result = await _controller.RegisterCustom(request);
-
-		// Assert
-		result.Should().BeOfType<OkObjectResult>();
-	}
-
-	[Fact]
-	public async Task RegisterCustom_ShouldReturnBadRequest_WhenCreationFails()
-	{
-		// Arrange
-		var request = new UserDto { Email = "invalid", Password = "123" };
-		var errors = new[] { new IdentityError { Description = "Password too short" } };
-
-		_userManagerMock.CreateAsync(Arg.Any<User>(), Arg.Any<string>())
-			.Returns(IdentityResult.Failed(errors));
-
-		// Act
-		var result = await _controller.RegisterCustom(request);
-
-		// Assert
-		var badRequest = result.Should().BeOfType<BadRequestObjectResult>().Subject;
-		badRequest.Value.Should().BeEquivalentTo(errors);
-	}
-
-	#endregion
 
 	#region Tests pour GetMyProfile
 
@@ -78,7 +46,8 @@ public class UsersControllerTests
 	public async Task GetMyProfile_ShouldReturnNotFound_WhenUserDoesNotExist()
 	{
 		// Arrange
-		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns((User?)null);
+		_userServiceMock.GetCurrentUserProfileAsync(Arg.Any<ClaimsPrincipal>())
+			.Returns(Result<UserReadDto>.Failure(new[] { "User not found" }, ErrorType.NotFound));
 
 		// Act
 		var result = await _controller.GetMyProfile();
@@ -91,16 +60,20 @@ public class UsersControllerTests
 	public async Task GetMyProfile_ShouldReturnOk_WithUserData_WhenUserExists()
 	{
 		// Arrange
-		var existingUser = new User
-		{
-			Id = "guid-123",
-			UserName = "alexis@etml.ch",
-			Email = "alexis@etml.ch",
-			FirstName = "Alexis",
-			LastName = "Rojas"
-		};
+		var userReadDto = new UserReadDto(
+			"guid-123",
+			"alexis",
+			"Alexis",
+			"Rojas",
+			"alexis@etml.ch",
+			null,
+			"2000-01-01",
+			true,
+			new List<SpokenLanguageDto>()
+		);
 
-		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+		_userServiceMock.GetCurrentUserProfileAsync(Arg.Any<ClaimsPrincipal>())
+			.Returns(Result<UserReadDto>.Success(userReadDto));
 
 		// Act
 		var result = await _controller.GetMyProfile();
@@ -109,14 +82,7 @@ public class UsersControllerTests
 		var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
 
 		// Vérification que les données retournées correspondent à l'utilisateur existant
-		okResult.Value.Should().BeEquivalentTo(new
-		{
-			Id = "guid-123",
-			UserName = "alexis@etml.ch",
-			FirstName = "Alexis",
-			LastName = "Rojas",
-			Email = "alexis@etml.ch"
-		});
+		okResult.Value.Should().BeEquivalentTo(userReadDto);
 	}
 
 	#endregion
@@ -142,7 +108,7 @@ public class UsersControllerTests
 		var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
 		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-		var bookAdvert = new Books
+		var bookAdvert = new Book
 		{
 			AdvertId = 1,
 			Title = "Book Title",
@@ -159,7 +125,7 @@ public class UsersControllerTests
 			Edition = "1st",
 			WrittenLanguage = Utils.Enums.Language.FR
 		};
-		var physicalItemAdvert = new PhysicalItems
+		var physicalItemAdvert = new PhysicalItem
 		{
 			AdvertId = 2,
 			Title = "Guitar",
@@ -172,7 +138,7 @@ public class UsersControllerTests
 			NotificationDate = DateTime.UtcNow,
 			Condition = Utils.Enums.Condition.LIKE_NEW
 		};
-		var serviceAdvert = new AdvertServices
+		var serviceAdvert = new AdvertService
 		{
 			AdvertId = 3,
 			Title = "Math tutoring",
@@ -269,7 +235,7 @@ public class UsersControllerTests
 		var existingUser = new User { Id = "guid-toggle-1" };
 		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-		var advert = new Books
+		var advert = new Book
 		{
 			AdvertId = 2,
 			Title = "Another book",
@@ -302,7 +268,7 @@ public class UsersControllerTests
 		var existingUser = new User { Id = "guid-toggle-2" };
 		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-		var advert = new Books
+		var advert = new Book
 		{
 			AdvertId = 3,
 			Title = "ToBeDeleted",
@@ -332,4 +298,87 @@ public class UsersControllerTests
 	}
 
 	#endregion
-}
+
+	#region Tests for GetMyAdverts
+	[Fact]
+    public async Task GetMyAdverts_ShouldReturnNotFound_WhenUserDoesNotExist()
+	{
+        // Arrange
+        _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns((User?)null);
+
+        // Act
+        var result = await _controller.GetMyAdverts();
+
+        // Assert
+        result.Should().BeOfType<NotFoundObjectResult>();
+    }
+
+	[Fact]
+	public async Task GetMyAdverts_ShouldReturnOk_WithData_WhenUserExistsAndHasAdverts()
+	{
+		// Arrange
+		var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
+		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+		var advert1 = new Books
+		{
+			AdvertId = 1,
+			Title = "Book Title",
+			Description = "Book Descr",
+			Price = 10,
+			UserId = existingUser.Id,
+			User = existingUser,
+			Status = Utils.Enums.AdvertStatus.ACTIVE,
+			CreatedAt = DateTime.UtcNow,
+			NotificationDate = DateTime.UtcNow,
+			ISBN = "12345",
+			Author = "John",
+			Publisher = "Pub",
+			Edition = "1st",
+			WrittenLanguage = Utils.Enums.Language.FR
+		};
+		var advert2 = new PhysicalItems
+		{
+			AdvertId = 2,
+			Title = "Guitar",
+			Description = "Acoustic",
+			Price = 120,
+			UserId = existingUser.Id,
+			User = existingUser,
+			Status = Utils.Enums.AdvertStatus.ACTIVE,
+			CreatedAt = DateTime.UtcNow,
+			NotificationDate = DateTime.UtcNow,
+			Condition = Utils.Enums.Condition.LIKE_NEW
+		};
+		_context.Adverts.AddRange(advert1, advert2);
+		await _context.SaveChangesAsync();
+
+		// Act
+		var result = await _controller.GetMyAdverts();
+
+		// Assert
+		var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+		var returnedAdverts = okResult.Value as IEnumerable<AdvertReadDto>;
+		returnedAdverts.Should().NotBeNull();
+		returnedAdverts.Should().HaveCount(2);
+		returnedAdverts.Should().Contain(a => a.id == advert1.AdvertId && a.type == "BOOK");
+		returnedAdverts.Should().Contain(a => a.id == advert2.AdvertId && a.type == "PRODUCT");
+	}
+
+	[Fact]
+	public async Task GetMyAdverts_ShouldReturnOk_WithEmptyList_WhenUserExistsButHasNoAdverts()
+	{
+		// Arrange
+		var existingUser = new User { Id = "guid-456", UserName = "jane_doe", FirstName = "Jane", LastName = "Doe" };
+		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+
+		// Act
+		var result = await _controller.GetMyAdverts();
+
+		// Assert
+		var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+		var returnedAdverts = okResult.Value as IEnumerable<AdvertReadDto>;
+		returnedAdverts.Should().NotBeNull();
+		returnedAdverts.Should().BeEmpty();
+	}
+    #endregion
+    }

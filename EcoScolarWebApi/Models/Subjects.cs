@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EcoscolarWebApi.Models
 {
-    [Table("Subject")]
+    [Table("Subjects")]
     public class Subjects
     {
         [Key]
