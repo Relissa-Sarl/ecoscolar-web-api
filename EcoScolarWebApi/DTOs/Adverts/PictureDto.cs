@@ -5,9 +5,9 @@
 /// It contains the label of the Pictures, which is a string that describes the Pictures. 
 /// This DTO is used to transfer data between the application and the client, and it is also used to map the data from the database to the application.
 /// </summary>
-/// <param name="label">The label of the Pictures</param>
-public record PictureDto(string label)
+/// <param name="Label">The label of the Pictures</param>
+public record PictureDto(string Label)
 {
     public static PictureDto FromEntity(Models.Picture entity) =>
-        new PictureDto(label: entity.Label);
+        new(Label: entity.Label);
 }

@@ -1,6 +1,6 @@
 namespace EcoScolarWebApi.DTOs.Adverts;
 
-public class AdvertSummaryDto
+public record AdvertSummaryDto
 {
 	public Guid Id { get; set; }
 	public string Title { get; set; } = string.Empty;

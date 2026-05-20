@@ -3,26 +3,26 @@ using EcoScolarWebApi.Models;
 
 namespace EcoScolarWebApi.DTOs.Adverts;
 
-public record ProductReadDto(long id, string title, string description, decimal price, DateTime publicationDate, DateTime notificationDate, AdvertStatus status, string userId, string sellerPseudo,
-	List<string> pictures, Condition condition, decimal? weight, long? productCategoryId, string? productCategoryLabel)
+public record ProductReadDto(long Id, string Title, string Description, decimal Price, DateTime PublicationDate, DateTime NotificationDate, AdvertStatus Status, string UserId, string SellerPseudo,
+	List<string> Pictures, Condition Condition, decimal? Weight, long? ProductCategoryId, string? ProductCategoryLabel)
 {
 	public static ProductReadDto FromEntity(PhysicalItem entity)
 	{
 		return new ProductReadDto(
-			id: entity.AdvertId,
-			title: entity.Title,
-			description: entity.Description,
-			price: entity.Price,
-			publicationDate: entity.CreatedAt,
-			notificationDate: entity.NotificationDate,
-			status: entity.Status,
-			userId: entity.UserId,
-			sellerPseudo: entity.User?.UserName ?? "Anonyme",
-			condition: entity.Condition,
-			weight: entity.Weight ?? null,
-			productCategoryId: entity.ProductCategoryId ?? null,
-			productCategoryLabel: entity.ProductCategory?.Name ?? null,
-			pictures: entity.Pictures?.Select(p => p.Label).ToList() ?? new List<string>()
+			Id: entity.AdvertId,
+			Title: entity.Title,
+			Description: entity.Description,
+			Price: entity.Price,
+			PublicationDate: entity.CreatedAt,
+			NotificationDate: entity.NotificationDate,
+			Status: entity.Status,
+			UserId: entity.UserId,
+			SellerPseudo: entity.User?.UserName ?? "Anonyme",
+			Condition: entity.Condition,
+			Weight: entity.Weight ?? null,
+			ProductCategoryId: entity.ProductCategoryId ?? null,
+			ProductCategoryLabel: entity.ProductCategory?.Name ?? null,
+			Pictures: entity.Pictures?.Select(p => p.Label).ToList() ?? []
 		);
 	}
 }
@@ -44,7 +44,7 @@ public record ProductCreateDto(string Title, string Description, decimal Price, 
 	/// Converts the ProductCreateDto to a PhysicalItems entity.
 	/// </summary>
 	/// <returns>The PhysicalItems entity</returns>
-	public PhysicalItem ToEntity()
+	public new PhysicalItem ToEntity()
 	{
 		var product = new PhysicalItem();
 		this.MapToEntity(product);

@@ -238,9 +238,9 @@ public class AdvertsControllerTests : IDisposable
         var value = okResult!.Value as IEnumerable<AdvertReadDto>;
         value.Should().NotBeNull("The controller did not return an AdvertReadDto");
         value.Should().HaveCount(2);
-        value.Should().OnlyContain(ad => ad.type == "BOOK");
-        value.Should().Contain(ad => ad.id == 1 && ad.title == "Book Title" && ad.price == 10);
-        value.Should().Contain(ad => ad.id == 2 && ad.title == "Book Title 2" && ad.price == 15.3m);
+        value.Should().OnlyContain(ad => ad.Type == "BOOK");
+        value.Should().Contain(ad => ad.Id == 1 && ad.Title == "Book Title" && ad.Price == 10);
+        value.Should().Contain(ad => ad.Id == 2 && ad.Title == "Book Title 2" && ad.Price == 15.3m);
     }
 
     [Fact]
@@ -335,9 +335,9 @@ public class AdvertsControllerTests : IDisposable
         var value = okResult!.Value as IEnumerable<AdvertReadDto>;
         value.Should().NotBeNull("The controller did not return an AdvertReadDto");
         value.Should().HaveCount(2);
-        value.Should().OnlyContain(ad => ad.type == "PRODUCT");
-        value.Should().Contain(ad => ad.id == 1 && ad.title == "Guitar" && ad.price == 10);
-        value.Should().Contain(ad => ad.id == 2 && ad.title == "Guitar 2" && ad.price == 15.3m);
+        value.Should().OnlyContain(ad => ad.Type == "PRODUCT");
+        value.Should().Contain(ad => ad.Id == 1 && ad.Title == "Guitar" && ad.Price == 10);
+        value.Should().Contain(ad => ad.Id == 2 && ad.Title == "Guitar 2" && ad.Price == 15.3m);
     }
 
     [Fact]
@@ -424,9 +424,9 @@ public class AdvertsControllerTests : IDisposable
         var value = okResult!.Value as IEnumerable<AdvertReadDto>;
         value.Should().NotBeNull("The controller did not return an AdvertReadDto");
         value.Should().HaveCount(2);
-        value.Should().OnlyContain(ad => ad.type == "PRODUCT");
-        value.Should().Contain(ad => ad.id == 1 && ad.title == "Guitar" && ad.price == 10);
-        value.Should().Contain(ad => ad.id == 3 && ad.title == "Guitar 3" && ad.price == 40);
+        value.Should().OnlyContain(ad => ad.Type == "PRODUCT");
+        value.Should().Contain(ad => ad.Id == 1 && ad.Title == "Guitar" && ad.Price == 10);
+        value.Should().Contain(ad => ad.Id == 3 && ad.Title == "Guitar 3" && ad.Price == 40);
     }
 
     [Fact]
@@ -508,9 +508,9 @@ public class AdvertsControllerTests : IDisposable
         var value = okResult!.Value as IEnumerable<AdvertReadDto>;
         value.Should().NotBeNull("The controller did not return an AdvertReadDto");
         value.Should().HaveCount(2);
-        value.Should().OnlyContain(ad => ad.type == "PRODUCT");
-        value.Should().Contain(ad => ad.id == 1 && ad.title == "Guitar" && ad.price == 10);
-        value.Should().Contain(ad => ad.id == 2 && ad.title == "Guitar 2" && ad.price == 15.3m);
+        value.Should().OnlyContain(ad => ad.Type == "PRODUCT");
+        value.Should().Contain(ad => ad.Id == 1 && ad.Title == "Guitar" && ad.Price == 10);
+        value.Should().Contain(ad => ad.Id == 2 && ad.Title == "Guitar 2" && ad.Price == 15.3m);
     }
 
     [Fact]
@@ -597,8 +597,8 @@ public class AdvertsControllerTests : IDisposable
         var value = okResult!.Value as IEnumerable<AdvertReadDto>;
         value.Should().NotBeNull("The controller did not return an AdvertReadDto");
         value.Should().HaveCount(1);
-        value.Should().OnlyContain(ad => ad.type == "PRODUCT");
-        value.Should().Contain(ad => ad.id == 1 && ad.title == "Guitar" && ad.price == 10);
+        value.Should().OnlyContain(ad => ad.Type == "PRODUCT");
+        value.Should().Contain(ad => ad.Id == 1 && ad.Title == "Guitar" && ad.Price == 10);
     }
 
     [Fact]
@@ -692,9 +692,9 @@ public class AdvertsControllerTests : IDisposable
         var value = okResult!.Value as IEnumerable<AdvertReadDto>;
         value.Should().NotBeNull("The controller did not return an AdvertReadDto");
         value.Should().HaveCount(2);
-        value.Should().OnlyContain(ad => ad.type == "SERVICE");
-        value.Should().Contain(ad => ad.id == 2 && ad.title == "Lesson de français" && ad.price == 15.3m);
-        value.Should().Contain(ad => ad.id == 3 && ad.title == "Lesson de math" && ad.price == 30);
+        value.Should().OnlyContain(ad => ad.Type == "SERVICE");
+        value.Should().Contain(ad => ad.Id == 2 && ad.Title == "Lesson de français" && ad.Price == 15.3m);
+        value.Should().Contain(ad => ad.Id == 3 && ad.Title == "Lesson de math" && ad.Price == 30);
     }
 
     [Fact]
@@ -768,8 +768,8 @@ public class AdvertsControllerTests : IDisposable
         var value = okResult!.Value as IEnumerable<AdvertReadDto>;
         value.Should().NotBeNull("The controller did not return an AdvertReadDto");
         value.Should().HaveCount(1);
-        value.Should().OnlyContain(ad => ad.type == "SERVICE");
-        value.Should().Contain(ad => ad.id == 2 && ad.title == "Lesson de français" && ad.price == 15.3m);
+        value.Should().OnlyContain(ad => ad.Type == "SERVICE");
+        value.Should().Contain(ad => ad.Id == 2 && ad.Title == "Lesson de français" && ad.Price == 15.3m);
     }
 
     [Fact]
@@ -907,9 +907,9 @@ public class AdvertsControllerTests : IDisposable
 
         var value = okResult!.Value as AdvertReadDto;
         value.Should().NotBeNull("The controller did not return an AdvertReadDto");
-        value!.id.Should().Be(1);
-        value.title.Should().Be("Book Title");
-        value.price.Should().Be(10);
+        value!.Id.Should().Be(1);
+        value.Title.Should().Be("Book Title");
+        value.Price.Should().Be(10);
     }
 
     [Fact]
@@ -1068,9 +1068,9 @@ public class AdvertsControllerTests : IDisposable
 
         var value = okResult!.Value as ProductReadDto;
         value.Should().NotBeNull("The controller did not return a ProductReadDto");
-        value!.id.Should().Be(1);
-        value.title.Should().Be("Guitar");
-        value.price.Should().Be(40);
+        value!.Id.Should().Be(1);
+        value.Title.Should().Be("Guitar");
+        value.Price.Should().Be(40);
     }
 
     [Fact]
@@ -1159,9 +1159,9 @@ public class AdvertsControllerTests : IDisposable
 
         var value = okResult!.Value as ServiceReadDto;
         value.Should().NotBeNull("The controller did not return a ServiceReadDto");
-        value!.id.Should().Be(1);
-        value.title.Should().Be("Lesson de math");
-        value.price.Should().Be(30);
+        value!.Id.Should().Be(1);
+        value.Title.Should().Be("Lesson de math");
+        value.Price.Should().Be(30);
     }
 
     [Fact]
@@ -1308,8 +1308,8 @@ public class AdvertsControllerTests : IDisposable
 
         var value = createdAtActionResult!.Value as AdvertReadDto;
         value.Should().NotBeNull("The controller did not return an AdvertReadDto");
-        value!.title.Should().Be("New Book");
-        value.price.Should().Be(20);
+        value!.Title.Should().Be("New Book");
+        value.Price.Should().Be(20);
     }
 
     [Fact]
@@ -1390,8 +1390,8 @@ public class AdvertsControllerTests : IDisposable
 
         var value = createdAtActionResult!.Value as AdvertReadDto;
         value.Should().NotBeNull("The controller did not return an AdvertReadDto");
-        value!.title.Should().Be("New Product");
-        value.price.Should().Be(20);
+        value!.Title.Should().Be("New Product");
+        value.Price.Should().Be(20);
     }
 
     [Fact]
@@ -1468,8 +1468,8 @@ public class AdvertsControllerTests : IDisposable
 
         var value = createdAtActionResult!.Value as AdvertReadDto;
         value.Should().NotBeNull("The controller did not return an AdvertReadDto");
-        value!.title.Should().Be("New Service");
-        value.price.Should().Be(20);
+        value!.Title.Should().Be("New Service");
+        value.Price.Should().Be(20);
     }
 
     [Fact]

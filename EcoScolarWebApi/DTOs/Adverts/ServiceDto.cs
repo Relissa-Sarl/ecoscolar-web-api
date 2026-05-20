@@ -3,27 +3,27 @@ using EcoScolarWebApi.Models;
 
 namespace EcoScolarWebApi.DTOs.Adverts;
 
-public record ServiceReadDto(long id, string title, string description, decimal price, DateTime publicationDate, DateTime notificationDate, AdvertStatus status, string userId, string sellerPseudo,
-	long subjectId, string subjectLabel, long schoolGradeId, string schoolGradeLabel, Enums.LanguageEnum teachingLanguage, string studyLevel)
+public record ServiceReadDto(long Id, string Title, string Description, decimal Price, DateTime PublicationDate, DateTime NotificationDate, AdvertStatus Status, string UserId, string SellerPseudo,
+	long SubjectId, string SubjectLabel, long SchoolGradeId, string SchoolGradeLabel, Enums.LanguageEnum TeachingLanguage, string StudyLevel)
 {
 	public static ServiceReadDto FromEntity(TutoringAdvert entity)
 	{
 		return new ServiceReadDto(
-			id: entity.AdvertId,
-			title: entity.Title,
-			description: entity.Description,
-			price: entity.Price,
-			publicationDate: entity.CreatedAt,
-			notificationDate: entity.NotificationDate,
-			status: entity.Status,
-			userId: entity.UserId,
-			sellerPseudo: entity.User?.UserName ?? "Anonyme",
-			subjectId: entity.SubjectId,
-			subjectLabel: entity.Subject.Name,
-			schoolGradeId: entity.SchoolGradeId,
-			schoolGradeLabel: entity.SchoolGrade.Name,
-			teachingLanguage: entity.TeachingLanguage,
-			studyLevel: entity.StudyLevel
+			Id: entity.AdvertId,
+			Title: entity.Title,
+			Description: entity.Description,
+			Price: entity.Price,
+			PublicationDate: entity.CreatedAt,
+			NotificationDate: entity.NotificationDate,
+			Status: entity.Status,
+			UserId: entity.UserId,
+			SellerPseudo: entity.User?.UserName ?? "Anonyme",
+			SubjectId: entity.SubjectId,
+			SubjectLabel: entity.Subject.Name,
+			SchoolGradeId: entity.SchoolGradeId,
+			SchoolGradeLabel: entity.SchoolGrade.Name,
+			TeachingLanguage: entity.TeachingLanguage,
+			StudyLevel: entity.StudyLevel
 		);
 	}
 }
@@ -46,7 +46,7 @@ public record ServiceCreateDto(string Title, string Description, decimal Price, 
 	/// Converts the ServiceCreateDto to an AdvertServices entity.
 	/// </summary>
 	/// <returns>The AdvertServices entity</returns>
-	public TutoringAdvert ToEntity()
+	public new TutoringAdvert ToEntity()
 	{
 		var service = new TutoringAdvert();
 		this.MapToEntity(service);

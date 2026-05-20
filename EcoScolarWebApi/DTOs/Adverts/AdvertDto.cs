@@ -9,17 +9,17 @@ namespace EcoScolarWebApi.DTOs.Adverts;
 /// and the URL of the primary image if available. 
 /// This DTO is designed to provide a concise overview of an Adverts without exposing all the underlying details of the entity.
 /// </summary>
-/// <param name="id">The ID of the Adverts</param>
-/// <param name="type">The type of the Adverts</param>
-/// <param name="title">The title of the Adverts</param>
-/// <param name="price">The price of the Adverts</param>
-/// <param name="publicationDate">The date when the Adverts was published</param>
-/// <param name="notificationDate">The date when the Adverts was notified</param>
-/// <param name="status">The status of the Adverts</param>
-/// <param name="userId">The ID of the user who created the Adverts</param>
-/// <param name="sellerPseudo">The pseudo (username) of the seller</param>
-/// <param name="primaryImage">The URL of the primary image of the Adverts</param>
-public record AdvertReadDto(long id, string type, string title, decimal price, DateTime publicationDate, DateTime notificationDate, AdvertStatus status, string userId, string sellerPseudo, string? primaryImage)
+/// <param name="Id">The ID of the Adverts</param>
+/// <param name="Type">The type of the Adverts</param>
+/// <param name="Title">The title of the Adverts</param>
+/// <param name="Price">The price of the Adverts</param>
+/// <param name="PublicationDate">The date when the Adverts was published</param>
+/// <param name="NotificationDate">The date when the Adverts was notified</param>
+/// <param name="Status">The status of the Adverts</param>
+/// <param name="UserId">The ID of the user who created the Adverts</param>
+/// <param name="SellerPseudo">The pseudo (username) of the seller</param>
+/// <param name="PrimaryImage">The URL of the primary image of the Adverts</param>
+public record AdvertReadDto(long Id, string Type, string Title, decimal Price, DateTime PublicationDate, DateTime NotificationDate, AdvertStatus Status, string UserId, string SellerPseudo, string? PrimaryImage)
 {
 	/// <summary>
 	/// Factory method to create an AdvertReadDto from an Adverts entity.
@@ -41,16 +41,16 @@ public record AdvertReadDto(long id, string type, string title, decimal price, D
 		string? primaryImage = (entity as Models.PhysicalItem)?.Pictures?.FirstOrDefault()?.Label;
 
 		return new AdvertReadDto(
-			id: entity.AdvertId,
-			type: type,
-			title: entity.Title,
-			price: entity.Price,
-			publicationDate: entity.CreatedAt,
-			notificationDate: entity.NotificationDate,
-			status: entity.Status,
-			userId: entity.UserId,
-			sellerPseudo: entity.User?.UserName ?? "Anonyme",
-			primaryImage: primaryImage
+			Id: entity.AdvertId,
+			Type: type,
+			Title: entity.Title,
+			Price: entity.Price,
+			PublicationDate: entity.CreatedAt,
+			NotificationDate: entity.NotificationDate,
+			Status: entity.Status,
+			UserId: entity.UserId,
+			SellerPseudo: entity.User?.UserName ?? "Anonyme",
+			PrimaryImage: primaryImage
 		);
 	}
 }

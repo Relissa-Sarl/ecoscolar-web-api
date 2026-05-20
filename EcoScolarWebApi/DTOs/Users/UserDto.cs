@@ -36,8 +36,7 @@ public record UserReadDto(
 	/// </summary>
 	/// <param name="entity">The User entity to convert. Cannot be null.</param>
 	/// <returns>A UserReadDto populated with data from the specified User entity.</returns>
-	public static UserReadDto fromEntity(User entity) => new UserReadDto
-	(
+	public static UserReadDto FromEntity(User entity) => new	(
 		Id: entity.Id,
 		Nickname: entity.UserName ?? "",
 		FirstName: entity.FirstName,
@@ -45,7 +44,7 @@ public record UserReadDto(
 		Email: entity.Email ?? "",
 		BirthdayDate: entity.BirthdayDate,
 		IsOnboarded: entity.IsOnboarded,
-		Location: LocationReadDto.fromEntity(entity.Location) ?? null,
+		Location: LocationReadDto.FromEntity(entity.Location) ?? null,
 		//GlobalRating: 0,
 		//IsBanned: false,
 		//CurrentSchoolLevelId: 0,
@@ -98,7 +97,7 @@ public record LocationReadDto(
 [Required] string Region
 )
 {
-	public static LocationReadDto? fromEntity(Location location)
+	public static LocationReadDto? FromEntity(Location location)
 	{
 		if (location != null)
 			return new LocationReadDto(

@@ -189,9 +189,9 @@ public class UsersControllerTests
 		var returnedFavorites = okResult.Value as IEnumerable<AdvertReadDto>;
 		returnedFavorites.Should().NotBeNull();
 		returnedFavorites.Should().HaveCount(3);
-		returnedFavorites.Should().Contain(a => a.id == bookAdvert.AdvertId && a.type == "BOOK");
-		returnedFavorites.Should().Contain(a => a.id == physicalItemAdvert.AdvertId && a.type == "PRODUCT");
-		returnedFavorites.Should().Contain(a => a.id == serviceAdvert.AdvertId && a.type == "SERVICE");
+		returnedFavorites.Should().Contain(a => a.Id == bookAdvert.AdvertId && a.Type == "BOOK");
+		returnedFavorites.Should().Contain(a => a.Id == physicalItemAdvert.AdvertId && a.Type == "PRODUCT");
+		returnedFavorites.Should().Contain(a => a.Id == serviceAdvert.AdvertId && a.Type == "SERVICE");
 
 		// Cleanup for in memory db persistence between tests
 		_context.UserFavorites.RemoveRange(favoriteBook, favoritePhysical, favoriteService);
@@ -361,8 +361,8 @@ public class UsersControllerTests
 		var returnedAdverts = okResult.Value as IEnumerable<AdvertReadDto>;
 		returnedAdverts.Should().NotBeNull();
 		returnedAdverts.Should().HaveCount(2);
-		returnedAdverts.Should().Contain(a => a.id == advert1.AdvertId && a.type == "BOOK");
-		returnedAdverts.Should().Contain(a => a.id == advert2.AdvertId && a.type == "PRODUCT");
+		returnedAdverts.Should().Contain(a => a.Id == advert1.AdvertId && a.Type == "BOOK");
+		returnedAdverts.Should().Contain(a => a.Id == advert2.AdvertId && a.Type == "PRODUCT");
 	}
 
 	[Fact]

@@ -59,7 +59,7 @@ public class UserService : IUserService
 			return Result<UserReadDto>.Failure("User not found or session expired.", ErrorType.NotFound);
 
 		// Build the dto for the response
-		var userDto = UserReadDto.fromEntity(currentUser);
+		var userDto = UserReadDto.FromEntity(currentUser);
 
 		return Result<UserReadDto>.Success(userDto);
 	}
@@ -100,7 +100,7 @@ public class UserService : IUserService
 			return Result<UserReadDto>.Failure(errors);
 		}
 
-		return Result<UserReadDto>.Success(UserReadDto.fromEntity(currentUser));
+		return Result<UserReadDto>.Success(UserReadDto.FromEntity(currentUser));
 	}
 
 	public async Task<Result<UserPublicReadDto>> GetPublicProfileAsync(string userId)
