@@ -4,6 +4,7 @@ using EcoscolarWebApi.Services;
 using EcoscolarWebApi.Utils.DTOs;
 using EcoscolarWebApi.Utils.DTOs.Advert;
 using EcoscolarWebApi.Utils.Enums;
+using EcoScolarWebApi.Utils.DTOs.Advert;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -28,7 +29,7 @@ namespace EcoscolarWebApi.Controllers
             _advertSearchService = advertSearchService;
         }
 
-        // GET METHODS
+        #region GET METHODS
 
         /// <summary>
         /// Get all adverts whatever their type is (book, product or service)
@@ -38,7 +39,7 @@ namespace EcoscolarWebApi.Controllers
         /// </summary>
         /// <returns>List of all formatted adverts</returns>
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<AdvertReadDto>>> Index()
+        public async Task<ActionResult<IEnumerable<AdvertDetailDto>>> Index()
         {
             IEnumerable<Adverts> adverts;
             try
@@ -174,7 +175,7 @@ namespace EcoscolarWebApi.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<AdvertReadDto>> Details(long id)
         {
-            Adverts advert;
+            Adverts? advert;
             try
             {
                 advert = await _context.Adverts
@@ -193,6 +194,65 @@ namespace EcoscolarWebApi.Controllers
             if (advert == null) return NotFound();
             
             return Ok(AdvertReadDto.FromEntity(advert));
+        }
+
+        [HttpGet("books/{id}")]
+        public async Task<ActionResult<AdvertReadDto>> GetBookById(long id)
+        {
+            Books? book;
+            try
+            {
+                book = await _context.Books
+                    .Include(b => b.User)
+                    .Include(b => b.Pictures)
+                    .Include(b => b.BookCategory)
+                    .FirstOrDefaultAsync(b => b.AdvertId == id);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(new { error = e.Message });
+            }
+            if (book == null) return NotFound();
+            return Ok(BookReadDto.FromEntity(book));
+        }
+
+        [HttpGet("products/{id}")]
+        public async Task<ActionResult<AdvertReadDto>> GetProductById(long id)
+        {
+            PhysicalItems? product;
+            try
+            {
+                product = await _context.Products
+                    .Include(p => p.User)
+                    .Include(p => p.Pictures)
+                    .FirstOrDefaultAsync(p => p.AdvertId == id);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(new { error = e.Message });
+            }
+            if (product == null) return NotFound();
+            return Ok(ProductReadDto.FromEntity(product));
+        }
+
+        [HttpGet("services/{id}")]
+        public async Task<ActionResult<ServiceReadDto>> GetServiceById(long id)
+        {
+            AdvertServices? service;
+            try
+            {
+                service = await _context.Services
+                    .Include(s => s.User)
+                    .Include(s => s.Subject)
+                    .Include(s => s.SchoolGrade)
+                    .FirstOrDefaultAsync(s => s.AdvertId == id);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(new { error = e.Message });
+            }
+            if (service == null) return NotFound();
+            return Ok(ServiceReadDto.FromEntity(service));
         }
 
         /// <summary>
@@ -221,8 +281,9 @@ namespace EcoscolarWebApi.Controllers
 
             return Ok(detail);
         }
+        #endregion
 
-        // POST METHODS
+        #region POST METHODS
 
         /// <summary>
         /// Create a new book advert with the provided details in the request body.
@@ -290,8 +351,9 @@ namespace EcoscolarWebApi.Controllers
             AdvertReadDto readDto = AdvertReadDto.FromEntity(service);
             return CreatedAtAction("GetServices", new { id = service.AdvertId }, readDto);
         }
+        #endregion
 
-        // PUT METHODS
+        #region PUT METHODS
 
         /// <summary>
         /// Edit an existing book advert with the provided details in the request body.
@@ -305,7 +367,7 @@ namespace EcoscolarWebApi.Controllers
         [HttpPut("books/{id}")]
         public async Task<IActionResult> EditBook(long id, [FromBody] BookCreateDto bookDto)
         {
-            Books existingBook = await _context.Books
+            Books? existingBook = await _context.Books
                 .Include(b => b.Pictures)
                 .FirstOrDefaultAsync(b => b.AdvertId == id);
             
@@ -338,7 +400,7 @@ namespace EcoscolarWebApi.Controllers
         [HttpPut("products/{id}")]
         public async Task<IActionResult> EditProduct(long id, [FromBody] ProductCreateDto productDto)
         {
-            PhysicalItems existingProduct = await _context.Products
+            PhysicalItems? existingProduct = await _context.Products
                 .Include(p => p.Pictures)
                 .FirstOrDefaultAsync(p => p.AdvertId == id);
 
@@ -371,7 +433,7 @@ namespace EcoscolarWebApi.Controllers
         [HttpPut("services/{id}")]
         public async Task<IActionResult> EditService(long id, [FromBody] ServiceCreateDto serviceDto)
         {
-            AdvertServices existingService = await _context.Services
+            AdvertServices? existingService = await _context.Services
                 .FirstOrDefaultAsync(s => s.AdvertId == id);
 
             if (existingService == null) return NotFound();
@@ -390,8 +452,9 @@ namespace EcoscolarWebApi.Controllers
 
             return NoContent();
         }
+        #endregion
 
-        // PATCH METHODS
+        #region PATCH METHODS
 
         /// <summary>
         /// Update the status of an existing advert.
@@ -421,8 +484,9 @@ namespace EcoscolarWebApi.Controllers
             await _context.SaveChangesAsync();
             return NoContent();
         }
+        #endregion
 
-        // DELETE METHODS
+        #region DELETE METHODS
 
         /// <summary>
         /// Delete an existing advert.
@@ -494,5 +558,6 @@ namespace EcoscolarWebApi.Controllers
             }
             return BadRequest("No matching images found to remove.");
         }
+        #endregion
     }
 }
