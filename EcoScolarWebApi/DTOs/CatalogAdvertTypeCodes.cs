@@ -1,7 +1,9 @@
-namespace EcoscolarWebApi.Utils.DTOs;
+using EcoScolarWebApi.DTOs.AdvertDtos;
+
+namespace EcoScolarWebApi.DTOs;
 
 /// <summary>
-/// Chaînes identiques au champ <c>type</c> de <see cref="EcoscolarWebApi.Utils.DTOs.Adverts.AdvertReadDto"/> (mapping dans <c>FromEntity</c>, fichier Adverts/AdvertDto.cs).
+/// Chaînes identiques au champ <c>type</c> de <see cref="AdvertReadDto"/> (mapping dans <c>FromEntity</c>, fichier Adverts/AdvertDto.cs).
 /// À utiliser pour les DTO catalogue (<see cref="AdvertSummaryDto"/> / <see cref="AdvertDetailDto"/>) sans dupliquer une enum ni modifier ce fichier tiers.
 /// </summary>
 public static class CatalogAdvertTypeCodes

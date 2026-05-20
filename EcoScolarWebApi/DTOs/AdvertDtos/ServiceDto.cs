@@ -1,7 +1,7 @@
-﻿using EcoscolarWebApi.Models;
-using EcoscolarWebApi.Utils.Enums;
+﻿using EcoScolarWebApi.Enums;
+using EcoScolarWebApi.Models;
 
-namespace EcoscolarWebApi.Utils.DTOs.Adverts
+namespace EcoScolarWebApi.DTOs.AdvertDtos
 {
     public record ServiceReadDto(long id, string title, string description, decimal price, DateTime publicationDate, DateTime notificationDate, AdvertStatus status, string userId, string sellerPseudo,
         long subjectId, string subjectLabel, long schoolGradeId, string schoolGradeLabel, Enums.Language teachingLanguage, string studyLevel)
@@ -57,7 +57,7 @@ namespace EcoscolarWebApi.Utils.DTOs.Adverts
         /// Maps the properties of the ServiceCreateDto to an existing Adverts entity, specifically to an AdvertServices entity.
         /// </summary>
         /// <param name="entity">The Adverts entity to map to</param>
-        public override void MapToEntity(Models.Adverts entity)
+        public override void MapToEntity(Advert entity)
         {
             base.MapToEntity(entity);
             if (entity is AdvertServices service)

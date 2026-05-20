@@ -1,10 +1,11 @@
-﻿using EcoscolarWebApi.Controllers;
-using EcoscolarWebApi.Data;
-using EcoscolarWebApi.Models;
-using EcoscolarWebApi.Services.Contracts;
-using EcoscolarWebApi.Utils;
-using EcoscolarWebApi.Utils.DTOs;
-using EcoscolarWebApi.Utils.DTOs.Adverts;
+﻿using EcoScolarWebApi.Controllers;
+using EcoScolarWebApi.Data;
+using EcoScolarWebApi.DTOs;
+using EcoScolarWebApi.DTOs.AdvertDtos;
+using EcoScolarWebApi.Enums;
+using EcoScolarWebApi.Models;
+using EcoScolarWebApi.Services.Contracts;
+using EcoScolarWebApi.Utils;
 using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -13,7 +14,7 @@ using NSubstitute;
 using System.Security.Claims;
 using Xunit;
 
-namespace EcoscolarWebApi.Tests.Controllers;
+namespace EcoScolarWebApi.Tests.Controllers;
 
 public class UsersControllerTests
 {
@@ -116,14 +117,14 @@ public class UsersControllerTests
 			Price = 10,
 			UserId = existingUser.Id,
 			User = existingUser,
-			Status = Utils.Enums.AdvertStatus.ACTIVE,
+			Status = AdvertStatus.ACTIVE,
 			CreatedAt = DateTime.UtcNow,
 			NotificationDate = DateTime.UtcNow,
 			ISBN = "12345",
 			Author = "John",
 			Publisher = "Pub",
 			Edition = "1st",
-			WrittenLanguage = Utils.Enums.Language.FR
+			WrittenLanguage = Enums.Language.FR
 		};
 		var physicalItemAdvert = new PhysicalItems
 		{
@@ -133,10 +134,10 @@ public class UsersControllerTests
 			Price = 120,
 			UserId = existingUser.Id,
 			User = existingUser,
-			Status = Utils.Enums.AdvertStatus.ACTIVE,
+			Status = AdvertStatus.ACTIVE,
 			CreatedAt = DateTime.UtcNow,
 			NotificationDate = DateTime.UtcNow,
-			Condition = Utils.Enums.Condition.LIKE_NEW
+			Condition = Condition.LIKE_NEW
 		};
 		var serviceAdvert = new AdvertServices
 		{
@@ -146,13 +147,13 @@ public class UsersControllerTests
 			Price = 30,
 			UserId = existingUser.Id,
 			User = existingUser,
-			Status = Utils.Enums.AdvertStatus.ACTIVE,
+			Status = AdvertStatus.ACTIVE,
 			CreatedAt = DateTime.UtcNow,
 			NotificationDate = DateTime.UtcNow,
 			StudyLevel = "High School",
 			SubjectId = 1,
 			SchoolGradeId = 1,
-			TeachingLanguage = Utils.Enums.Language.FR
+			TeachingLanguage = Enums.Language.FR
 		};
 
 		var favoriteBook = new UserFavorite
@@ -245,7 +246,7 @@ public class UsersControllerTests
 			Author = "John",
 			Publisher = "Pub",
 			Edition = "1st",
-			WrittenLanguage = Utils.Enums.Language.FR
+			WrittenLanguage = Enums.Language.FR
 		};
 		_context.Adverts.Add(advert);
 		await _context.SaveChangesAsync();
@@ -278,7 +279,7 @@ public class UsersControllerTests
 			Author = "John",
 			Publisher = "Pub",
 			Edition = "1st",
-			WrittenLanguage = Utils.Enums.Language.FR
+			WrittenLanguage = Enums.Language.FR
 		};
 		_context.Adverts.Add(advert);
 
@@ -327,14 +328,14 @@ public class UsersControllerTests
 			Price = 10,
 			UserId = existingUser.Id,
 			User = existingUser,
-			Status = Utils.Enums.AdvertStatus.ACTIVE,
+			Status = AdvertStatus.ACTIVE,
 			CreatedAt = DateTime.UtcNow,
 			NotificationDate = DateTime.UtcNow,
 			ISBN = "12345",
 			Author = "John",
 			Publisher = "Pub",
 			Edition = "1st",
-			WrittenLanguage = Utils.Enums.Language.FR
+			WrittenLanguage = Enums.Language.FR
 		};
 		var advert2 = new PhysicalItems
 		{
@@ -344,10 +345,10 @@ public class UsersControllerTests
 			Price = 120,
 			UserId = existingUser.Id,
 			User = existingUser,
-			Status = Utils.Enums.AdvertStatus.ACTIVE,
+			Status = AdvertStatus.ACTIVE,
 			CreatedAt = DateTime.UtcNow,
 			NotificationDate = DateTime.UtcNow,
-			Condition = Utils.Enums.Condition.LIKE_NEW
+			Condition = Condition.LIKE_NEW
 		};
 		_context.Adverts.AddRange(advert1, advert2);
 		await _context.SaveChangesAsync();

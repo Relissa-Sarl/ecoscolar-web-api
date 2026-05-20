@@ -1,7 +1,7 @@
-﻿using EcoscolarWebApi.Models;
-using EcoscolarWebApi.Utils.Enums;
+﻿using EcoScolarWebApi.Enums;
+using EcoScolarWebApi.Models;
 
-namespace EcoscolarWebApi.Utils.DTOs.Adverts
+namespace EcoScolarWebApi.DTOs.AdvertDtos
 {
     public record BookReadDto(long id, string title, string description, decimal price, DateTime publicationDate, DateTime notificationDate, AdvertStatus status, string userId, string sellerPseudo,
         List<string> pictures, Condition condition, long bookCategoryId, string bookCategoryLabel, string isbn, string author, string publisher, string edition, Enums.Language writtenLanguage, decimal? weight = null)
@@ -66,7 +66,7 @@ namespace EcoscolarWebApi.Utils.DTOs.Adverts
         /// Maps the properties of the BookCreateDto to an existing Adverts entity, specifically to a Books entity.
         /// </summary>
         /// <param name="entity">The Adverts entity to map to</param>
-        public override void MapToEntity(Models.Adverts entity)
+        public override void MapToEntity(Advert entity)
         {
             base.MapToEntity(entity);
             if (entity is Books Books)

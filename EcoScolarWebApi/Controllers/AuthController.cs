@@ -1,12 +1,10 @@
-﻿using EcoscolarWebApi.Models;
-using EcoscolarWebApi.Services.Contracts;
-using EcoscolarWebApi.Utils;
-using EcoscolarWebApi.Utils.DTOs;
+﻿using EcoScolarWebApi.Models;
+using EcoScolarWebApi.Services.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
-namespace EcoscolarWebApi.Controllers
+namespace EcoScolarWebApi.Controllers
 {
     /// <summary>
     /// Defines API endpoints for user authentication operations such as registration and login.

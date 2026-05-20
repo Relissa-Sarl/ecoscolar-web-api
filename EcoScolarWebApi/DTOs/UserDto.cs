@@ -1,7 +1,7 @@
-﻿using EcoscolarWebApi.Models;
+﻿using EcoScolarWebApi.Models;
 using System.ComponentModel.DataAnnotations;
 
-namespace EcoscolarWebApi.Utils.DTOs
+namespace EcoScolarWebApi.DTOs
 {
     /// <summary>
     /// Represents a data transfer object containing user profile information for read operations.

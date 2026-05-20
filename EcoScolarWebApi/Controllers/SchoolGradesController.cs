@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using EcoscolarWebApi.Models;
-using EcoscolarWebApi.Data;
-using EcoscolarWebApi.Utils.DTOs.ReferenceData;
+using EcoScolarWebApi.Models;
+using EcoScolarWebApi.Data;
+using EcoScolarWebApi.DTOs.ReferenceData;
 
 [Route("api/v1/[controller]")]
 [ApiController]

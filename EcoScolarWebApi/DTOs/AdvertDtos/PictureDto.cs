@@ -1,4 +1,4 @@
-﻿namespace EcoscolarWebApi.Utils.DTOs.Adverts
+﻿namespace EcoScolarWebApi.DTOs.AdvertDtos
 {
     /// <summary>
     /// DTO used to represent a Pictures in an Adverts. 

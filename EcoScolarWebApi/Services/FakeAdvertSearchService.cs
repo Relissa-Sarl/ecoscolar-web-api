@@ -1,6 +1,6 @@
-using EcoscolarWebApi.Utils.DTOs;
+using EcoScolarWebApi.DTOs;
 
-namespace EcoscolarWebApi.Services
+namespace EcoScolarWebApi.Services
 {
     /// <summary>
     /// Mock catalogue search aligned with <see cref="AdvertSearchService"/>:

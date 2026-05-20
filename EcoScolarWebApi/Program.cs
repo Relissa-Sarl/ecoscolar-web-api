@@ -1,13 +1,13 @@
-using EcoscolarWebApi.Data;
-using EcoscolarWebApi.Models;
-using EcoscolarWebApi.Services;
-using EcoscolarWebApi.Services.Contracts;
+using EcoScolarWebApi.Data;
+using EcoScolarWebApi.Models;
+using EcoScolarWebApi.Services;
+using EcoScolarWebApi.Services.Contracts;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 using Stripe;
 
-namespace EcoscolarWebApi
+namespace EcoScolarWebApi
 {
     public class Program
     {

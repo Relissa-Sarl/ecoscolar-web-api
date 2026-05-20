@@ -1,11 +1,10 @@
-﻿using EcoscolarWebApi.Utils.Enums;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace EcoscolarWebApi.Models
+namespace EcoScolarWebApi.Models
 {
     [Table("Services")]
-    public class AdvertServices : Adverts
+    public class AdvertServices : Advert
     {
         [Required]
         [StringLength(50)]
@@ -18,7 +17,7 @@ namespace EcoscolarWebApi.Models
         public long SchoolGradeId { get; set; }
 
         [Required]
-        public Utils.Enums.Language TeachingLanguage { get; set; }
+        public Enums.Language TeachingLanguage { get; set; }
 
         [ForeignKey("SubjectId")]
         public virtual Subjects Subjects { get; set; }

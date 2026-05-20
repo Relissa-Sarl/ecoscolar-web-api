@@ -1,11 +1,11 @@
-﻿using EcoscolarWebApi.Utils.Enums;
+﻿using EcoScolarWebApi.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace EcoscolarWebApi.Models
+namespace EcoScolarWebApi.Models
 {
     [Table("PhysicalItems")]
-    public class PhysicalItems : Adverts
+    public class PhysicalItems : Advert
     {
         [Required]
         public Condition Condition { get; set; }

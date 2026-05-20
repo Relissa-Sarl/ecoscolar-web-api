@@ -1,13 +1,13 @@
-using EcoscolarWebApi.Data;
-using EcoscolarWebApi.Models;
-using EcoscolarWebApi.Services;
-using EcoscolarWebApi.Utils.DTOs;
-using EcoscolarWebApi.Utils.DTOs.Adverts;
-using EcoscolarWebApi.Utils.Enums;
+using EcoScolarWebApi.Data;
+using EcoScolarWebApi.DTOs;
+using EcoScolarWebApi.DTOs.AdvertDtos;
+using EcoScolarWebApi.Enums;
+using EcoScolarWebApi.Models;
+using EcoScolarWebApi.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace EcoscolarWebApi.Controllers
+namespace EcoScolarWebApi.Controllers
 {
     [Route("api/v1/[controller]")]
     [ApiController]
@@ -40,7 +40,7 @@ namespace EcoscolarWebApi.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<AdvertDetailDto>>> Index()
         {
-            IEnumerable<Adverts> adverts;
+            IEnumerable<Advert> adverts;
             try
             {
                 adverts = await _context.Adverts
@@ -177,7 +177,7 @@ namespace EcoscolarWebApi.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<AdvertReadDto>> Details(long id)
         {
-            Adverts Adverts;
+            Advert Adverts;
             try
             {
                 Adverts = await _context.Adverts
@@ -525,7 +525,7 @@ namespace EcoscolarWebApi.Controllers
         [HttpPatch("{id}/status")]
         public async Task<IActionResult> UpdateAdvertStatus(long id, [FromBody] AdvertStatus status)
         {
-            Adverts? Adverts;
+            Advert? Adverts;
             try
             {
                 Adverts = await _context.Adverts.FindAsync(id);
@@ -556,7 +556,7 @@ namespace EcoscolarWebApi.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAdvert(long id)
         {
-            Adverts? Adverts;
+            Advert? Adverts;
             try
             {
                 Adverts = await _context.Adverts.FindAsync(id);

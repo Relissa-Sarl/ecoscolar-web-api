@@ -1,8 +1,8 @@
-﻿using EcoscolarWebApi.Models;
+﻿using EcoScolarWebApi.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-namespace EcoscolarWebApi.Data
+namespace EcoScolarWebApi.Data
 {
     /// <summary>
     /// Database context for the Ecoscolar application, inheriting from IdentityDbContext 
@@ -95,7 +95,7 @@ namespace EcoscolarWebApi.Data
 		/// <summary>
 		/// DbSet for the Adverts entity, representing the adverts in the database
 		/// </summary>
-		public DbSet<Adverts> Adverts { get; set; } = default!;
+		public DbSet<Advert> Adverts { get; set; } = default!;
 		public DbSet<PhysicalItems> Products { get; set; } = default!;
 		public DbSet<AdvertServices> Services { get; set; } = default!;
 		public DbSet<Books> Books { get; set; } = default!;

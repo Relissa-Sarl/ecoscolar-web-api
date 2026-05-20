@@ -1,7 +1,7 @@
-﻿using EcoscolarWebApi.Models;
-using EcoscolarWebApi.Utils.Enums;
+﻿using EcoScolarWebApi.Enums;
+using EcoScolarWebApi.Models;
 
-namespace EcoscolarWebApi.Utils.DTOs.Adverts
+namespace EcoScolarWebApi.DTOs.AdvertDtos
 {
     /// <summary>
     /// DTO used to return Adverts information in a simplified form, suitable for listing and basic display purposes. 
@@ -28,7 +28,7 @@ namespace EcoscolarWebApi.Utils.DTOs.Adverts
         /// <param name="entity">The Adverts entity to convert</param>
         /// <returns>The AdvertReadDto instance</returns>
         /// <exception cref="InvalidOperationException"></exception>
-        public static AdvertReadDto FromEntity(Models.Adverts entity)
+        public static AdvertReadDto FromEntity(Advert entity)
         {
             string type = entity switch
             {
@@ -69,9 +69,9 @@ namespace EcoscolarWebApi.Utils.DTOs.Adverts
         /// This method initializes the common properties of the Adverts, such as title, description, price, user ID, status, creation date, and notification date.
         /// </summary>
         /// <returns>The Adverts entity</returns>
-        public Models.Adverts ToEntity()
+        public Advert ToEntity()
         {
-            var Adverts = new Models.Adverts();
+            var Adverts = new Advert();
             this.MapToEntity(Adverts);
             return Adverts;
         }
@@ -80,7 +80,7 @@ namespace EcoscolarWebApi.Utils.DTOs.Adverts
         /// Maps the properties of the AdvertBaseCreateDto to an existing Adverts entity.
         /// </summary>
         /// <param name="entity">The Adverts entity to map to</param>
-        public virtual void MapToEntity(Models.Adverts entity)
+        public virtual void MapToEntity(Advert entity)
         {
             entity.Title = Title;
             entity.Description = Description;

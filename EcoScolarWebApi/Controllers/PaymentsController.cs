@@ -2,9 +2,9 @@
 using Stripe;
 using Stripe.V2.Core;
 using Stripe.Checkout;
-using EcoscolarWebApi.Utils.DTOs.Stripe;
+using EcoScolarWebApi.DTOs.Stripe;
 
-namespace EcoscolarWebApi.Controllers
+namespace EcoScolarWebApi.Controllers
 {
     [Route("api/v1/[controller]")]
     [ApiController]

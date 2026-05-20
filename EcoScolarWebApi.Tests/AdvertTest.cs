@@ -1,11 +1,8 @@
-using EcoscolarWebApi.Controllers;
-using EcoscolarWebApi.Data;
-using EcoscolarWebApi.Models;
-using EcoscolarWebApi.Services;
-using EcoscolarWebApi.Utils.DTOs;
-using EcoscolarWebApi.Services.Contracts;
-using EcoscolarWebApi.Utils.DTOs.Adverts;
-using EcoscolarWebApi.Utils.Enums;
+using EcoScolarWebApi.Controllers;
+using EcoScolarWebApi.Data;
+using EcoScolarWebApi.Models;
+using EcoScolarWebApi.Services;
+using EcoScolarWebApi.Services.Contracts;
 using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -13,7 +10,10 @@ using Microsoft.EntityFrameworkCore;
 using NSubstitute;
 using System.Security.Claims;
 using Xunit;
-using Language = EcoscolarWebApi.Utils.Enums.Language;
+using Language = EcoScolarWebApi.Enums.Language;
+using EcoScolarWebApi.DTOs;
+using EcoScolarWebApi.DTOs.AdvertDtos;
+using EcoScolarWebApi.Enums;
 
 namespace EcoScolarWebApi.Tests.Controllers;
 
@@ -70,7 +70,7 @@ public class AdvertsControllerTests : IDisposable
             new Pictures { PictureId = 4, Label = "http://example.com/pic2.jpg", AdvertId = 2 }
         };
 
-        var adverts = new List<Adverts>
+        var adverts = new List<Advert>
         {
             new Books 
             {
@@ -171,7 +171,7 @@ public class AdvertsControllerTests : IDisposable
         {
             new Pictures { PictureId = 3, Label = "http://example.com/pic1.jpg", AdvertId = 2 }
         };
-        var adverts = new List<Adverts>
+        var adverts = new List<Advert>
         {
             new Books
             {
@@ -278,7 +278,7 @@ public class AdvertsControllerTests : IDisposable
         {
             new Pictures { PictureId = 3, Label = "http://example.com/pic1.jpg", AdvertId = 2 }
         };
-        var adverts = new List<Adverts>
+        var adverts = new List<Advert>
         {
             new PhysicalItems
             {
@@ -365,7 +365,7 @@ public class AdvertsControllerTests : IDisposable
             new Pictures { PictureId = 5, Label = "http://example.com/pic2.jpg", AdvertId = 3 },
             new Pictures { PictureId = 6, Label = "http://example.com/pic3.jpg", AdvertId = 3 }
         };
-        var adverts = new List<Adverts>
+        var adverts = new List<Advert>
         {
             new PhysicalItems
             {
@@ -452,7 +452,7 @@ public class AdvertsControllerTests : IDisposable
             new Pictures { PictureId = 5, Label = "http://example.com/pic2.jpg", AdvertId = 3 },
             new Pictures { PictureId = 6, Label = "http://example.com/pic3.jpg", AdvertId = 3 }
         };
-        var adverts = new List<Adverts>
+        var adverts = new List<Advert>
         {
             new PhysicalItems
             {
@@ -538,7 +538,7 @@ public class AdvertsControllerTests : IDisposable
             new Pictures { PictureId = 5, Label = "http://example.com/pic2.jpg", AdvertId = 3 },
             new Pictures { PictureId = 6, Label = "http://example.com/pic3.jpg", AdvertId = 3 }
         };
-        var adverts = new List<Adverts>
+        var adverts = new List<Advert>
         {
             new PhysicalItems
             {
@@ -634,7 +634,7 @@ public class AdvertsControllerTests : IDisposable
             new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
             new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
         };
-        var adverts = new List<Adverts>
+        var adverts = new List<Advert>
         {
             new PhysicalItems
             {
@@ -710,7 +710,7 @@ public class AdvertsControllerTests : IDisposable
             new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
             new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
         };
-        var adverts = new List<Adverts>
+        var adverts = new List<Advert>
         {
             new PhysicalItems
             {
@@ -785,7 +785,7 @@ public class AdvertsControllerTests : IDisposable
             new Pictures { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
             new Pictures { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
         };
-        var adverts = new List<Adverts>
+        var adverts = new List<Advert>
         {
             new PhysicalItems
             {

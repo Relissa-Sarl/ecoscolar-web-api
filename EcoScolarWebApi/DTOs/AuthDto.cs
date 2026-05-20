@@ -1,7 +1,7 @@
-﻿using EcoscolarWebApi.Models;
+﻿using EcoScolarWebApi.Models;
 using System.ComponentModel.DataAnnotations;
 
-namespace EcoscolarWebApi.Utils.DTOs
+namespace EcoScolarWebApi.DTOs
 {
     public record LoginRequestDto(
         [Required(ErrorMessage = "The email is required")]

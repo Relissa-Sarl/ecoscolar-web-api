@@ -1,8 +1,7 @@
-﻿using EcoscolarWebApi.Utils.Enums;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace EcoscolarWebApi.Models
+namespace EcoScolarWebApi.Models
 {
     [Table("Books")]
     public class Books : PhysicalItems
@@ -24,7 +23,7 @@ namespace EcoscolarWebApi.Models
         public string Edition { get; set; }
 
         [Required]
-        public Utils.Enums.Language WrittenLanguage { get; set; }
+        public Enums.Language WrittenLanguage { get; set; }
         
         [Required]
         public long BookCategoryId { get; set; }

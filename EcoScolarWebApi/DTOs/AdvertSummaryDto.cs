@@ -1,4 +1,4 @@
-namespace EcoscolarWebApi.Utils.DTOs
+namespace EcoScolarWebApi.DTOs
 {
 	public class AdvertSummaryDto
 	{

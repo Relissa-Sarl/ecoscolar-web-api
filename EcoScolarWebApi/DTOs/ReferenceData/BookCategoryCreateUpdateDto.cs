@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace EcoscolarWebApi.Utils.DTOs.ReferenceData
+namespace EcoScolarWebApi.DTOs.ReferenceData
 {
 	public class BookCategoryCreateUpdateDto
 	{

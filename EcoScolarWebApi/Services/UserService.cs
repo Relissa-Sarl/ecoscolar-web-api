@@ -1,13 +1,13 @@
-﻿using EcoscolarWebApi.Data;
-using EcoscolarWebApi.Models;
-using EcoscolarWebApi.Services.Contracts;
-using EcoscolarWebApi.Utils;
-using EcoscolarWebApi.Utils.DTOs;
+﻿using EcoScolarWebApi.Data;
+using EcoScolarWebApi.DTOs;
+using EcoScolarWebApi.Models;
+using EcoScolarWebApi.Services.Contracts;
+using EcoScolarWebApi.Utils;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
-namespace EcoscolarWebApi.Services
+namespace EcoScolarWebApi.Services
 {
     /// <summary>
     /// Implements user-related business logic.

@@ -1,11 +1,11 @@
-﻿using EcoscolarWebApi.Utils.Enums;
+﻿using EcoScolarWebApi.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace EcoscolarWebApi.Models
+namespace EcoScolarWebApi.Models
 {
     [Table("Adverts")]
-    public class Adverts
+    public class Advert
     {
         [Key]
         public long AdvertId { get; set; }

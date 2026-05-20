@@ -1,15 +1,15 @@
-﻿using EcoscolarWebApi.Data;
-using EcoscolarWebApi.Models;
-using EcoscolarWebApi.Services.Contracts;
-using EcoscolarWebApi.Utils;
-using EcoscolarWebApi.Utils.DTOs;
-using EcoscolarWebApi.Utils.DTOs.Adverts;
+﻿using EcoScolarWebApi.Data;
+using EcoScolarWebApi.DTOs;
+using EcoScolarWebApi.DTOs.AdvertDtos;
+using EcoScolarWebApi.Models;
+using EcoScolarWebApi.Services.Contracts;
+using EcoScolarWebApi.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace EcoscolarWebApi.Controllers
+namespace EcoScolarWebApi.Controllers
 {
     [Route("api/v1/[controller]")]
     [ApiController]

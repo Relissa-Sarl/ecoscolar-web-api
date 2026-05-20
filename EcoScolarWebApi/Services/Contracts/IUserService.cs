@@ -1,8 +1,8 @@
-﻿using EcoscolarWebApi.Utils;
-using EcoscolarWebApi.Utils.DTOs;
+﻿using EcoScolarWebApi.DTOs;
+using EcoScolarWebApi.Utils;
 using System.Security.Claims;
 
-namespace EcoscolarWebApi.Services.Contracts
+namespace EcoScolarWebApi.Services.Contracts
 {
     /// <summary>
     /// User service interface.

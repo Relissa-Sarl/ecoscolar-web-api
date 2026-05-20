@@ -1,4 +1,4 @@
-﻿namespace EcoscolarWebApi.Utils.DTOs.Stripe
+﻿namespace EcoScolarWebApi.DTOs.Stripe
 {
     public class ConnectAccountRequestDto
     {

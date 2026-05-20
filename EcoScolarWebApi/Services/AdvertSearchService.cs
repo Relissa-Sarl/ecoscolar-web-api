@@ -1,15 +1,15 @@
-﻿using EcoscolarWebApi.Data;
-using EcoscolarWebApi.Models;
-using EcoscolarWebApi.Utils.DTOs;
+﻿using EcoScolarWebApi.Data;
+using EcoScolarWebApi.DTOs;
+using EcoScolarWebApi.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace EcoscolarWebApi.Services
+namespace EcoScolarWebApi.Services
 {
     /// <summary>
-    /// Catalogue summaries/detail sur <see cref="Adverts"/> (livres, produits hors livre, services).
+    /// Catalogue summaries/detail sur <see cref="Advert"/> (livres, produits hors livre, services).
     /// Filtre <c>isbn</c> : lignes résolues comme annonces reliées à <see cref="Books"/>.
     /// Filtre <c>q</c> : titre ou ISBN (pour les lignes livre uniquement dans la sous-requête).
-    /// <see cref="AdvertSummaryDto.Id"/> encode <see cref="Adverts.AdvertId"/> en <see cref="Guid"/>.
+    /// <see cref="AdvertSummaryDto.Id"/> encode <see cref="Advert.AdvertId"/> en <see cref="Guid"/>.
     /// </summary>
     public sealed class AdvertSearchService : IAdvertSearchService
     {
@@ -24,7 +24,7 @@ namespace EcoscolarWebApi.Services
             AdvertSearchQuery? query,
             CancellationToken cancellationToken = default)
         {
-            IQueryable<Adverts> advertsQuery = _context.Adverts.AsNoTracking();
+            IQueryable<Advert> advertsQuery = _context.Adverts.AsNoTracking();
 
             if (query != null && !string.IsNullOrWhiteSpace(query.Isbn))
             {
@@ -110,7 +110,7 @@ namespace EcoscolarWebApi.Services
         }
 
         private static AdvertSummaryDto MapSummary(
-            Adverts a,
+            Advert a,
             Dictionary<long, Books> booksDict,
             Dictionary<long, AdvertServices> servicesDict)
         {

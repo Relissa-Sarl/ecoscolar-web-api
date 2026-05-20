@@ -1,6 +1,6 @@
-using EcoscolarWebApi.Utils.DTOs;
+using EcoScolarWebApi.DTOs;
 
-namespace EcoscolarWebApi.Services
+namespace EcoScolarWebApi.Services
 {
     public interface IAdvertSearchService
     {

@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace EcoscolarWebApi.Utils.DTOs.ReferenceData
+namespace EcoScolarWebApi.DTOs.ReferenceData
 {
-	public class SchoolGradeCreateUpdateDto
+	public class SubjectCreateUpdateDto
 	{
 		[Required]
 		[StringLength(100)]
@@ -10,6 +10,6 @@ namespace EcoscolarWebApi.Utils.DTOs.ReferenceData
 
 		[Required]
 		[StringLength(100)]
-		public string SchoolGrade { get; set; }
+		public string Subject { get; set; }
 	}
 }

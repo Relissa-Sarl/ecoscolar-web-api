@@ -1,7 +1,7 @@
-﻿using EcoscolarWebApi.Models;
-using EcoscolarWebApi.Utils.Enums;
+﻿using EcoScolarWebApi.Enums;
+using EcoScolarWebApi.Models;
 
-namespace EcoscolarWebApi.Utils.DTOs.Adverts
+namespace EcoScolarWebApi.DTOs.AdvertDtos
 {
     public record ProductReadDto(long id, string title, string description, decimal price, DateTime publicationDate, DateTime notificationDate, AdvertStatus status, string userId, string sellerPseudo, 
         List<string> pictures, Condition condition, decimal? weight, long? productCategoryId, string? productCategoryLabel)
@@ -55,7 +55,7 @@ namespace EcoscolarWebApi.Utils.DTOs.Adverts
         /// Maps the properties of the ProductCreateDto to an existing Adverts entity, specifically to a PhysicalItems entity.
         /// </summary>
         /// <param name="entity">The Adverts entity to map to</param>
-        public override void MapToEntity(Models.Adverts entity)
+        public override void MapToEntity(Advert entity)
         {
             base.MapToEntity(entity);
             if (entity is PhysicalItems product)

@@ -1,7 +1,7 @@
-﻿using EcoscolarWebApi.Models;
+﻿using EcoScolarWebApi.Models;
 using Microsoft.AspNetCore.Identity;
 
-namespace EcoscolarWebApi.Services
+namespace EcoScolarWebApi.Services
 {
     public class DevEmailSenderService : IEmailSender<User>
     {

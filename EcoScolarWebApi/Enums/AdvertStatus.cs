@@ -1,7 +1,7 @@
 ﻿using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 
-namespace EcoscolarWebApi.Utils.Enums
+namespace EcoScolarWebApi.Enums
 {
     /// <summary>
     /// Enumeration that represents the status of an Adverts.
