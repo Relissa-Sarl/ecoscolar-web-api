@@ -20,8 +20,9 @@ namespace EcoscolarWebApi.Utils.DTOs
         string FirstName,
         string LastName,
         string Email,
-        string PostalCode,
+        LocationReadDto? Location,
         string BirthdayDate,
+        bool IsOnboarded,
         //double GlobalRating,
         //bool IsBanned,
         //int CurrentSchoolLevelId,
@@ -43,7 +44,8 @@ namespace EcoscolarWebApi.Utils.DTOs
             LastName: entity.LastName,
             Email: entity.Email ?? "",
             BirthdayDate: entity.BirthdayDate,
-            PostalCode: entity.Location?.PostalCode ?? "",
+            IsOnboarded: entity.IsOnboarded,
+            Location: LocationReadDto.fromEntity(entity.Location) ?? null,
             //GlobalRating: 0,
             //IsBanned: false,
             //CurrentSchoolLevelId: 0,
@@ -82,5 +84,24 @@ namespace EcoscolarWebApi.Utils.DTOs
     )
     {
         public static UserPublicReadDto fromEntity(User user) => new UserPublicReadDto(user.Id, user.Nickname);
+    }
+
+    public record LocationReadDto(
+        [Required] string PostalCode,
+        [Required] string City,
+        [Required] string Region
+    )
+    {
+        public static LocationReadDto? fromEntity(Location location)
+        { 
+            if (location != null)
+                return new LocationReadDto(
+                    PostalCode: location.PostalCode,
+                    City: location.City,
+                    Region: location.Region
+                );
+
+            return null;
+        }
     }
 }
