@@ -7,14 +7,12 @@ using EcoscolarWebApi.Services.Contracts;
 using EcoscolarWebApi.Utils.DTOs.Adverts;
 using EcoscolarWebApi.Utils.Enums;
 using FluentAssertions;
-using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NSubstitute;
 using System.Security.Claims;
 using Xunit;
-using Xunit.Sdk;
 using Language = EcoscolarWebApi.Utils.Enums.Language;
 
 namespace EcoScolarWebApi.Tests.Controllers;
@@ -702,7 +700,7 @@ public class AdvertsControllerTests : IDisposable
     }
 
     [Fact]
-    public async Task GetServices_ReturnsAllProducts_WhenResearchKeyword()
+    public async Task GetServices_ReturnsAllServices_WhenResearchKeyword()
     {
         // Arrange
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
@@ -974,7 +972,7 @@ public class AdvertsControllerTests : IDisposable
 
         // Assert
         var okResult = result.Result as OkObjectResult;
-        okResult.Should().NotBeNull("The controller did not return a NotFoundResult");
+        okResult.Should().NotBeNull("The controller did not return an OkObjectResult");
 
         var value = okResult!.Value as BookReadDto;
         value.Should().NotBeNull("The controller did not return a BookReadDto");
@@ -1239,6 +1237,7 @@ public class AdvertsControllerTests : IDisposable
     #endregion
 
     #region Tests for GetSummaryDetail
+    [Fact]
     public async Task GetSummaryDetail_ReturnsOk_WhenItemExists()
     {
         // Arrange
@@ -2210,7 +2209,7 @@ public class AdvertsControllerTests : IDisposable
         await _context.SaveChangesAsync();
 
         // Act
-        var result = await _controller.RemoveAdvertImages(1, ["http://example.com/nonexistent.jpg"]); // Non-existing picture
+        var result = await _controller.RemoveAdvertImages(1, ["http://example.com/nonexistent.jpg"]); // Bad picture URL
 
         // Assert
         var notFoundResult = result as BadRequestObjectResult;

@@ -39,7 +39,7 @@ namespace EcoscolarWebApi.Utils.DTOs.Adverts
     /// <param name="Description">The description of the Books Adverts</param>
     /// <param name="Price">The price of the Books Adverts</param>
     /// <param name="UserId">The ID of the user who is creating the Books Adverts</param>
-    /// <param name="Images">The array of image URLs for the Books Adverts</param>
+    /// <param name="Images">The array of image for the Books Adverts</param>
     /// <param name="Condition">The condition of the Books Adverts</param>
     /// <param name="CategoryId">The ID of the category to which the Books Adverts belongs</param>
     /// <param name="Isbn">The ISBN of the Books Adverts</param>
@@ -48,7 +48,7 @@ namespace EcoscolarWebApi.Utils.DTOs.Adverts
     /// <param name="Edition">The edition of the Books Adverts</param>
     public record BookCreateDto(
         string Title, string Description, decimal Price, string UserId, Pictures[] Images, Condition Condition,
-        long CategoryId, string Isbn, string Author, string Publisher, string Edition, Language WrittenLanguage
+        long CategoryId, string Isbn, string Author, string Publisher, string Edition, Enums.Language WrittenLanguage
     ) : ProductCreateDto(Title, Description, Price, UserId, Images, Condition, ProductCategoryId: null)
     {
         /// <summary>
