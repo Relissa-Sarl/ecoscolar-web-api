@@ -14,12 +14,17 @@ namespace EcoscolarWebApi.Data
         /// Db context constructor
         /// </summary>
         /// <param name="options">The options for the DbContext</param>
-        public DbSet<EcoscolarWebApi.Models.Subjects> Subjects { get; set; } = default!;
+        public DbSet<SchoolGrades> SchoolGrades { get; set; } = default!;
         /// <summary>
         /// Db context constructor
         /// </summary>
         /// <param name="options">The options for the DbContext</param>
-        public DbSet<EcoscolarWebApi.Models.BookCategories> BookCategories { get; set; } = default!;
+        public DbSet<Subjects> Subjects { get; set; } = default!;
+        /// <summary>
+        /// Db context constructor
+        /// </summary>
+        /// <param name="options">The options for the DbContext</param>
+        public DbSet<BookCategories> BookCategories { get; set; } = default!;
         /// <summary>
         /// Db context constructor
         /// </summary>
@@ -59,12 +64,6 @@ namespace EcoscolarWebApi.Data
                 .WithMany()
                 .HasForeignKey(uf => uf.AdvertId)
                 .OnDelete(DeleteBehavior.Cascade);
-
-            /*builder.Entity<PhysicalItems>()
-                .HasOne(p => p.ProductCategory)
-                .WithMany(c => c.PhysicalItems)
-                .HasForeignKey(p => p.ProductCategoryId)
-                .OnDelete(DeleteBehavior.Restrict);*/
 
 			Seeding(builder);
         }
