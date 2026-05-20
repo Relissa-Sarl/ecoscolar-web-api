@@ -54,7 +54,7 @@ namespace EcoScolarWebApi.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Locations",
+                name: "Location",
                 columns: table => new
                 {
                     LocationId = table.Column<int>(type: "int", nullable: false)
@@ -65,7 +65,7 @@ namespace EcoScolarWebApi.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Locations", x => x.LocationId);
+                    table.PrimaryKey("PK_Location", x => x.LocationId);
                 });
 
             migrationBuilder.CreateTable(
@@ -89,11 +89,11 @@ namespace EcoScolarWebApi.Migrations
                     SchoolGradeId = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    SchoolGrades = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false)
+                    SchoolGrade = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_SchoolGrade", x => x.SchoolGradeId);
+                    table.PrimaryKey("PK_SchoolGrades", x => x.SchoolGradeId);
                 });
 
             migrationBuilder.CreateTable(
@@ -103,11 +103,11 @@ namespace EcoScolarWebApi.Migrations
                     SubjectId = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    Subjects = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false)
+                    Subject = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Subject", x => x.SubjectId);
+                    table.PrimaryKey("PK_Subjects", x => x.SubjectId);
                 });
 
             migrationBuilder.CreateTable(
@@ -161,9 +161,9 @@ namespace EcoScolarWebApi.Migrations
                 {
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_AspNetUsers_Locations_LocationId",
+                        name: "FK_AspNetUsers_Location_LocationId",
                         column: x => x.LocationId,
-                        principalTable: "Locations",
+                        principalTable: "Location",
                         principalColumn: "LocationId",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -325,8 +325,7 @@ namespace EcoScolarWebApi.Migrations
                         name: "FK_PhysicalItems_ProductCategories_ProductCategoryId",
                         column: x => x.ProductCategoryId,
                         principalTable: "ProductCategories",
-                        principalColumn: "ProductCategoryId",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "ProductCategoryId");
                 });
 
             migrationBuilder.CreateTable(
@@ -349,13 +348,13 @@ namespace EcoScolarWebApi.Migrations
                         principalColumn: "AdvertId",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Services_SchoolGrade_SchoolGradeId",
+                        name: "FK_Services_SchoolGrades_SchoolGradeId",
                         column: x => x.SchoolGradeId,
                         principalTable: "SchoolGrades",
                         principalColumn: "SchoolGradeId",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Services_Subject_SubjectId",
+                        name: "FK_Services_Subjects_SubjectId",
                         column: x => x.SubjectId,
                         principalTable: "Subjects",
                         principalColumn: "SubjectId",
@@ -464,7 +463,7 @@ namespace EcoScolarWebApi.Migrations
                 });
 
             migrationBuilder.InsertData(
-                table: "Locations",
+                table: "Location",
                 columns: new[] { "LocationId", "City", "PostalCode", "Region" },
                 values: new object[,]
                 {
@@ -492,7 +491,7 @@ namespace EcoScolarWebApi.Migrations
 
             migrationBuilder.InsertData(
                 table: "SchoolGrades",
-                columns: new[] { "SchoolGradeId", "Name", "SchoolGrades" },
+                columns: new[] { "SchoolGradeId", "Name", "SchoolGrade" },
                 values: new object[,]
                 {
                     { 1L, "Cycle 1 (1H-4H)", "C1" },
@@ -506,7 +505,7 @@ namespace EcoScolarWebApi.Migrations
 
             migrationBuilder.InsertData(
                 table: "Subjects",
-                columns: new[] { "SubjectId", "Name", "Subjects" },
+                columns: new[] { "SubjectId", "Name", "Subject" },
                 values: new object[,]
                 {
                     { 1L, "Français", "FR" },
@@ -674,7 +673,7 @@ namespace EcoScolarWebApi.Migrations
                 name: "AspNetUsers");
 
             migrationBuilder.DropTable(
-                name: "Locations");
+                name: "Location");
         }
     }
 }

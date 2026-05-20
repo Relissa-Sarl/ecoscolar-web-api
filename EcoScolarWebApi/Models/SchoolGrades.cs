@@ -15,8 +15,6 @@ namespace EcoscolarWebApi.Models
 
         [Required]
         [StringLength(100)]
-        public string Grade { get; set; }
-
-        public virtual ICollection<AdvertServices> AdvertServices { get; set; } = [];
+        public string SchoolGrade { get; set; }
     }
 }

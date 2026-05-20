@@ -16,7 +16,5 @@ namespace EcoscolarWebApi.Models
         [Required]
         [StringLength(1000)]
         public string Description { get; set; }
-
-        public virtual ICollection<Books> Books { get; set; } = new List<Books>();
     }
 }

@@ -4,20 +4,35 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EcoscolarWebApi.Data
 {
-	/// <summary>
-	/// Database context for the Ecoscolar application, inheriting from IdentityDbContext 
-	/// to include user management features provided by ASP.NET Core Identity.
-	/// </summary>
-	public class EcoscolarDbContext : IdentityDbContext<User>
-	{
-		/// <summary>
-		/// Db context constructor
-		/// </summary>
-		/// <param name="options">The options for the DbContext</param>
-		public EcoscolarDbContext(DbContextOptions<EcoscolarDbContext> options)
-			: base(options)
-		{
-		}
+    /// <summary>
+    /// Database context for the Ecoscolar application, inheriting from IdentityDbContext 
+    /// to include user management features provided by ASP.NET Core Identity.
+    /// </summary>
+    public class EcoscolarDbContext : IdentityDbContext<User>
+    {
+        /// <summary>
+        /// Db context constructor
+        /// </summary>
+        /// <param name="options">The options for the DbContext</param>
+        public DbSet<SchoolGrades> SchoolGrades { get; set; } = default!;
+        /// <summary>
+        /// Db context constructor
+        /// </summary>
+        /// <param name="options">The options for the DbContext</param>
+        public DbSet<Subjects> Subjects { get; set; } = default!;
+        /// <summary>
+        /// Db context constructor
+        /// </summary>
+        /// <param name="options">The options for the DbContext</param>
+        public DbSet<BookCategories> BookCategories { get; set; } = default!;
+        /// <summary>
+        /// Db context constructor
+        /// </summary>
+        /// <param name="options">The options for the DbContext</param>
+        public EcoscolarDbContext(DbContextOptions<EcoscolarDbContext> options)
+            : base(options)
+        {
+        }
 
 		/// <summary>
 		/// DbSet for the User entity, representing the users in the database
@@ -45,12 +60,6 @@ namespace EcoscolarWebApi.Data
 				.WithMany()
 				.HasForeignKey(uf => uf.AdvertId)
 				.OnDelete(DeleteBehavior.Cascade);
-
-			builder.Entity<PhysicalItems>()
-				.HasOne(p => p.ProductCategories)
-				.WithMany(c => c.PhysicalItems)
-				.HasForeignKey(p => p.ProductCategoryId)
-				.OnDelete(DeleteBehavior.Restrict);
 
 			configureUserLanguageEntity(builder);
 			configureLocationEntity(builder);
@@ -120,28 +129,28 @@ namespace EcoscolarWebApi.Data
 				new BookCategories { BookCategoryId = 10, Name = "Formation professionnelle", Description = "Manuels liés aux filières CFC et maturité professionnelle." }
 			);
 			builder.Entity<Subjects>().HasData(
-				new Subjects { SubjectId = 1, Name = "Français", Code = "FR" },
-				new Subjects { SubjectId = 2, Name = "Allemand", Code = "DE" },
-				new Subjects { SubjectId = 3, Name = "Anglais", Code = "EN" },
-				new Subjects { SubjectId = 4, Name = "Mathématiques", Code = "MATH" },
-				new Subjects { SubjectId = 5, Name = "Sciences naturelles", Code = "SCI" },
-				new Subjects { SubjectId = 6, Name = "Histoire", Code = "HIST" },
-				new Subjects { SubjectId = 7, Name = "Géographie", Code = "GEO" },
-				new Subjects { SubjectId = 8, Name = "Éducation physique", Code = "EPS" },
-				new Subjects { SubjectId = 9, Name = "Arts visuels", Code = "ARTS" },
-				new Subjects { SubjectId = 10, Name = "Musique", Code = "MUS" },
-				new Subjects { SubjectId = 11, Name = "Économie et droit", Code = "ECO" },
-				new Subjects { SubjectId = 12, Name = "Informatique", Code = "INFO" }
+				new Subjects { SubjectId = 1, Name = "Français", Subject = "FR" },
+				new Subjects { SubjectId = 2, Name = "Allemand", Subject = "DE" },
+				new Subjects { SubjectId = 3, Name = "Anglais", Subject = "EN" },
+				new Subjects { SubjectId = 4, Name = "Mathématiques", Subject = "MATH" },
+				new Subjects { SubjectId = 5, Name = "Sciences naturelles", Subject = "SCI" },
+				new Subjects { SubjectId = 6, Name = "Histoire", Subject = "HIST" },
+				new Subjects { SubjectId = 7, Name = "Géographie", Subject = "GEO" },
+				new Subjects { SubjectId = 8, Name = "Éducation physique", Subject = "EPS" },
+				new Subjects { SubjectId = 9, Name = "Arts visuels", Subject = "ARTS" },
+				new Subjects { SubjectId = 10, Name = "Musique", Subject = "MUS" },
+				new Subjects { SubjectId = 11, Name = "Économie et droit", Subject = "ECO" },
+				new Subjects { SubjectId = 12, Name = "Informatique", Subject = "INFO" }
 			);
 			// Système HarmoS : https://ecole-basse-veveyse.ch/informations/degres-harmos/
 			builder.Entity<SchoolGrades>().HasData(
-				new SchoolGrades { SchoolGradeId = 1, Name = "Cycle 1 (1H-4H)", Grade = "C1" },
-				new SchoolGrades { SchoolGradeId = 2, Name = "Cycle 2 (5H-8H)", Grade = "C2" },
-				new SchoolGrades { SchoolGradeId = 3, Name = "Cycle 3 (9H-11H)", Grade = "C3" },
-				new SchoolGrades { SchoolGradeId = 4, Name = "Secondaire II - Gymnase", Grade = "S2-GYM" },
-				new SchoolGrades { SchoolGradeId = 5, Name = "Secondaire II - Maturité professionnelle", Grade = "S2-MP" },
-				new SchoolGrades { SchoolGradeId = 6, Name = "Secondaire II - CFC", Grade = "S2-CFC" },
-				new SchoolGrades { SchoolGradeId = 7, Name = "Secondaire II - ECG", Grade = "S2-ECG" }
+				new SchoolGrades { SchoolGradeId = 1, Name = "Cycle 1 (1H-4H)", SchoolGrade = "C1" },
+				new SchoolGrades { SchoolGradeId = 2, Name = "Cycle 2 (5H-8H)", SchoolGrade = "C2" },
+				new SchoolGrades { SchoolGradeId = 3, Name = "Cycle 3 (9H-11H)", SchoolGrade = "C3" },
+				new SchoolGrades { SchoolGradeId = 4, Name = "Secondaire II - Gymnase", SchoolGrade = "S2-GYM" },
+				new SchoolGrades { SchoolGradeId = 5, Name = "Secondaire II - Maturité professionnelle", SchoolGrade = "S2-MP" },
+				new SchoolGrades { SchoolGradeId = 6, Name = "Secondaire II - CFC", SchoolGrade = "S2-CFC" },
+				new SchoolGrades { SchoolGradeId = 7, Name = "Secondaire II - ECG", SchoolGrade = "S2-ECG" }
 			);
 			builder.Entity<ProductCategories>().HasData(
 				new ProductCategories { ProductCategoryId = 1, Name = "Papeterie", Description = "Papiers, enveloppes, étiquettes et consommables." },

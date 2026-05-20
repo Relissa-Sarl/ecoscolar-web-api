@@ -4,7 +4,7 @@ using EcoscolarWebApi.Models;
 using EcoscolarWebApi.Services.Contracts;
 using EcoscolarWebApi.Utils;
 using EcoscolarWebApi.Utils.DTOs;
-using EcoscolarWebApi.Utils.DTOs.Advert;
+using EcoscolarWebApi.Utils.DTOs.Adverts;
 using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -108,7 +108,7 @@ public class UsersControllerTests
 		var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
 		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-		var bookAdvert = new Book
+		var bookAdvert = new Books
 		{
 			AdvertId = 1,
 			Title = "Book Title",
@@ -125,7 +125,7 @@ public class UsersControllerTests
 			Edition = "1st",
 			WrittenLanguage = Utils.Enums.Language.FR
 		};
-		var physicalItemAdvert = new PhysicalItem
+		var physicalItemAdvert = new PhysicalItems
 		{
 			AdvertId = 2,
 			Title = "Guitar",
@@ -138,7 +138,7 @@ public class UsersControllerTests
 			NotificationDate = DateTime.UtcNow,
 			Condition = Utils.Enums.Condition.LIKE_NEW
 		};
-		var serviceAdvert = new AdvertService
+		var serviceAdvert = new AdvertServices
 		{
 			AdvertId = 3,
 			Title = "Math tutoring",
@@ -159,21 +159,21 @@ public class UsersControllerTests
 		{
 			UserId = existingUser.Id,
 			AdvertId = bookAdvert.AdvertId,
-			Advert = bookAdvert,
+			Adverts = bookAdvert,
 			User = existingUser
 		};
 		var favoritePhysical = new UserFavorite
 		{
 			UserId = existingUser.Id,
 			AdvertId = physicalItemAdvert.AdvertId,
-			Advert = physicalItemAdvert,
+			Adverts = physicalItemAdvert,
 			User = existingUser
 		};
 		var favoriteService = new UserFavorite
 		{
 			UserId = existingUser.Id,
 			AdvertId = serviceAdvert.AdvertId,
-			Advert = serviceAdvert,
+			Adverts = serviceAdvert,
 			User = existingUser
 		};
 
@@ -235,7 +235,7 @@ public class UsersControllerTests
 		var existingUser = new User { Id = "guid-toggle-1" };
 		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-		var advert = new Book
+		var advert = new Books
 		{
 			AdvertId = 2,
 			Title = "Another book",
@@ -268,7 +268,7 @@ public class UsersControllerTests
 		var existingUser = new User { Id = "guid-toggle-2" };
 		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-		var advert = new Book
+		var advert = new Books
 		{
 			AdvertId = 3,
 			Title = "ToBeDeleted",
