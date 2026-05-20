@@ -1,8 +1,9 @@
-﻿using EcoscolarWebApi.Services.Contracts;
-using EcoscolarWebApi.Utils;
+﻿using EcoscolarWebApi.Models;
 using EcoscolarWebApi.Utils.DTOs;
+using EcoscolarWebApi.Utils.DTOs.Advert;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace EcoscolarWebApi.Controllers
 {
@@ -97,6 +98,108 @@ namespace EcoscolarWebApi.Controllers
             };
         }
 
+            return Ok(userProfileDto);
+        }
+
+        [HttpGet("me/adverts")]
+        public async Task<IActionResult> GetMyAdverts()
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null)
+                return NotFound(new { message = "User not found." });
+
+            var adverts = await _context.Adverts
+                .Where(a => a.UserId == currentUser.Id)
+                .Include(a => a.User)
+                .ToListAsync();
+            List<long> physicalItemIds = adverts.OfType<PhysicalItems>()
+                .Select(item => item.AdvertId)
+                .ToList();
+            if (physicalItemIds.Any())
+            {
+                await _context.Pictures
+                    .Where(picture => physicalItemIds.Contains(picture.AdvertId))
+                    .LoadAsync();
+            }
+            return Ok(adverts.Select(AdvertReadDto.FromEntity));
+        }
+
+        /// <summary>
+        /// Retrieves the list of favorite adverts for the currently authenticated user.
+        /// 
+        /// Url: GET /api/v1/users/me/favorites
+        /// </summary>
+        /// <returns>List of favorite adverts data transfer objects</returns>
+        [HttpGet("me/favorites")]
+        [Authorize]
+        public async Task<IActionResult> GetMyFavorites()
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null)
+                return NotFound(new { message = "User not found." });
+
+            var favorites = await _context.UserFavorites
+                .Where(uf => uf.UserId == currentUser.Id)
+                .Include(uf => uf.Advert)
+                .ThenInclude(a => a.User)
+                .Select(uf => uf.Advert)
+                .ToListAsync();
+
+            List<long> physicalItemIds = [.. favorites.OfType<PhysicalItems>().Select(item => item.AdvertId)];
+
+            if (physicalItemIds.Any())
+            {
+                await _context.Pictures
+                    .Where(picture => physicalItemIds.Contains(picture.AdvertId))
+                    .LoadAsync();
+            }
+
+            return Ok(favorites.Select(AdvertReadDto.FromEntity));
+        }
+
+        /// <summary>
+        /// Toggles a specific advert in the authenticated user's favorites list. Add to favorites if not present, otherwise remove it.
+        /// 
+        /// Url: PATCH /api/v1/users/me/favorites/{advertId}
+        /// </summary>
+        /// <param name="advertId">The ID of the advert to toggle in favorites</param>
+        /// <returns>A status indicating whether the advert is currently a favorite or not</returns>
+        [HttpPatch("me/favorites/{advertId}")]
+        public async Task<IActionResult> ToggleFavorite(long advertId)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null)
+                return NotFound(new { message = "User not found." });
+
+            var advert = await _context.Adverts.FindAsync(advertId);
+            if (advert == null)
+                return NotFound(new { message = "Advert not found." });
+
+            var favorite = await _context.UserFavorites
+                .FirstOrDefaultAsync(uf => uf.UserId == currentUser.Id && uf.AdvertId == advertId);
+
+            bool isFavorite;
+
+            if (favorite != null)
+            {
+                _context.UserFavorites.Remove(favorite);
+                isFavorite = false;
+            }
+            else
+            {
+                var newFavorite = new UserFavorite
+                {
+                    UserId = currentUser.Id,
+                    AdvertId = advertId
+                };
+                _context.UserFavorites.Add(newFavorite);
+                isFavorite = true;
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { AdvertId = advertId.ToString(), IsFavorite = isFavorite });
+        }
         #endregion
     }
 }

@@ -30,5 +30,6 @@ namespace EcoscolarWebApi.Models
 
         // === Many-to-many relationships ===
         public ICollection<UserLanguage> Languages { get; set; } = new List<UserLanguage>();
-    }
+		public virtual ICollection<UserFavorite> Favorites { get; set; } = [];
+	}
 }

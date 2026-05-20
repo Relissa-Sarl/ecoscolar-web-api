@@ -59,7 +59,9 @@ dist/
 
 # IDE / user
 *.user
+*.lscache
 .vscode/
+.idea
 
 # OS / logs
 .DS_Store

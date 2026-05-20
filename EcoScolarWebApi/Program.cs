@@ -4,6 +4,7 @@ using EcoscolarWebApi.Services;
 using EcoscolarWebApi.Services.Contracts;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi;
 using Stripe;
 
 namespace EcoscolarWebApi
@@ -51,8 +52,45 @@ namespace EcoscolarWebApi
             });
 
             // Add services to the container.
-            builder.Services.AddControllers();
+            builder.Services.AddControllers().AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+            });
+
+            var useFakeAdvertSearch = builder.Configuration.GetValue("Features:UseFakeAdvertSearch", defaultValue: true);
+            if (useFakeAdvertSearch)
+            {
+                builder.Services.AddScoped<IAdvertSearchService, FakeAdvertSearchService>();
+            }
+            else
+            {
+                builder.Services.AddScoped<IAdvertSearchService, AdvertSearchService>();
+            }
+
             builder.Services.AddOpenApi();
+            builder.Services.AddSwaggerGen(options =>
+            {
+                options.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Version = "v1",
+                    Title = "EcoScolar Web API",
+                    Description = "API for the EcoScolar application, providing endpoints for user management, payment processing, and more.",
+                    Contact = new OpenApiContact
+                    {
+                        Name = "EcoScolar Support",
+                        Email = "email@here.com"
+                    }
+                });
+                options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+				{
+					In = ParameterLocation.Header,
+					Description = "Please enter a valid token",
+					Name = "Authorization",
+					Type = SecuritySchemeType.Http,
+					Scheme = "bearer",
+					BearerFormat = "JWT"
+				});
+			});
 
             // Setup CORS policy
             builder.Services.AddCors(options =>
@@ -71,19 +109,47 @@ namespace EcoscolarWebApi
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddTransient<IEmailSender<User>, DevEmailSenderService>();
 
+            builder.Services.AddHealthChecks();
+
             // Build the application
             var app = builder.Build();
+
+            if (app.Configuration.GetValue<bool>("ApplyDatabaseMigrations"))
+            {
+                using (var scope = app.Services.CreateScope())
+                {
+                    var db = scope.ServiceProvider.GetRequiredService<EcoscolarDbContext>();
+                    db.Database.Migrate();  
+                }
+            }   
 
             // Use the CORS policy
             app.UseCors("AllowFrontend");
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
+            {
+                using (var scope = app.Services.CreateScope())
+                {
+                    var db = scope.ServiceProvider.GetRequiredService<EcoscolarDbContext>();
+                    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+                    // Call the seeder only when running in Development mode
+                    DataSeeder.Seed(db, userManager).Wait();
+                }
+
                 app.MapOpenApi();
+                app.UseSwagger();
+                app.UseSwaggerUI(c =>
+                {
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "EcoScolar Web API V1");
+                });
+            }
 
             app.UseHttpsRedirection();
             app.UseAuthentication();
             app.UseAuthorization();
+
+            app.MapHealthChecks("/health");
 
             // Map controllers to the application
             app.MapControllers();

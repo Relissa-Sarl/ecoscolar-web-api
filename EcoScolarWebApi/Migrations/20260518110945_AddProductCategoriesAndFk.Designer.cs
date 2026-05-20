@@ -4,6 +4,7 @@ using EcoscolarWebApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,13 +12,15 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EcoscolarWebApi.Migrations
 {
     [DbContext(typeof(EcoscolarDbContext))]
-    partial class EcoscolarDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260518110945_AddProductCategoriesAndFk")]
+    partial class AddProductCategoriesAndFk
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.8")
+                .HasAnnotation("ProductVersion", "10.0.7")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -91,62 +94,8 @@ namespace EcoscolarWebApi.Migrations
                         new
                         {
                             BookCategoryId = 1L,
-                            Description = "Manuels par niveau et programme cantonal.",
-                            Name = "Manuels scolaires"
-                        },
-                        new
-                        {
-                            BookCategoryId = 2L,
-                            Description = "Dictionnaires, encyclopédies et atlas scolaires.",
-                            Name = "Ouvrages de référence"
-                        },
-                        new
-                        {
-                            BookCategoryId = 3L,
-                            Description = "Français, allemand, italien, anglais et langues locales.",
-                            Name = "Langues"
-                        },
-                        new
-                        {
-                            BookCategoryId = 4L,
-                            Description = "Supports de mathématiques pour cycles 1 à secondaire II.",
-                            Name = "Mathématiques"
-                        },
-                        new
-                        {
-                            BookCategoryId = 5L,
-                            Description = "Biologie, chimie, physique et sciences de la nature.",
-                            Name = "Sciences naturelles"
-                        },
-                        new
-                        {
-                            BookCategoryId = 6L,
-                            Description = "Histoire suisse, géographie et éducation citoyenne.",
-                            Name = "Histoire et géographie"
-                        },
-                        new
-                        {
-                            BookCategoryId = 7L,
-                            Description = "Introduction à l'économie, droit et gestion.",
-                            Name = "Économie et droit"
-                        },
-                        new
-                        {
-                            BookCategoryId = 8L,
-                            Description = "Supports pour arts visuels, musique et activités créatives.",
-                            Name = "Arts et musique"
-                        },
-                        new
-                        {
-                            BookCategoryId = 9L,
-                            Description = "Initiation au numérique, algorithmique et outils informatiques.",
-                            Name = "Informatique"
-                        },
-                        new
-                        {
-                            BookCategoryId = 10L,
-                            Description = "Manuels liés aux filières CFC et maturité professionnelle.",
-                            Name = "Formation professionnelle"
+                            Description = "description",
+                            Name = "first cat"
                         });
                 });
 
@@ -194,68 +143,6 @@ namespace EcoscolarWebApi.Migrations
                     b.HasKey("ProductCategoryId");
 
                     b.ToTable("ProductCategories");
-
-                    b.HasData(
-                        new
-                        {
-                            ProductCategoryId = 1L,
-                            Description = "Papiers, enveloppes, étiquettes et consommables.",
-                            Name = "Papeterie"
-                        },
-                        new
-                        {
-                            ProductCategoryId = 2L,
-                            Description = "Stylos, crayons, feutres et surligneurs.",
-                            Name = "Matériel d'écriture"
-                        },
-                        new
-                        {
-                            ProductCategoryId = 3L,
-                            Description = "Cahiers, classeurs, intercalaires et chemises.",
-                            Name = "Cahiers et classeurs"
-                        },
-                        new
-                        {
-                            ProductCategoryId = 4L,
-                            Description = "Peinture, pinceaux, papiers dessin et outils créatifs.",
-                            Name = "Matériel artistique"
-                        },
-                        new
-                        {
-                            ProductCategoryId = 5L,
-                            Description = "Kits pédagogiques, microscopes et accessoires.",
-                            Name = "Matériel scientifique"
-                        },
-                        new
-                        {
-                            ProductCategoryId = 6L,
-                            Description = "Ballons, cordes, protections et matériel EPS.",
-                            Name = "Équipement sportif"
-                        },
-                        new
-                        {
-                            ProductCategoryId = 7L,
-                            Description = "Claviers, souris, périphériques et accessoires.",
-                            Name = "Matériel informatique"
-                        },
-                        new
-                        {
-                            ProductCategoryId = 8L,
-                            Description = "Sacs d'école, cartables et trousses.",
-                            Name = "Sacs et cartables"
-                        },
-                        new
-                        {
-                            ProductCategoryId = 9L,
-                            Description = "Calculatrices scientifiques et financières.",
-                            Name = "Calculatrices"
-                        },
-                        new
-                        {
-                            ProductCategoryId = 10L,
-                            Description = "Blouses, lunettes de protection et consommables.",
-                            Name = "Accessoires de laboratoire"
-                        });
                 });
 
             modelBuilder.Entity("EcoscolarWebApi.Models.SchoolGrades", b =>
@@ -284,44 +171,8 @@ namespace EcoscolarWebApi.Migrations
                         new
                         {
                             SchoolGradeId = 1L,
-                            Name = "Cycle 1 (1H-4H)",
-                            SchoolGrade = "C1"
-                        },
-                        new
-                        {
-                            SchoolGradeId = 2L,
-                            Name = "Cycle 2 (5H-8H)",
-                            SchoolGrade = "C2"
-                        },
-                        new
-                        {
-                            SchoolGradeId = 3L,
-                            Name = "Cycle 3 (9H-11H)",
-                            SchoolGrade = "C3"
-                        },
-                        new
-                        {
-                            SchoolGradeId = 4L,
-                            Name = "Secondaire II - Gymnase",
-                            SchoolGrade = "S2-GYM"
-                        },
-                        new
-                        {
-                            SchoolGradeId = 5L,
-                            Name = "Secondaire II - Maturité professionnelle",
-                            SchoolGrade = "S2-MP"
-                        },
-                        new
-                        {
-                            SchoolGradeId = 6L,
-                            Name = "Secondaire II - CFC",
-                            SchoolGrade = "S2-CFC"
-                        },
-                        new
-                        {
-                            SchoolGradeId = 7L,
-                            Name = "Secondaire II - ECG",
-                            SchoolGrade = "S2-ECG"
+                            Name = "École Supérieur",
+                            SchoolGrade = "ES"
                         });
                 });
 
@@ -351,153 +202,8 @@ namespace EcoscolarWebApi.Migrations
                         new
                         {
                             SubjectId = 1L,
-                            Name = "Français",
-                            Subject = "FR"
-                        },
-                        new
-                        {
-                            SubjectId = 2L,
-                            Name = "Allemand",
-                            Subject = "DE"
-                        },
-                        new
-                        {
-                            SubjectId = 3L,
-                            Name = "Anglais",
-                            Subject = "EN"
-                        },
-                        new
-                        {
-                            SubjectId = 4L,
-                            Name = "Mathématiques",
+                            Name = "Math",
                             Subject = "MATH"
-                        },
-                        new
-                        {
-                            SubjectId = 5L,
-                            Name = "Sciences naturelles",
-                            Subject = "SCI"
-                        },
-                        new
-                        {
-                            SubjectId = 6L,
-                            Name = "Histoire",
-                            Subject = "HIST"
-                        },
-                        new
-                        {
-                            SubjectId = 7L,
-                            Name = "Géographie",
-                            Subject = "GEO"
-                        },
-                        new
-                        {
-                            SubjectId = 8L,
-                            Name = "Éducation physique",
-                            Subject = "EPS"
-                        },
-                        new
-                        {
-                            SubjectId = 9L,
-                            Name = "Arts visuels",
-                            Subject = "ARTS"
-                        },
-                        new
-                        {
-                            SubjectId = 10L,
-                            Name = "Musique",
-                            Subject = "MUS"
-                        },
-                        new
-                        {
-                            SubjectId = 11L,
-                            Name = "Économie et droit",
-                            Subject = "ECO"
-                        },
-                        new
-                        {
-                            SubjectId = 12L,
-                            Name = "Informatique",
-                            Subject = "INFO"
-                        });
-                });
-
-            modelBuilder.Entity("EcoscolarWebApi.Models.Language", b =>
-                {
-                    b.Property<string>("Label")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Label");
-
-                    b.ToTable("Languages");
-
-                    b.HasData(
-                        new
-                        {
-                            Label = "FR",
-                            Name = "Français"
-                        },
-                        new
-                        {
-                            Label = "DE",
-                            Name = "Deutsch"
-                        },
-                        new
-                        {
-                            Label = "IT",
-                            Name = "Italian"
-                        });
-                });
-
-            modelBuilder.Entity("EcoscolarWebApi.Models.Location", b =>
-                {
-                    b.Property<int>("LocationId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("LocationId"));
-
-                    b.Property<string>("City")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PostalCode")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Region")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("LocationId");
-
-                    b.ToTable("Locations");
-
-                    b.HasData(
-                        new
-                        {
-                            LocationId = 1,
-                            City = "Lausanne",
-                            PostalCode = "1000",
-                            Region = "Vaud"
-                        },
-                        new
-                        {
-                            LocationId = 2,
-                            City = "Montreux",
-                            PostalCode = "1820",
-                            Region = "Vaud"
-                        },
-                        new
-                        {
-                            LocationId = 3,
-                            City = "Martigny",
-                            PostalCode = "1920",
-                            Region = "Valais"
                         });
                 });
 
@@ -508,9 +214,6 @@ namespace EcoscolarWebApi.Migrations
 
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
-
-                    b.Property<string>("BirthdayDate")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -524,25 +227,18 @@ namespace EcoscolarWebApi.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("FirstName")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsOnboarded")
-                        .HasColumnType("bit");
 
                     b.Property<string>("LastName")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("LocationId")
-                        .HasColumnType("int");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");
 
                     b.Property<DateTimeOffset?>("LockoutEnd")
                         .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("Nickname")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
@@ -573,8 +269,6 @@ namespace EcoscolarWebApi.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("LocationId");
-
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
 
@@ -584,25 +278,6 @@ namespace EcoscolarWebApi.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
-                });
-
-            modelBuilder.Entity("EcoscolarWebApi.Models.UserLanguage", b =>
-                {
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Label")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("LanguageLevel")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("UserId", "Label");
-
-                    b.HasIndex("Label");
-
-                    b.ToTable("UserLanguages");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -770,44 +445,75 @@ namespace EcoscolarWebApi.Migrations
                     b.Property<int>("Condition")
                         .HasColumnType("int");
 
+                    b.Property<long?>("ProductCategoriesProductCategoryId")
+                        .HasColumnType("bigint");
+
                     b.Property<long?>("ProductCategoryId")
                         .HasColumnType("bigint");
 
                     b.Property<decimal?>("Weight")
                         .HasColumnType("decimal(18,2)");
 
-                    b.HasIndex("ProductCategoryId");
+                    b.HasIndex("ProductCategoriesProductCategoryId");
 
                     b.ToTable("PhysicalItems");
                 });
 
-            modelBuilder.Entity("EcoscolarWebApi.Models.User", b =>
+            modelBuilder.Entity("EcoscolarWebApi.Models.Books", b =>
                 {
-                    b.HasOne("EcoscolarWebApi.Models.Location", "Location")
-                        .WithMany("Users")
-                        .HasForeignKey("LocationId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                    b.HasBaseType("EcoscolarWebApi.Models.PhysicalItems");
 
-                    b.Navigation("Location");
+                    b.Property<string>("Author")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<long>("BookCategoryId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Edition")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("ISBN")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Publisher")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int>("WrittenLanguage")
+                        .HasColumnType("int");
+
+                    b.HasIndex("BookCategoryId");
+
+                    b.ToTable("Books");
                 });
 
-            modelBuilder.Entity("EcoscolarWebApi.Models.UserLanguage", b =>
+            modelBuilder.Entity("EcoscolarWebApi.Models.Adverts", b =>
                 {
-                    b.HasOne("EcoscolarWebApi.Models.Language", "Language")
-                        .WithMany("UserLanguages")
-                        .HasForeignKey("Label")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("EcoscolarWebApi.Models.User", "User")
-                        .WithMany("Languages")
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Language");
-
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("EcoscolarWebApi.Models.Pictures", b =>
+                {
+                    b.HasOne("EcoscolarWebApi.Models.PhysicalItems", "Advert")
+                        .WithMany("Pictures")
+                        .HasForeignKey("AdvertId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Advert");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -894,12 +600,9 @@ namespace EcoscolarWebApi.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("EcoscolarWebApi.Models.ProductCategories", "ProductCategory")
+                    b.HasOne("EcoscolarWebApi.Models.ProductCategories", null)
                         .WithMany("PhysicalItems")
-                        .HasForeignKey("ProductCategoryId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("ProductCategory");
+                        .HasForeignKey("ProductCategoriesProductCategoryId");
                 });
 
             modelBuilder.Entity("EcoscolarWebApi.Models.Books", b =>
@@ -939,29 +642,9 @@ namespace EcoscolarWebApi.Migrations
                     b.Navigation("AdvertServices");
                 });
 
-            modelBuilder.Entity("EcoscolarWebApi.Models.User", b =>
-                {
-                    b.Navigation("Favorites");
-                });
-
             modelBuilder.Entity("EcoscolarWebApi.Models.PhysicalItems", b =>
                 {
                     b.Navigation("Pictures");
-                });
-
-            modelBuilder.Entity("EcoscolarWebApi.Models.Language", b =>
-                {
-                    b.Navigation("UserLanguages");
-                });
-
-            modelBuilder.Entity("EcoscolarWebApi.Models.Location", b =>
-                {
-                    b.Navigation("Users");
-                });
-
-            modelBuilder.Entity("EcoscolarWebApi.Models.User", b =>
-                {
-                    b.Navigation("Languages");
                 });
 #pragma warning restore 612, 618
         }

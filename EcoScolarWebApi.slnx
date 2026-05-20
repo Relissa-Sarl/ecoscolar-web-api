@@ -1,0 +1,4 @@
+<Solution>
+     <Project Path="EcoScolarWebApi\EcoScolarWebApi.csproj"/>
+     <Project Path="EcoScolarWebApi.Tests\EcoScolarWebApi.Tests.csproj"/>
+</Solution>
