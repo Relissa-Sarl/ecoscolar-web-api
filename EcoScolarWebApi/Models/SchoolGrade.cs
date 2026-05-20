@@ -1,20 +1,19 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace EcoScolarWebApi.Models
+namespace EcoScolarWebApi.Models;
+
+[Table("SchoolGrades")]
+public class SchoolGrade
 {
-    [Table("SchoolGrades")]
-    public class SchoolGrade
-    {
-        [Key]
-        public long SchoolGradeId { get; set; }
+    [Key]
+    public long SchoolGradeId { get; set; }
 
-        [Required]
-        [StringLength(100)]
-        public string Name { get; set; }
+    [Required]
+    [StringLength(100)]
+    public string Name { get; set; }
 
-        [Required]
-        [StringLength(100)]
-        public string Code { get; set; }
-    }
+    [Required]
+    [StringLength(100)]
+    public string Code { get; set; }
 }

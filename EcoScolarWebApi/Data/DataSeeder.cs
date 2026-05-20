@@ -107,7 +107,7 @@ public class DataSeeder
 
 		var books = booksFaker.Generate(15);
 
-		var servicesFaker = new Faker<AdvertService>("fr_CH")
+		var servicesFaker = new Faker<TutoringAdvert>("fr_CH")
 			.RuleFor(s => s.Title, f => $"Cours de {f.Random.ListItem(subjectList).Name}")
 			.RuleFor(s => s.Description, f => f.Lorem.Paragraphs(2))
 			.RuleFor(s => s.Price, f => decimal.Round(f.Random.Decimal(20m, 90m), 2))

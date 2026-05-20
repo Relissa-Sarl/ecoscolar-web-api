@@ -1,7 +1,7 @@
 ﻿using EcoScolarWebApi.Commun;
 using EcoScolarWebApi.Controllers;
 using EcoScolarWebApi.Data;
-using EcoScolarWebApi.DTOs.AdvertDtos;
+using EcoScolarWebApi.DTOs.Adverts;
 using EcoScolarWebApi.DTOs.Users;
 using EcoScolarWebApi.Enums;
 using EcoScolarWebApi.Models;
@@ -139,7 +139,7 @@ public class UsersControllerTests
 			NotificationDate = DateTime.UtcNow,
 			Condition = Condition.LIKE_NEW
 		};
-		var serviceAdvert = new AdvertService
+		var serviceAdvert = new TutoringAdvert
 		{
 			AdvertId = 3,
 			Title = "Math tutoring",

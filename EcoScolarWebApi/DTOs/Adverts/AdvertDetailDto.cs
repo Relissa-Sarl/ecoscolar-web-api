@@ -1,16 +1,15 @@
-namespace EcoScolarWebApi.DTOs.Adverts
+namespace EcoScolarWebApi.DTOs.Adverts;
+
+public class AdvertDetailDto
 {
-	public class AdvertDetailDto
-	{
-		public Guid Id { get; set; }
-		public string Type { get; set; } = string.Empty;
-		public string Title { get; set; } = string.Empty;
-		public decimal Price { get; set; }
-		public string? Isbn { get; set; }
-		public string? Category { get; set; }
-		public string? Subjects { get; set; }
-		public string? Grade { get; set; }
-		public string Description { get; set; } = string.Empty;
-		public string? ImageUrl { get; set; }
-	}
+	public Guid Id { get; set; }
+	public string Type { get; set; } = string.Empty;
+	public string Title { get; set; } = string.Empty;
+	public decimal Price { get; set; }
+	public string? Isbn { get; set; }
+	public string? Category { get; set; }
+	public string? Subjects { get; set; }
+	public string? Grade { get; set; }
+	public string Description { get; set; } = string.Empty;
+	public string? ImageUrl { get; set; }
 }

@@ -1,7 +1,6 @@
-﻿namespace EcoScolarWebApi.DTOs.Stripe
+﻿namespace EcoScolarWebApi.DTOs.Stripe;
+
+public class ConnectAccountRequestDto
 {
-    public class ConnectAccountRequestDto
-    {
-        public string Email { get; set; }
-    }
+    public string Email { get; set; }
 }

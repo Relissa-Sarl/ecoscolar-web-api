@@ -1,5 +1,3 @@
-using EcoScolarWebApi.DTOs.AdvertDtos;
-
 namespace EcoScolarWebApi.DTOs.Adverts;
 
 /// <summary>

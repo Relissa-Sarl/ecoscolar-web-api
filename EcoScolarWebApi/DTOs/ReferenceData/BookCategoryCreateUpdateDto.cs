@@ -1,15 +1,14 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace EcoScolarWebApi.DTOs.ReferenceData
-{
-	public class BookCategoryCreateUpdateDto
-	{
-		[Required]
-		[StringLength(100)]
-		public string Name { get; set; }
+namespace EcoScolarWebApi.DTOs.ReferenceData;
 
-		[Required]
-		[StringLength(1000)]
-		public string Description { get; set; }
-	}
+public class BookCategoryCreateUpdateDto
+{
+	[Required]
+	[StringLength(100)]
+	public string Name { get; set; }
+
+	[Required]
+	[StringLength(1000)]
+	public string Description { get; set; }
 }

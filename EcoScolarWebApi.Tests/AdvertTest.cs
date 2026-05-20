@@ -1,7 +1,6 @@
 using EcoScolarWebApi.Controllers;
 using EcoScolarWebApi.Data;
 using EcoScolarWebApi.Models;
-using EcoScolarWebApi.Services;
 using EcoScolarWebApi.Services.Contracts;
 using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
@@ -11,7 +10,6 @@ using NSubstitute;
 using System.Security.Claims;
 using Xunit;
 using LanguageEnum = EcoScolarWebApi.Enums.LanguageEnum;
-using EcoScolarWebApi.DTOs.AdvertDtos;
 using EcoScolarWebApi.Enums;
 using EcoScolarWebApi.DTOs.Adverts;
 
@@ -105,7 +103,7 @@ public class AdvertsControllerTests : IDisposable
                 Condition = Condition.LIKE_NEW,
                 Pictures = pictures2
             },
-            new AdvertService
+            new TutoringAdvert
             {
                 AdvertId = 3,
                 Title = "Lesson de math",
@@ -211,7 +209,7 @@ public class AdvertsControllerTests : IDisposable
                 WrittenLanguage = LanguageEnum.FR,
                 Pictures = pictures2
             },
-            new AdvertService
+            new TutoringAdvert
             {
                 AdvertId = 3,
                 Title = "Lesson de math",
@@ -308,7 +306,7 @@ public class AdvertsControllerTests : IDisposable
                 Condition = Condition.NEW,
                 Pictures = pictures2
             },
-            new AdvertService
+            new TutoringAdvert
             {
                 AdvertId = 3,
                 Title = "Lesson de math",
@@ -650,7 +648,7 @@ public class AdvertsControllerTests : IDisposable
                 Condition = Condition.NEW,
                 Pictures = pictures
             },
-            new AdvertService
+            new TutoringAdvert
             {
                 AdvertId = 2,
                 Title = "Lesson de français",
@@ -665,7 +663,7 @@ public class AdvertsControllerTests : IDisposable
                 SubjectId = 2,
                 SchoolGradeId = 3,
             },
-            new AdvertService
+            new TutoringAdvert
             {
                 AdvertId = 3,
                 Title = "Lesson de math",
@@ -726,7 +724,7 @@ public class AdvertsControllerTests : IDisposable
                 Condition = Condition.NEW,
                 Pictures = pictures
             },
-            new AdvertService
+            new TutoringAdvert
             {
                 AdvertId = 2,
                 Title = "Lesson de français",
@@ -741,7 +739,7 @@ public class AdvertsControllerTests : IDisposable
                 SubjectId = 2,
                 SchoolGradeId = 3,
             },
-            new AdvertService
+            new TutoringAdvert
             {
                 AdvertId = 3,
                 Title = "Lesson de math",
@@ -801,7 +799,7 @@ public class AdvertsControllerTests : IDisposable
                 Condition = Condition.NEW,
                 Pictures = pictures
             },
-            new AdvertService
+            new TutoringAdvert
             {
                 AdvertId = 2,
                 Title = "Lesson de français",
@@ -816,7 +814,7 @@ public class AdvertsControllerTests : IDisposable
                 SubjectId = 2,
                 SchoolGradeId = 3,
             },
-            new AdvertService
+            new TutoringAdvert
             {
                 AdvertId = 3,
                 Title = "Lesson de math",
@@ -1005,7 +1003,7 @@ public class AdvertsControllerTests : IDisposable
             new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
             new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
         };
-        var advert = new AdvertService
+        var advert = new TutoringAdvert
         {
             AdvertId = 1,
             Title = "Lesson de math",
@@ -1095,7 +1093,7 @@ public class AdvertsControllerTests : IDisposable
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-        var advert = new AdvertService
+        var advert = new TutoringAdvert
         {
             AdvertId = 1,
             Title = "Lesson de math",
@@ -1134,7 +1132,7 @@ public class AdvertsControllerTests : IDisposable
 
         _context.Set<Subject>().Add(subject);
         _context.Set<SchoolGrade>().Add(grade);
-        var advert = new AdvertService
+        var advert = new TutoringAdvert
         {
             AdvertId = 1,
             Title = "Lesson de math",
@@ -1851,7 +1849,7 @@ public class AdvertsControllerTests : IDisposable
         _context.Set<SchoolGrade>().Add(grade);
         await _context.SaveChangesAsync();
 
-        var advert = new AdvertService
+        var advert = new TutoringAdvert
         {
             AdvertId = 1,
             Title = "Lesson de math",
@@ -1909,7 +1907,7 @@ public class AdvertsControllerTests : IDisposable
 
         _context.Set<Subject>().Add(subject);
         _context.Set<SchoolGrade>().Add(grade);
-        var advert = new AdvertService
+        var advert = new TutoringAdvert
         {
             AdvertId = 1,
             Title = "Lesson de math",

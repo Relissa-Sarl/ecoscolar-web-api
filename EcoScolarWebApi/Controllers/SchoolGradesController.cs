@@ -5,6 +5,8 @@ using EcoScolarWebApi.Data;
 using EcoScolarWebApi.DTOs.ReferenceData;
 using Asp.Versioning;
 
+namespace EcoScolarWebApi.Controllers;
+
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/[controller]")]
 [ApiController]
