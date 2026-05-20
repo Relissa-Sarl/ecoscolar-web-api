@@ -1,9 +1,9 @@
-﻿using EcoScolarWebApi.Data;
-using EcoScolarWebApi.DTOs;
+﻿using EcoScolarWebApi.Commun;
+using EcoScolarWebApi.Data;
 using EcoScolarWebApi.DTOs.AdvertDtos;
+using EcoScolarWebApi.DTOs.Users;
 using EcoScolarWebApi.Models;
 using EcoScolarWebApi.Services.Contracts;
-using EcoScolarWebApi.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
