@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EcoScolarWebApi.Migrations
 {
     [DbContext(typeof(EcoscolarDbContext))]
-    [Migration("20260520183232_NormalizeTableNames")]
-    partial class NormalizeTableNames
+    [Migration("20260520193436_InitialMigration")]
+    partial class InitialMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -348,12 +348,12 @@ namespace EcoScolarWebApi.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("SchoolGradeId"));
 
-                    b.Property<string>("Grade")
+                    b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("Name")
+                    b.Property<string>("SchoolGrade")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -366,44 +366,44 @@ namespace EcoScolarWebApi.Migrations
                         new
                         {
                             SchoolGradeId = 1L,
-                            Grade = "C1",
-                            Name = "Cycle 1 (1H-4H)"
+                            Name = "Cycle 1 (1H-4H)",
+                            SchoolGrade = "C1"
                         },
                         new
                         {
                             SchoolGradeId = 2L,
-                            Grade = "C2",
-                            Name = "Cycle 2 (5H-8H)"
+                            Name = "Cycle 2 (5H-8H)",
+                            SchoolGrade = "C2"
                         },
                         new
                         {
                             SchoolGradeId = 3L,
-                            Grade = "C3",
-                            Name = "Cycle 3 (9H-11H)"
+                            Name = "Cycle 3 (9H-11H)",
+                            SchoolGrade = "C3"
                         },
                         new
                         {
                             SchoolGradeId = 4L,
-                            Grade = "S2-GYM",
-                            Name = "Secondaire II - Gymnase"
+                            Name = "Secondaire II - Gymnase",
+                            SchoolGrade = "S2-GYM"
                         },
                         new
                         {
                             SchoolGradeId = 5L,
-                            Grade = "S2-MP",
-                            Name = "Secondaire II - Maturité professionnelle"
+                            Name = "Secondaire II - Maturité professionnelle",
+                            SchoolGrade = "S2-MP"
                         },
                         new
                         {
                             SchoolGradeId = 6L,
-                            Grade = "S2-CFC",
-                            Name = "Secondaire II - CFC"
+                            Name = "Secondaire II - CFC",
+                            SchoolGrade = "S2-CFC"
                         },
                         new
                         {
                             SchoolGradeId = 7L,
-                            Grade = "S2-ECG",
-                            Name = "Secondaire II - ECG"
+                            Name = "Secondaire II - ECG",
+                            SchoolGrade = "S2-ECG"
                         });
                 });
 
@@ -415,12 +415,12 @@ namespace EcoScolarWebApi.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("SubjectId"));
 
-                    b.Property<string>("Code")
+                    b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("Name")
+                    b.Property<string>("Subject")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -433,74 +433,74 @@ namespace EcoScolarWebApi.Migrations
                         new
                         {
                             SubjectId = 1L,
-                            Code = "FR",
-                            Name = "Français"
+                            Name = "Français",
+                            Subject = "FR"
                         },
                         new
                         {
                             SubjectId = 2L,
-                            Code = "DE",
-                            Name = "Allemand"
+                            Name = "Allemand",
+                            Subject = "DE"
                         },
                         new
                         {
                             SubjectId = 3L,
-                            Code = "EN",
-                            Name = "Anglais"
+                            Name = "Anglais",
+                            Subject = "EN"
                         },
                         new
                         {
                             SubjectId = 4L,
-                            Code = "MATH",
-                            Name = "Mathématiques"
+                            Name = "Mathématiques",
+                            Subject = "MATH"
                         },
                         new
                         {
                             SubjectId = 5L,
-                            Code = "SCI",
-                            Name = "Sciences naturelles"
+                            Name = "Sciences naturelles",
+                            Subject = "SCI"
                         },
                         new
                         {
                             SubjectId = 6L,
-                            Code = "HIST",
-                            Name = "Histoire"
+                            Name = "Histoire",
+                            Subject = "HIST"
                         },
                         new
                         {
                             SubjectId = 7L,
-                            Code = "GEO",
-                            Name = "Géographie"
+                            Name = "Géographie",
+                            Subject = "GEO"
                         },
                         new
                         {
                             SubjectId = 8L,
-                            Code = "EPS",
-                            Name = "Éducation physique"
+                            Name = "Éducation physique",
+                            Subject = "EPS"
                         },
                         new
                         {
                             SubjectId = 9L,
-                            Code = "ARTS",
-                            Name = "Arts visuels"
+                            Name = "Arts visuels",
+                            Subject = "ARTS"
                         },
                         new
                         {
                             SubjectId = 10L,
-                            Code = "MUS",
-                            Name = "Musique"
+                            Name = "Musique",
+                            Subject = "MUS"
                         },
                         new
                         {
                             SubjectId = 11L,
-                            Code = "ECO",
-                            Name = "Économie et droit"
+                            Name = "Économie et droit",
+                            Subject = "ECO"
                         },
                         new
                         {
                             SubjectId = 12L,
-                            Code = "INFO",
-                            Name = "Informatique"
+                            Name = "Informatique",
+                            Subject = "INFO"
                         });
                 });
 
@@ -973,13 +973,13 @@ namespace EcoScolarWebApi.Migrations
                         .IsRequired();
 
                     b.HasOne("EcoscolarWebApi.Models.SchoolGrades", "SchoolGrades")
-                        .WithMany("AdvertServices")
+                        .WithMany()
                         .HasForeignKey("SchoolGradeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("EcoscolarWebApi.Models.Subjects", "Subjects")
-                        .WithMany("AdvertServices")
+                        .WithMany()
                         .HasForeignKey("SubjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -998,9 +998,8 @@ namespace EcoScolarWebApi.Migrations
                         .IsRequired();
 
                     b.HasOne("EcoscolarWebApi.Models.ProductCategories", "ProductCategories")
-                        .WithMany("PhysicalItems")
-                        .HasForeignKey("ProductCategoryId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .WithMany()
+                        .HasForeignKey("ProductCategoryId");
 
                     b.Navigation("ProductCategories");
                 });
@@ -1014,17 +1013,12 @@ namespace EcoScolarWebApi.Migrations
                         .IsRequired();
 
                     b.HasOne("EcoscolarWebApi.Models.BookCategories", "BookCategories")
-                        .WithMany("Books")
+                        .WithMany()
                         .HasForeignKey("BookCategoryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("BookCategories");
-                });
-
-            modelBuilder.Entity("EcoscolarWebApi.Models.BookCategories", b =>
-                {
-                    b.Navigation("Books");
                 });
 
             modelBuilder.Entity("EcoscolarWebApi.Models.Language", b =>
@@ -1035,21 +1029,6 @@ namespace EcoScolarWebApi.Migrations
             modelBuilder.Entity("EcoscolarWebApi.Models.Location", b =>
                 {
                     b.Navigation("Users");
-                });
-
-            modelBuilder.Entity("EcoscolarWebApi.Models.ProductCategories", b =>
-                {
-                    b.Navigation("PhysicalItems");
-                });
-
-            modelBuilder.Entity("EcoscolarWebApi.Models.SchoolGrades", b =>
-                {
-                    b.Navigation("AdvertServices");
-                });
-
-            modelBuilder.Entity("EcoscolarWebApi.Models.Subjects", b =>
-                {
-                    b.Navigation("AdvertServices");
                 });
 
             modelBuilder.Entity("EcoscolarWebApi.Models.User", b =>

@@ -32,7 +32,7 @@ namespace EcoscolarWebApi.Utils.DTOs.Adverts
         {
             string type = entity switch
             {
-                Models.Books => "Books",
+                Models.Books => "BOOK",
                 Models.PhysicalItems => "PRODUCT",
                 Models.AdvertServices => "SERVICE",
                 _ => throw new InvalidOperationException("Unknown Adverts type")

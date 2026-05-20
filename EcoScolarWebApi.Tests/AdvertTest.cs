@@ -2,7 +2,8 @@ using EcoscolarWebApi.Controllers;
 using EcoscolarWebApi.Data;
 using EcoscolarWebApi.Models;
 using EcoscolarWebApi.Services;
-using EcoscolarWebApi.Utils.DTOs.Advert;
+using EcoscolarWebApi.Services.Contracts;
+using EcoscolarWebApi.Utils.DTOs.Adverts;
 using EcoscolarWebApi.Utils.Enums;
 using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
@@ -11,6 +12,7 @@ using NSubstitute;
 using System.Security.Claims;
 using Xunit;
 using Xunit.Sdk;
+using Language = EcoscolarWebApi.Utils.Enums.Language;
 
 namespace EcoScolarWebApi.Tests.Controllers;
 
@@ -21,8 +23,9 @@ public class AdvertsControllerTests : IDisposable
     private readonly IAdvertSearchService _searchService; 
     private readonly UserManager<User> _userManagerMock;
     private readonly UsersController _usersController;
+    private readonly IUserService _userServiceMock;
 
-    public AdvertsControllerTests()
+	public AdvertsControllerTests()
     {
         _searchService = Substitute.For<IAdvertSearchService>();
 
@@ -34,11 +37,11 @@ public class AdvertsControllerTests : IDisposable
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
         _context = new EcoscolarDbContext(options);
+		_userServiceMock = Substitute.For<IUserService>();
 
-        // Simulate the dependency injection of context and store into the AdvertsController
-        _usersController = new UsersController(_userManagerMock, _context);
-        _controller = new AdvertsController(_context, _searchService);
-
+		// Simulate the dependency injection of context and store into the AdvertsController
+		_usersController = new UsersController(_userServiceMock, _userManagerMock, _context);
+		_controller = new AdvertsController(_context, _searchService);
     }
 
     public void Dispose()
