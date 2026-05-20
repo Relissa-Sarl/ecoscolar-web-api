@@ -1,8 +1,8 @@
-﻿using EcoScolarWebApi.Data;
-using EcoScolarWebApi.DTOs;
+﻿using EcoScolarWebApi.Commun;
+using EcoScolarWebApi.Data;
+using EcoScolarWebApi.DTOs.Users;
 using EcoScolarWebApi.Models;
 using EcoScolarWebApi.Services.Contracts;
-using EcoScolarWebApi.Utils;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;

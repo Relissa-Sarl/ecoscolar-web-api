@@ -177,7 +177,7 @@ namespace EcoScolarWebApi.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<AdvertReadDto>> Details(long id)
         {
-            Advert Adverts;
+            Advert? Adverts;
             try
             {
                 Adverts = await _context.Adverts

@@ -1,4 +1,6 @@
-﻿namespace EcoScolarWebApi.Utils
+﻿using EcoScolarWebApi.Commun;
+
+namespace EcoScolarWebApi.Utils
 {
     public class Result<T>
     {

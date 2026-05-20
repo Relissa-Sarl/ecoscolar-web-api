@@ -1,4 +1,4 @@
-using EcoScolarWebApi.DTOs;
+using EcoScolarWebApi.DTOs.Adverts;
 
 namespace EcoScolarWebApi.Services
 {

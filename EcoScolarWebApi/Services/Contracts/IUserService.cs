@@ -1,5 +1,5 @@
-﻿using EcoScolarWebApi.DTOs;
-using EcoScolarWebApi.Utils;
+﻿using EcoScolarWebApi.Commun;
+using EcoScolarWebApi.DTOs.Users;
 using System.Security.Claims;
 
 namespace EcoScolarWebApi.Services.Contracts
