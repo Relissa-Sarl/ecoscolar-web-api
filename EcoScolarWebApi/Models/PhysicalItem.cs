@@ -5,17 +5,17 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace EcoscolarWebApi.Models
 {
     [Table("PhysicalItems")]
-    public class PhysicalItems : Adverts
+    public class PhysicalItem : Advert
     {
         [Required]
         public Condition Condition { get; set; }
 
         [Column(TypeName = "decimal(18,2)")]
         public decimal? Weight { get; set; }
-        public virtual ICollection<Pictures> Pictures { get; set; } = new List<Pictures>();
+        public virtual ICollection<Picture> Pictures { get; set; } = new List<Picture>();
         public long? ProductCategoryId { get; set; }
 
         [ForeignKey(nameof(ProductCategoryId))]
-        public virtual ProductCategories? ProductCategory { get; set; }
+        public virtual ProductCategory? ProductCategory { get; set; }
     }
 }

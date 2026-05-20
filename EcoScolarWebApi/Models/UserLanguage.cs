@@ -1,5 +1,8 @@
-﻿namespace EcoscolarWebApi.Models
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace EcoscolarWebApi.Models
 {
+    [Table("UserLanguages")]
     public class UserLanguage
     {
         public string UserId { get; set; }

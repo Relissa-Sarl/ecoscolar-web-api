@@ -1,7 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EcoscolarWebApi.Models
 {
+    [Table("Location")]
     public class Location
     {
         [Key]

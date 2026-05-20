@@ -3,11 +3,11 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EcoscolarWebApi.Models
 {
-    [Table("Subject")]
-    public class Subjects
+    [Table("SchoolGrades")]
+    public class SchoolGrade
     {
         [Key]
-        public long SubjectId { get; set; }
+        public long SchoolGradeId { get; set; }
 
         [Required]
         [StringLength(100)]
@@ -15,8 +15,8 @@ namespace EcoscolarWebApi.Models
 
         [Required]
         [StringLength(100)]
-        public string Subject { get; set; }
+        public string Grade { get; set; }
 
-        public virtual ICollection<AdvertServices> AdvertServices { get; set; } = new List<AdvertServices>();
+        public virtual ICollection<AdvertService> AdvertServices { get; set; } = [];
     }
 }

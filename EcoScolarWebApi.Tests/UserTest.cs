@@ -108,7 +108,7 @@ public class UsersControllerTests
 		var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
 		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-		var bookAdvert = new Books
+		var bookAdvert = new Book
 		{
 			AdvertId = 1,
 			Title = "Book Title",
@@ -125,7 +125,7 @@ public class UsersControllerTests
 			Edition = "1st",
 			WrittenLanguage = Utils.Enums.Language.FR
 		};
-		var physicalItemAdvert = new PhysicalItems
+		var physicalItemAdvert = new PhysicalItem
 		{
 			AdvertId = 2,
 			Title = "Guitar",
@@ -138,7 +138,7 @@ public class UsersControllerTests
 			NotificationDate = DateTime.UtcNow,
 			Condition = Utils.Enums.Condition.LIKE_NEW
 		};
-		var serviceAdvert = new AdvertServices
+		var serviceAdvert = new AdvertService
 		{
 			AdvertId = 3,
 			Title = "Math tutoring",
@@ -235,7 +235,7 @@ public class UsersControllerTests
 		var existingUser = new User { Id = "guid-toggle-1" };
 		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-		var advert = new Books
+		var advert = new Book
 		{
 			AdvertId = 2,
 			Title = "Another book",
@@ -268,7 +268,7 @@ public class UsersControllerTests
 		var existingUser = new User { Id = "guid-toggle-2" };
 		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-		var advert = new Books
+		var advert = new Book
 		{
 			AdvertId = 3,
 			Title = "ToBeDeleted",

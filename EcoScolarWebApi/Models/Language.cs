@@ -1,8 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EcoscolarWebApi.Models
 {
+    [Table("Languages")]
     public class Language
     {
         [Key]
@@ -13,6 +15,6 @@ namespace EcoscolarWebApi.Models
 
         // === Many-to-many relationships ===
 
-        public ICollection<UserLanguage> UserLanguages { get; set; } = new List<UserLanguage>();
+        public ICollection<UserLanguage> UserLanguages { get; set; } = [];
     }
 }

@@ -28,17 +28,17 @@ namespace EcoscolarWebApi.Utils.DTOs.Advert
         /// <param name="entity">The Adverts entity to convert</param>
         /// <returns>The AdvertReadDto instance</returns>
         /// <exception cref="InvalidOperationException"></exception>
-        public static AdvertReadDto FromEntity(Models.Adverts entity)
+        public static AdvertReadDto FromEntity(Models.Advert entity)
         {
             string type = entity switch
             {
-                Models.Books => "BOOK",
-                Models.PhysicalItems => "PRODUCT",
-                Models.AdvertServices => "SERVICE",
+                Models.Book => "BOOK",
+                Models.PhysicalItem => "PRODUCT",
+                Models.AdvertService => "SERVICE",
                 _ => throw new InvalidOperationException("Unknown advert type")
             };
             
-            string? primaryImage = (entity as Models.PhysicalItems)?.Pictures?.FirstOrDefault()?.Label;
+            string? primaryImage = (entity as Models.PhysicalItem)?.Pictures?.FirstOrDefault()?.Label;
 
             return new AdvertReadDto(
                 id: entity.AdvertId,
@@ -69,9 +69,9 @@ namespace EcoscolarWebApi.Utils.DTOs.Advert
         /// This method initializes the common properties of the advert, such as title, description, price, user ID, status, creation date, and notification date.
         /// </summary>
         /// <returns>The Adverts entity</returns>
-        public Adverts ToEntity()
+        public Models.Advert ToEntity()
         {
-            var advert = new Adverts();
+            var advert = new Models.Advert();
             this.MapToEntity(advert);
             return advert;
         }
@@ -80,7 +80,7 @@ namespace EcoscolarWebApi.Utils.DTOs.Advert
         /// Maps the properties of the AdvertBaseCreateDto to an existing Adverts entity.
         /// </summary>
         /// <param name="entity">The Adverts entity to map to</param>
-        public virtual void MapToEntity(Adverts entity)
+        public virtual void MapToEntity(Models.Advert entity)
         {
             entity.Title = Title;
             entity.Description = Description;
@@ -110,9 +110,9 @@ namespace EcoscolarWebApi.Utils.DTOs.Advert
         /// Converts the ServiceCreateDto to an AdvertServices entity.
         /// </summary>
         /// <returns>The AdvertServices entity</returns>
-        public AdvertServices ToEntity()
+        public AdvertService ToEntity()
         {
-            var service = new AdvertServices();
+            var service = new AdvertService();
             this.MapToEntity(service);
             return service;
         }
@@ -121,10 +121,10 @@ namespace EcoscolarWebApi.Utils.DTOs.Advert
         /// Maps the properties of the ServiceCreateDto to an existing Adverts entity, specifically to an AdvertServices entity.
         /// </summary>
         /// <param name="entity">The Adverts entity to map to</param>
-        public override void MapToEntity(Adverts entity)
+        public override void MapToEntity(Models.Advert entity)
         {
             base.MapToEntity(entity);
-            if (entity is AdvertServices service)
+            if (entity is AdvertService service)
             {
                 service.SubjectId = SubjectId;
                 service.SchoolGradeId = SchoolLevelId;
@@ -151,9 +151,9 @@ namespace EcoscolarWebApi.Utils.DTOs.Advert
         /// Converts the ProductCreateDto to a PhysicalItems entity.
         /// </summary>
         /// <returns>The PhysicalItems entity</returns>
-        public PhysicalItems ToEntity()
+        public PhysicalItem ToEntity()
         {
-            var product = new PhysicalItems();
+            var product = new PhysicalItem();
             this.MapToEntity(product);
             return product;
         }
@@ -162,14 +162,14 @@ namespace EcoscolarWebApi.Utils.DTOs.Advert
         /// Maps the properties of the ProductCreateDto to an existing Adverts entity, specifically to a PhysicalItems entity.
         /// </summary>
         /// <param name="entity">The Adverts entity to map to</param>
-        public override void MapToEntity(Adverts entity)
+        public override void MapToEntity(Models.Advert entity)
         {
             base.MapToEntity(entity);
-            if (entity is PhysicalItems product)
+            if (entity is PhysicalItem product)
             {
                 product.Condition = Condition;
                 product.ProductCategoryId = ProductCategoryId;
-                product.Pictures = Images.Select(url => new Pictures { Label = url }).ToList();
+                product.Pictures = Images.Select(url => new Picture { Label = url }).ToList();
             }
         }
     }
@@ -197,9 +197,9 @@ namespace EcoscolarWebApi.Utils.DTOs.Advert
         /// Converts the BookCreateDto to a Books entity.
         /// </summary>
         /// <returns>The Books entity</returns>
-        public Books ToEntity()
+        public Book ToEntity()
         {
-            var book = new Books();
+            var book = new Book();
             this.MapToEntity(book);
             return book;
         }
@@ -208,10 +208,10 @@ namespace EcoscolarWebApi.Utils.DTOs.Advert
         /// Maps the properties of the BookCreateDto to an existing Adverts entity, specifically to a Books entity.
         /// </summary>
         /// <param name="entity">The Adverts entity to map to</param>
-        public override void MapToEntity(Adverts entity)
+        public override void MapToEntity(Models.Advert entity)
         {
             base.MapToEntity(entity);
-            if (entity is Books book)
+            if (entity is Book book)
             {
                 book.Author = Author;
                 book.Publisher = Publisher;

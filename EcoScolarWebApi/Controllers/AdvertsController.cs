@@ -40,13 +40,13 @@ namespace EcoscolarWebApi.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<AdvertReadDto>>> Index()
         {
-            IEnumerable<Adverts> adverts;
+            IEnumerable<Advert> adverts;
             try
             {
                 adverts = await _context.Adverts
                     .Include(a => a.User)
                     .ToListAsync();
-                List<long> physicalItemIds = adverts.OfType<PhysicalItems>()
+                List<long> physicalItemIds = adverts.OfType<PhysicalItem>()
                     .Select(item => item.AdvertId)
                     .ToList();
                 if (physicalItemIds.Any())
@@ -74,7 +74,7 @@ namespace EcoscolarWebApi.Controllers
         [HttpGet("books")]
         public async Task<ActionResult<IEnumerable<AdvertReadDto>>> GetBooks()
         {
-            IEnumerable<Books> books;
+            IEnumerable<Book> books;
             try
             {
                 books = await _context.Books
@@ -102,13 +102,13 @@ namespace EcoscolarWebApi.Controllers
                 [FromQuery] long? categoryId,
                 [FromQuery] decimal? maxPrice)
         {
-            IEnumerable<PhysicalItems> products;
+            IEnumerable<PhysicalItem> products;
             try
             {
                 var query = _context.Products
                     .Include(p => p.User)
                     .Include(p => p.Pictures)
-                    .Where(p => !_context.Set<Books>().Any(b => b.AdvertId == p.AdvertId));
+                    .Where(p => !_context.Set<Book>().Any(b => b.AdvertId == p.AdvertId));
                 if (categoryId.HasValue)
                 {
                     query = query.Where(p => p.ProductCategoryId == categoryId.Value);
@@ -137,7 +137,7 @@ namespace EcoscolarWebApi.Controllers
         [HttpGet("services")]
         public async Task<ActionResult<IEnumerable<AdvertReadDto>>> GetServices([FromQuery] string? q)
         {
-            IEnumerable<AdvertServices> services;
+            IEnumerable<AdvertService> services;
             try
             {
                 var query = _context.Services
@@ -174,13 +174,13 @@ namespace EcoscolarWebApi.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<AdvertReadDto>> Details(long id)
         {
-            Adverts advert;
+            Advert advert;
             try
             {
                 advert = await _context.Adverts
                     .Include(a => a.User)
                     .FirstOrDefaultAsync(a => a.AdvertId == id);
-                if (advert is PhysicalItems physicalItem)
+                if (advert is PhysicalItem physicalItem)
                 {
                     await _context.Entry(physicalItem)
                         .Collection(item => item.Pictures)
@@ -238,7 +238,7 @@ namespace EcoscolarWebApi.Controllers
         {
             if (bookDto == null) return BadRequest();
 
-            Books book = bookDto.ToEntity();
+            Book book = bookDto.ToEntity();
 
             _context.Books.Add(book);
             await _context.SaveChangesAsync();
@@ -260,7 +260,7 @@ namespace EcoscolarWebApi.Controllers
         {
             if (productDto == null) return BadRequest();
 
-            PhysicalItems product = productDto.ToEntity();
+            PhysicalItem product = productDto.ToEntity();
 
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
@@ -282,7 +282,7 @@ namespace EcoscolarWebApi.Controllers
         {
             if (serviceDto == null) return BadRequest();
 
-            AdvertServices service = serviceDto.ToEntity();
+            AdvertService service = serviceDto.ToEntity();
 
             _context.Services.Add(service);
             await _context.SaveChangesAsync();
@@ -305,7 +305,7 @@ namespace EcoscolarWebApi.Controllers
         [HttpPut("books/{id}")]
         public async Task<IActionResult> EditBook(long id, [FromBody] BookCreateDto bookDto)
         {
-            Books existingBook = await _context.Books
+            Book existingBook = await _context.Books
                 .Include(b => b.Pictures)
                 .FirstOrDefaultAsync(b => b.AdvertId == id);
             
@@ -338,7 +338,7 @@ namespace EcoscolarWebApi.Controllers
         [HttpPut("products/{id}")]
         public async Task<IActionResult> EditProduct(long id, [FromBody] ProductCreateDto productDto)
         {
-            PhysicalItems existingProduct = await _context.Products
+            PhysicalItem existingProduct = await _context.Products
                 .Include(p => p.Pictures)
                 .FirstOrDefaultAsync(p => p.AdvertId == id);
 
@@ -371,7 +371,7 @@ namespace EcoscolarWebApi.Controllers
         [HttpPut("services/{id}")]
         public async Task<IActionResult> EditService(long id, [FromBody] ServiceCreateDto serviceDto)
         {
-            AdvertServices existingService = await _context.Services
+            AdvertService existingService = await _context.Services
                 .FirstOrDefaultAsync(s => s.AdvertId == id);
 
             if (existingService == null) return NotFound();
@@ -405,7 +405,7 @@ namespace EcoscolarWebApi.Controllers
         [HttpPatch("{id}/status")]
         public async Task<IActionResult> UpdateAdvertStatus(long id, [FromBody] AdvertStatus status)
         {
-            Adverts? advert;
+            Advert? advert;
             try
             {
                 advert = await _context.Adverts.FindAsync(id);
@@ -435,7 +435,7 @@ namespace EcoscolarWebApi.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAdvert(long id)
         {
-            Adverts? advert;
+            Advert? advert;
             try
             {
                 advert = await _context.Adverts.FindAsync(id);
@@ -461,7 +461,7 @@ namespace EcoscolarWebApi.Controllers
         [HttpDelete("{id}/images")]
         public async Task<IActionResult> RemoveAdvertImages(long id, [FromBody] List<string> imageUrls)
         {
-            PhysicalItems? product;
+            PhysicalItem? product;
             try
             {
                 product = await _context.Products
@@ -475,7 +475,7 @@ namespace EcoscolarWebApi.Controllers
             }
             if (product == null) return NotFound();
 
-            ICollection<Pictures> picturesToRemove = product.Pictures
+            ICollection<Picture> picturesToRemove = product.Pictures
                 .Where(p => imageUrls.Contains(p.Label))
                 .ToList();
 
