@@ -2,7 +2,7 @@ name: CD Pipeline - EcoScolar backend
 
 on:
   push:
-    branches: [ "main", "develop", "feature/deployment" ]
+    branches: [ "main", "develop" ]
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
