@@ -1,8 +1,7 @@
 ﻿using EcoscolarWebApi.Models;
-using EcoscolarWebApi.Utils.DTOs.Advert;
 using EcoscolarWebApi.Utils.Enums;
 
-namespace EcoScolarWebApi.Utils.DTOs.Advert
+namespace EcoscolarWebApi.Utils.DTOs.Advert
 {
     public record BookReadDto(long id, string title, string description, decimal price, DateTime publicationDate, DateTime notificationDate, AdvertStatus status, string userId, string sellerPseudo,
         List<string> pictures, Condition condition, long bookCategoryId, string bookCategoryLabel, string isbn, string author, string publisher, string edition, Language writtenLanguage, decimal? weight = null)
@@ -18,7 +17,7 @@ namespace EcoScolarWebApi.Utils.DTOs.Advert
                 notificationDate: entity.NotificationDate,
                 status: entity.Status,
                 userId: entity.UserId,
-                sellerPseudo: entity.User.UserName ?? "Anonyme",
+                sellerPseudo: entity.User?.UserName ?? "Anonyme",
                 condition: entity.Condition,
                 weight: entity.Weight,
                 bookCategoryId: entity.BookCategoryId,

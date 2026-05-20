@@ -4,7 +4,6 @@ using EcoscolarWebApi.Services;
 using EcoscolarWebApi.Utils.DTOs;
 using EcoscolarWebApi.Utils.DTOs.Advert;
 using EcoscolarWebApi.Utils.Enums;
-using EcoScolarWebApi.Utils.DTOs.Advert;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -199,6 +198,14 @@ namespace EcoscolarWebApi.Controllers
             return Ok(AdvertReadDto.FromEntity(advert));
         }
 
+        /// <summary>
+        /// Get the details of a specific book by its ID.
+        /// 
+        /// GET: AdvertsController/GetBookById/5
+        /// Url: /api/v1/adverts/books/5
+        /// </summary>
+        /// <param name="id">The ID of the book to retrieve</param>
+        /// <returns>The formatted book details</returns>
         [HttpGet("books/{id}")]
         public async Task<ActionResult<BookReadDto>> GetBookById(long id)
         {
@@ -219,6 +226,14 @@ namespace EcoscolarWebApi.Controllers
             return Ok(BookReadDto.FromEntity(book));
         }
 
+        /// <summary>
+        /// Get the details of a specific product by its ID.
+        /// 
+        /// GET: AdvertsController/GetProductById/5
+        /// Url: /api/v1/adverts/products/5
+        /// </summary>
+        /// <param name="id">The ID of the product to retrieve</param>
+        /// <returns>The formatted product details</returns>
         [HttpGet("products/{id}")]
         public async Task<ActionResult<ProductReadDto>> GetProductById(long id)
         {
@@ -228,6 +243,7 @@ namespace EcoscolarWebApi.Controllers
                 product = await _context.Products
                     .Include(p => p.User)
                     .Include(p => p.Pictures)
+                    .Where(p => !_context.Set<Books>().Any(b => b.AdvertId == p.AdvertId))
                     .FirstOrDefaultAsync(p => p.AdvertId == id);
             }
             catch (Exception e)
@@ -238,6 +254,14 @@ namespace EcoscolarWebApi.Controllers
             return Ok(ProductReadDto.FromEntity(product));
         }
 
+        /// <summary>
+        /// Get the details of a specific service by its ID.
+        /// 
+        /// GET: AdvertsController/GetServiceById/5
+        /// Url: /api/v1/adverts/services/5
+        /// </summary>
+        /// <param name="id">The ID of the service to retrieve</param>
+        /// <returns>The formatted service details</returns>
         [HttpGet("services/{id}")]
         public async Task<ActionResult<ServiceReadDto>> GetServiceById(long id)
         {

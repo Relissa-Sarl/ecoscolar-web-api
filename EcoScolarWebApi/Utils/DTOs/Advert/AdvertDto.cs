@@ -49,7 +49,7 @@ namespace EcoscolarWebApi.Utils.DTOs.Advert
                 notificationDate: entity.NotificationDate,
                 status: entity.Status,
                 userId: entity.UserId,
-                sellerPseudo: entity.User.UserName ?? "Anonyme",
+                sellerPseudo: entity.User?.UserName ?? "Anonyme",
                 primaryImage: primaryImage
             );
         }

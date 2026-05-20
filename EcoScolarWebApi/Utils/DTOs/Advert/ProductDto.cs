@@ -1,8 +1,7 @@
 ﻿using EcoscolarWebApi.Models;
-using EcoscolarWebApi.Utils.DTOs.Advert;
 using EcoscolarWebApi.Utils.Enums;
 
-namespace EcoScolarWebApi.Utils.DTOs.Advert
+namespace EcoscolarWebApi.Utils.DTOs.Advert
 {
     public record ProductReadDto(long id, string title, string description, decimal price, DateTime publicationDate, DateTime notificationDate, AdvertStatus status, string userId, string sellerPseudo, 
         List<string> pictures, Condition condition, decimal? weight, long? productCategoryId, string? productCategoryLabel)
@@ -18,7 +17,7 @@ namespace EcoScolarWebApi.Utils.DTOs.Advert
                 notificationDate: entity.NotificationDate,
                 status: entity.Status,
                 userId: entity.UserId,
-                sellerPseudo: entity.User.UserName ?? "Anonyme",
+                sellerPseudo: entity.User?.UserName ?? "Anonyme",
                 condition: entity.Condition,
                 weight: entity.Weight ?? null,
                 productCategoryId: entity.ProductCategoryId ?? null,
@@ -29,7 +28,7 @@ namespace EcoScolarWebApi.Utils.DTOs.Advert
     }
 
     /// <summary>
-    /// DTO used for creating new product adverts, inheriting from AdvertBaseCreateDto and adding specific properties related to products, such as an array of image URLs and the condition of the product.
+    /// DTO used for creating new product adverts, inheriting from AdvertCreateDto and adding specific properties related to products, such as an array of image URLs and the condition of the product.
     /// </summary>
     /// <param name="Title">The title of the product advert</param>
     /// <param name="Description">The description of the product advert</param>
