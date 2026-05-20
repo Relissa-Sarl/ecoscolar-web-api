@@ -333,11 +333,11 @@ namespace EcoscolarWebApi.Controllers
 
             Books book = bookDto.ToEntity();
 
-            _context.Books.Add(Books);
+            _context.Books.Add(book);
             await _context.SaveChangesAsync();
 
-            AdvertReadDto readDto = AdvertReadDto.FromEntity(Books);
-            return CreatedAtAction("GetBooks", new { id = Books.AdvertId }, readDto);
+            AdvertReadDto readDto = AdvertReadDto.FromEntity(book);
+            return CreatedAtAction("GetBooks", new { id = book.AdvertId }, readDto);
         }
 
         /// <summary>
