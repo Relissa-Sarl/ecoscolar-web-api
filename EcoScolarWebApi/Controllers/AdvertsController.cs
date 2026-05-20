@@ -97,11 +97,13 @@ namespace EcoscolarWebApi.Controllers
         /// GET: AdvertsController/GetProducts
         /// Url: /api/v1/adverts/products
         /// </summary>
+        /// <param name="categoryId">The category ID to filter products by</param>
+        /// <param name="maxPrice">The maximum price to filter products by</param>
         /// <returns>List of formatted product adverts</returns>
         [HttpGet("products")]
         public async Task<ActionResult<IEnumerable<AdvertReadDto>>> GetProducts(
-                [FromQuery] long? categoryId,
-                [FromQuery] decimal? maxPrice)
+                [FromQuery] long? categoryId = null,
+                [FromQuery] decimal? maxPrice = null)
         {
             IEnumerable<PhysicalItems> products;
             try
@@ -129,14 +131,15 @@ namespace EcoscolarWebApi.Controllers
 
         /// <summary>
         /// Get all services adverts
+        /// q query parameter allows to filter services by title or description containing the provided keyword (case-insensitive)
         /// 
         /// GET: AdvertsController/GetServices
         /// Url: /api/v1/adverts/services
-        /// q query parameter allows to filter services by title or description containing the provided keyword (case-insensitive)
         /// </summary>
+        /// <param name="q">The keyword to search for</param>
         /// <returns>List of formatted service adverts</returns>
         [HttpGet("services")]
-        public async Task<ActionResult<IEnumerable<AdvertReadDto>>> GetServices([FromQuery] string? q)
+        public async Task<ActionResult<IEnumerable<AdvertReadDto>>> GetServices([FromQuery] string? q = null)
         {
             IEnumerable<AdvertServices> services;
             try
@@ -197,7 +200,7 @@ namespace EcoscolarWebApi.Controllers
         }
 
         [HttpGet("books/{id}")]
-        public async Task<ActionResult<AdvertReadDto>> GetBookById(long id)
+        public async Task<ActionResult<BookReadDto>> GetBookById(long id)
         {
             Books? book;
             try
@@ -217,7 +220,7 @@ namespace EcoscolarWebApi.Controllers
         }
 
         [HttpGet("products/{id}")]
-        public async Task<ActionResult<AdvertReadDto>> GetProductById(long id)
+        public async Task<ActionResult<ProductReadDto>> GetProductById(long id)
         {
             PhysicalItems? product;
             try
