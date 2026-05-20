@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using EcoScolarWebApi.Data;
 using EcoScolarWebApi.DTOs.AdvertDtos;
 using EcoScolarWebApi.DTOs.Adverts;
@@ -9,8 +10,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EcoScolarWebApi.Controllers
 {
-    [Route("api/v1/[controller]")]
-    [ApiController]
+	[ApiVersion("1.0")]
+	[Route("api/v{version:apiVersion}/[controller]")]
+	[ApiController]
     public class AdvertsController : ControllerBase
     {
         private readonly IAdvertSearchService _advertSearchService;

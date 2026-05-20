@@ -1,4 +1,5 @@
-﻿using EcoScolarWebApi.Models;
+﻿using Asp.Versioning;
+using EcoScolarWebApi.Models;
 using EcoScolarWebApi.Services.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -6,11 +7,12 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace EcoScolarWebApi.Controllers
 {
-    /// <summary>
-    /// Defines API endpoints for user authentication operations such as registration and login.
-    /// </summary>
-    [Route("api/v1/[controller]")]
-    [ApiController]
+	/// <summary>
+	/// Defines API endpoints for user authentication operations such as registration and login.
+	/// </summary>
+	[ApiVersion("1.0")]
+	[Route("api/v{version:apiVersion}/[controller]")]
+	[ApiController]
     public class AuthController : ControllerBase
     {
         private readonly IUserService _userService;             // User service instance reference

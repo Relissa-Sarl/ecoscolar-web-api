@@ -7,7 +7,7 @@ namespace EcoScolarWebApi.Enums
     /// Enumeration that represents the language of an Adverts.
     /// It can be FR, DE or IT.
     /// </summary>
-    public enum Language
+    public enum LanguageEnum
     {
         [EnumMember(Value = "FR")]
         [JsonPropertyName("FR")]

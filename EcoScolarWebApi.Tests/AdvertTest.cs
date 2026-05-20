@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using NSubstitute;
 using System.Security.Claims;
 using Xunit;
-using Language = EcoScolarWebApi.Enums.Language;
+using LanguageEnum = EcoScolarWebApi.Enums.LanguageEnum;
 using EcoScolarWebApi.DTOs.AdvertDtos;
 using EcoScolarWebApi.Enums;
 using EcoScolarWebApi.DTOs.Adverts;
@@ -88,7 +88,7 @@ public class AdvertsControllerTests : IDisposable
                 Author = "John",
                 Publisher = "Pub",
                 Edition = "1st",
-                WrittenLanguage = Language.FR,
+                WrittenLanguage = LanguageEnum.FR,
                 Pictures = pictures
             },
             new PhysicalItem
@@ -189,7 +189,7 @@ public class AdvertsControllerTests : IDisposable
                 Author = "John",
                 Publisher = "Pub",
                 Edition = "1st",
-                WrittenLanguage = Language.FR,
+                WrittenLanguage = LanguageEnum.FR,
                 Pictures = pictures
             },
             new Book
@@ -208,7 +208,7 @@ public class AdvertsControllerTests : IDisposable
                 Author = "Doe",
                 Publisher = "Smith",
                 Edition = "3st",
-                WrittenLanguage = Language.FR,
+                WrittenLanguage = LanguageEnum.FR,
                 Pictures = pictures2
             },
             new AdvertService
@@ -894,7 +894,7 @@ public class AdvertsControllerTests : IDisposable
             Author = "John",
             Publisher = "Pub",
             Edition = "1st",
-            WrittenLanguage = Language.FR,
+            WrittenLanguage = LanguageEnum.FR,
             Pictures = pictures
         };
         _context.Adverts.Add(advert);
@@ -960,7 +960,7 @@ public class AdvertsControllerTests : IDisposable
             Author = "John",
             Publisher = "Pub",
             Edition = "1st",
-            WrittenLanguage = Language.FR,
+            WrittenLanguage = LanguageEnum.FR,
             BookCategoryId = 1,
             Pictures = pictures
         };
@@ -1298,7 +1298,7 @@ public class AdvertsControllerTests : IDisposable
             Author: "Jane",
             Publisher: "New Pub",
             Edition: "2nd",
-            WrittenLanguage: Language.FR
+            WrittenLanguage: LanguageEnum.FR
         );
 
         // Act
@@ -1340,7 +1340,7 @@ public class AdvertsControllerTests : IDisposable
             Author: "Jane",
             Publisher: "New Pub",
             Edition: "2nd",
-            WrittenLanguage: Language.FR
+            WrittenLanguage: LanguageEnum.FR
         );
 
         // FORCE VALIDATION ERROR
@@ -1457,7 +1457,7 @@ public class AdvertsControllerTests : IDisposable
             UserId: existingUser.Id,
             SubjectId: 1,
             SchoolLevelId: 1,
-            TeachingLanguage: Language.FR,
+            TeachingLanguage: LanguageEnum.FR,
             SpecificStudyLevel: "Diplôme en Mathématiques"
         );
 
@@ -1495,7 +1495,7 @@ public class AdvertsControllerTests : IDisposable
             UserId: existingUser.Id,
             SubjectId: 1,
             SchoolLevelId: 1,
-            TeachingLanguage: Language.FR,
+            TeachingLanguage: LanguageEnum.FR,
             SpecificStudyLevel: "Diplôme en Mathématiques"
         );
 
@@ -1547,7 +1547,7 @@ public class AdvertsControllerTests : IDisposable
             Author = "John",
             Publisher = "Pub",
             Edition = "1st",
-            WrittenLanguage = Language.FR,
+            WrittenLanguage = LanguageEnum.FR,
             BookCategoryId = 1,
             Pictures = pictures
         };
@@ -1569,7 +1569,7 @@ public class AdvertsControllerTests : IDisposable
             Author: "Jane",
             Publisher: "New Pub",
             Edition: "2nd",
-            WrittenLanguage: Language.FR
+            WrittenLanguage: LanguageEnum.FR
         );
 
         // Act
@@ -1622,7 +1622,7 @@ public class AdvertsControllerTests : IDisposable
             Author = "John",
             Publisher = "Pub",
             Edition = "1st",
-            WrittenLanguage = Language.FR,
+            WrittenLanguage = LanguageEnum.FR,
             BookCategoryId = 1,
             Pictures = pictures
         };
@@ -1644,7 +1644,7 @@ public class AdvertsControllerTests : IDisposable
             Author: "Jane",
             Publisher: "New Pub",
             Edition: "2nd",
-            WrittenLanguage: Language.FR
+            WrittenLanguage: LanguageEnum.FR
         );
 
         _controller.ModelState.AddModelError("Title", "The Title field is required.");
@@ -1681,7 +1681,7 @@ public class AdvertsControllerTests : IDisposable
             Author: "Jane",
             Publisher: "New Pub",
             Edition: "2nd",
-            WrittenLanguage: Language.FR
+            WrittenLanguage: LanguageEnum.FR
         );
 
         // Act
@@ -1876,7 +1876,7 @@ public class AdvertsControllerTests : IDisposable
             UserId: existingUser.Id,
             SubjectId: 2,
             SchoolLevelId: 1,
-            TeachingLanguage: Language.FR,
+            TeachingLanguage: LanguageEnum.FR,
             SpecificStudyLevel: "Diplôme en Langue Française"
 
         );
@@ -1934,7 +1934,7 @@ public class AdvertsControllerTests : IDisposable
             UserId: existingUser.Id,
             SubjectId: 1,
             SchoolLevelId: 1,
-            TeachingLanguage: Language.FR,
+            TeachingLanguage: LanguageEnum.FR,
             SpecificStudyLevel: "Diplôme en Langue Française"
 
         );
@@ -1965,7 +1965,7 @@ public class AdvertsControllerTests : IDisposable
             UserId: existingUser.Id,
             SubjectId: 1,
             SchoolLevelId: 1,
-            TeachingLanguage: Language.FR,
+            TeachingLanguage: LanguageEnum.FR,
             SpecificStudyLevel: "Diplôme en Langue Française"
 
         );
@@ -2011,7 +2011,7 @@ public class AdvertsControllerTests : IDisposable
             Author = "John",
             Publisher = "Pub",
             Edition = "1st",
-            WrittenLanguage = Language.FR,
+            WrittenLanguage = LanguageEnum.FR,
             BookCategoryId = 1,
             Pictures = pictures
         };
@@ -2076,7 +2076,7 @@ public class AdvertsControllerTests : IDisposable
             Author = "John",
             Publisher = "Pub",
             Edition = "1st",
-            WrittenLanguage = Language.FR,
+            WrittenLanguage = LanguageEnum.FR,
             BookCategoryId = 1,
             Pictures = pictures
         };
@@ -2139,7 +2139,7 @@ public class AdvertsControllerTests : IDisposable
             Author = "John",
             Publisher = "Pub",
             Edition = "1st",
-            WrittenLanguage = Language.FR,
+            WrittenLanguage = LanguageEnum.FR,
             BookCategoryId = 1,
             Pictures = pictures
         };
@@ -2201,7 +2201,7 @@ public class AdvertsControllerTests : IDisposable
             Author = "John",
             Publisher = "Pub",
             Edition = "1st",
-            WrittenLanguage = Language.FR,
+            WrittenLanguage = LanguageEnum.FR,
             BookCategoryId = 1,
             Pictures = pictures
         };

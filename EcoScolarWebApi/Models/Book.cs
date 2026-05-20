@@ -23,7 +23,7 @@ namespace EcoScolarWebApi.Models
         public string Edition { get; set; }
 
         [Required]
-        public Enums.Language WrittenLanguage { get; set; }
+        public Enums.LanguageEnum WrittenLanguage { get; set; }
         
         [Required]
         public long BookCategoryId { get; set; }

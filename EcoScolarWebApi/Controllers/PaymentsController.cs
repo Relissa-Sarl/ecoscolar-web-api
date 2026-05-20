@@ -1,13 +1,15 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Stripe;
-using Stripe.V2.Core;
-using Stripe.Checkout;
+﻿using Asp.Versioning;
 using EcoScolarWebApi.DTOs.Stripe;
+using Microsoft.AspNetCore.Mvc;
+using Stripe;
+using Stripe.Checkout;
+using Stripe.V2.Core;
 
 namespace EcoScolarWebApi.Controllers
 {
-    [Route("api/v1/[controller]")]
-    [ApiController]
+	[ApiVersion("1.0")]
+	[Route("api/v{version:apiVersion}/[controller]")]
+	[ApiController]
     public class PaymentsController : ControllerBase
     {
         private readonly IConfiguration _config;        // Configuration to access Stripe secret key

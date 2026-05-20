@@ -124,7 +124,7 @@ public class UsersControllerTests
 			Author = "John",
 			Publisher = "Pub",
 			Edition = "1st",
-			WrittenLanguage = Enums.Language.FR
+			WrittenLanguage = Enums.LanguageEnum.FR
 		};
 		var physicalItemAdvert = new PhysicalItem
 		{
@@ -153,7 +153,7 @@ public class UsersControllerTests
 			StudyLevel = "High School",
 			SubjectId = 1,
 			SchoolGradeId = 1,
-			TeachingLanguage = Enums.Language.FR
+			TeachingLanguage = Enums.LanguageEnum.FR
 		};
 
 		var favoriteBook = new UserFavorite
@@ -246,7 +246,7 @@ public class UsersControllerTests
 			Author = "John",
 			Publisher = "Pub",
 			Edition = "1st",
-			WrittenLanguage = Enums.Language.FR
+			WrittenLanguage = Enums.LanguageEnum.FR
 		};
 		_context.Adverts.Add(advert);
 		await _context.SaveChangesAsync();
@@ -279,7 +279,7 @@ public class UsersControllerTests
 			Author = "John",
 			Publisher = "Pub",
 			Edition = "1st",
-			WrittenLanguage = Enums.Language.FR
+			WrittenLanguage = Enums.LanguageEnum.FR
 		};
 		_context.Adverts.Add(advert);
 
@@ -335,7 +335,7 @@ public class UsersControllerTests
 			Author = "John",
 			Publisher = "Pub",
 			Edition = "1st",
-			WrittenLanguage = Enums.Language.FR
+			WrittenLanguage = Enums.LanguageEnum.FR
 		};
 		var advert2 = new PhysicalItem
 		{

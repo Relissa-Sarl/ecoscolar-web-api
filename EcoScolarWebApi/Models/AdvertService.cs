@@ -17,7 +17,7 @@ namespace EcoScolarWebApi.Models
         public long SchoolGradeId { get; set; }
 
         [Required]
-        public Enums.Language TeachingLanguage { get; set; }
+        public Enums.LanguageEnum TeachingLanguage { get; set; }
 
         [ForeignKey("SubjectId")]
         public virtual Subject Subjects { get; set; }

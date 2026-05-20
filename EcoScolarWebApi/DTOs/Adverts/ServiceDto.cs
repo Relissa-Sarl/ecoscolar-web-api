@@ -4,7 +4,7 @@ using EcoScolarWebApi.Models;
 namespace EcoScolarWebApi.DTOs.AdvertDtos
 {
     public record ServiceReadDto(long id, string title, string description, decimal price, DateTime publicationDate, DateTime notificationDate, AdvertStatus status, string userId, string sellerPseudo,
-        long subjectId, string subjectLabel, long schoolGradeId, string schoolGradeLabel, Enums.Language teachingLanguage, string studyLevel)
+        long subjectId, string subjectLabel, long schoolGradeId, string schoolGradeLabel, Enums.LanguageEnum teachingLanguage, string studyLevel)
     {
         public static ServiceReadDto FromEntity(AdvertService entity)
         {
@@ -39,7 +39,7 @@ namespace EcoScolarWebApi.DTOs.AdvertDtos
     /// <param name="SchoolLevelId">The ID of the school level related to the service Adverts</param>
     /// <param name="TeachingLanguage">The language in which the service will be taught</param>
     /// <param name="SpecificStudyLevel">The specific study level related to the service Adverts</param>
-    public record ServiceCreateDto(string Title, string Description, decimal Price, string UserId, long SubjectId, long SchoolLevelId, Enums.Language TeachingLanguage, string SpecificStudyLevel)
+    public record ServiceCreateDto(string Title, string Description, decimal Price, string UserId, long SubjectId, long SchoolLevelId, Enums.LanguageEnum TeachingLanguage, string SpecificStudyLevel)
         : AdvertCreateDto(Title, Description, Price, UserId)
     {
         /// <summary>

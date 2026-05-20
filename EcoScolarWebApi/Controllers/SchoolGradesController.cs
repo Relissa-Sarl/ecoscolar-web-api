@@ -3,8 +3,10 @@ using Microsoft.EntityFrameworkCore;
 using EcoScolarWebApi.Models;
 using EcoScolarWebApi.Data;
 using EcoScolarWebApi.DTOs.ReferenceData;
+using Asp.Versioning;
 
-[Route("api/v1/[controller]")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/[controller]")]
 [ApiController]
 public class SchoolGradesController : ControllerBase
 {

@@ -4,7 +4,7 @@ using EcoScolarWebApi.Models;
 namespace EcoScolarWebApi.DTOs.AdvertDtos
 {
     public record BookReadDto(long id, string title, string description, decimal price, DateTime publicationDate, DateTime notificationDate, AdvertStatus status, string userId, string sellerPseudo,
-        List<string> pictures, Condition condition, long bookCategoryId, string bookCategoryLabel, string isbn, string author, string publisher, string edition, Enums.Language writtenLanguage, decimal? weight = null)
+        List<string> pictures, Condition condition, long bookCategoryId, string bookCategoryLabel, string isbn, string author, string publisher, string edition, Enums.LanguageEnum writtenLanguage, decimal? weight = null)
     {
         public static BookReadDto FromEntity(Book entity)
         {
@@ -48,7 +48,7 @@ namespace EcoScolarWebApi.DTOs.AdvertDtos
     /// <param name="Edition">The edition of the Books Adverts</param>
     public record BookCreateDto(
         string Title, string Description, decimal Price, string UserId, Picture[] Images, Condition Condition,
-        long CategoryId, string Isbn, string Author, string Publisher, string Edition, Enums.Language WrittenLanguage
+        long CategoryId, string Isbn, string Author, string Publisher, string Edition, Enums.LanguageEnum WrittenLanguage
     ) : ProductCreateDto(Title, Description, Price, UserId, Images, Condition, ProductCategoryId: null)
     {
         /// <summary>

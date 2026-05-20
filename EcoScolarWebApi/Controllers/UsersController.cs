@@ -1,4 +1,5 @@
-﻿using EcoScolarWebApi.Commun;
+﻿using Asp.Versioning;
+using EcoScolarWebApi.Commun;
 using EcoScolarWebApi.Data;
 using EcoScolarWebApi.DTOs.AdvertDtos;
 using EcoScolarWebApi.DTOs.Users;
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EcoScolarWebApi.Controllers
 {
-    [Route("api/v1/[controller]")]
+	[ApiVersion("1.0")]
     [ApiController]
-    [Authorize]
+	[Route("api/v{version:apiVersion}/[controller]")]
+	[Authorize]
     public class UsersController : ControllerBase
     {
 		private readonly UserManager<User> _userManager;
