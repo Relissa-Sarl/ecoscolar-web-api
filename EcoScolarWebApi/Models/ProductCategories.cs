@@ -17,6 +17,6 @@ namespace EcoscolarWebApi.Models
         [StringLength(1000)]
         public string Description { get; set; }
 
-        public virtual ICollection<PhysicalItems> PhysicalItems { get; set; } = new List<PhysicalItems>();
+        //public virtual ICollection<PhysicalItems> PhysicalItems { get; set; } = new List<PhysicalItems>();
     }
 }
