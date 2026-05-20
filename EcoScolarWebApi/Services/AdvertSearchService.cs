@@ -61,7 +61,7 @@ namespace EcoscolarWebApi.Services
             var booksDict = bookAdvertIds.Length == 0
                 ? []
                 : await _context.Books.AsNoTracking()
-                    .Include(b => b.BookCategory)
+                    .Include(b => b.BookCategories)
                     .Include(b => b.Pictures)
                     .Where(b => bookAdvertIds.Contains(b.AdvertId))
                     .ToDictionaryAsync(b => b.AdvertId, cancellationToken);
@@ -69,8 +69,8 @@ namespace EcoscolarWebApi.Services
             var servicesDict = serviceAdvertIds.Length == 0
                 ? []
                 : await _context.Services.AsNoTracking()
-                    .Include(s => s.Subject)
-                    .Include(s => s.SchoolGrade)
+                    .Include(s => s.Subjects)
+                    .Include(s => s.SchoolGrades)
                     .Where(s => serviceAdvertIds.Contains(s.AdvertId))
                     .ToDictionaryAsync(s => s.AdvertId, cancellationToken);
 
@@ -84,7 +84,7 @@ namespace EcoscolarWebApi.Services
 
             var bookDetail = await _context.Books
                 .AsNoTracking()
-                .Include(b => b.BookCategory)
+                .Include(b => b.BookCategories)
                 .Include(b => b.Pictures)
                 .FirstOrDefaultAsync(b => b.AdvertId == advertId, cancellationToken);
             if (bookDetail != null)
@@ -92,8 +92,8 @@ namespace EcoscolarWebApi.Services
 
             var serviceDetail = await _context.Services
                 .AsNoTracking()
-                .Include(s => s.Subject)
-                .Include(s => s.SchoolGrade)
+                .Include(s => s.Subjects)
+                .Include(s => s.SchoolGrades)
                 .FirstOrDefaultAsync(s => s.AdvertId == advertId, cancellationToken);
             if (serviceDetail != null)
                 return ToDetailFromService(serviceDetail, id);
@@ -103,7 +103,7 @@ namespace EcoscolarWebApi.Services
                 .Include(p => p.Pictures)
                 .Where(p =>
                     p.AdvertId == advertId
-                    && !_context.Set<Books>().Any(book => book.AdvertId == p.AdvertId))
+                    && !_context.Set<Books>().Any(Books => Books.AdvertId == p.AdvertId))
                 .FirstOrDefaultAsync(cancellationToken);
 
             return productDetail == null ? null : ToDetailFromPhysical(productDetail, id);
@@ -125,10 +125,10 @@ namespace EcoscolarWebApi.Services
                         Id = CatalogIdFromAdvertId(bk.AdvertId),
                         Title = bk.Title,
                         Price = bk.Price,
-                        Type = CatalogAdvertTypeCodes.Book,
+                        Type = CatalogAdvertTypeCodes.Books,
                         Isbn = string.IsNullOrWhiteSpace(src.ISBN) ? null : src.ISBN,
-                        Category = src.BookCategory?.Name,
-                        Subject = null,
+                        Category = src.BookCategories?.Name,
+                        Subjects = null,
                         Grade = null
                     };
                 }
@@ -144,8 +144,8 @@ namespace EcoscolarWebApi.Services
                         Type = CatalogAdvertTypeCodes.Service,
                         Isbn = null,
                         Category = null,
-                        Subject = src.Subject?.Name,
-                        Grade = src.SchoolGrade?.Name
+                        Subjects = src.Subjects?.Name,
+                        Grade = src.SchoolGrades?.Name
                     };
                 }
                 case PhysicalItems phy when phy is not Books:
@@ -157,11 +157,11 @@ namespace EcoscolarWebApi.Services
                         Type = CatalogAdvertTypeCodes.Product,
                         Isbn = null,
                         Category = null,
-                        Subject = null,
+                        Subjects = null,
                         Grade = null
                     };
                 default:
-                    throw new InvalidOperationException($"Unknown advert CLR type '{a.GetType().Name}'.");
+                    throw new InvalidOperationException($"Unknown Adverts CLR type '{a.GetType().Name}'.");
             }
         }
 
@@ -173,10 +173,10 @@ namespace EcoscolarWebApi.Services
             {
                 Id = catalogId,
                 Title = b.Title,
-                Type = CatalogAdvertTypeCodes.Book,
+                Type = CatalogAdvertTypeCodes.Books,
                 Isbn = string.IsNullOrWhiteSpace(b.ISBN) ? null : b.ISBN,
-                Category = b.BookCategory?.Name,
-                Subject = null,
+                Category = b.BookCategories?.Name,
+                Subjects = null,
                 Grade = null,
                 Price = b.Price,
                 Description = b.Description ?? string.Empty,
@@ -193,8 +193,8 @@ namespace EcoscolarWebApi.Services
                 Type = CatalogAdvertTypeCodes.Service,
                 Isbn = null,
                 Category = null,
-                Subject = s.Subject?.Name,
-                Grade = s.SchoolGrade?.Name,
+                Subjects = s.Subjects?.Name,
+                Grade = s.SchoolGrades?.Name,
                 Price = s.Price,
                 Description = s.Description ?? string.Empty,
                 ImageUrl = null
@@ -211,7 +211,7 @@ namespace EcoscolarWebApi.Services
                 Type = CatalogAdvertTypeCodes.Product,
                 Isbn = null,
                 Category = null,
-                Subject = null,
+                Subjects = null,
                 Grade = null,
                 Price = p.Price,
                 Description = p.Description ?? string.Empty,

@@ -8,7 +8,7 @@ namespace EcoscolarWebApi.Utils.DTOs
 		public string Type { get; set; } = string.Empty;
 		public string? Isbn { get; set; } = null;
 		public string? Category { get; set; }
-		public string? Subject { get; set; }
+		public string? Subjects { get; set; }
 		public string? Grade { get; set; }
     }
 }

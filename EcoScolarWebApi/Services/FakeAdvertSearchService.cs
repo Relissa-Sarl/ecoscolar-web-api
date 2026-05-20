@@ -4,9 +4,9 @@ namespace EcoscolarWebApi.Services
 {
     /// <summary>
     /// Mock catalogue search aligned with <see cref="AdvertSearchService"/>:
-    /// <c>isbn</c> keeps book rows whose normalized ISBN matches;
-    /// <c>q</c> keeps rows whose title contains the keyword (any advert type)
-    /// or whose book ISBN matches the normalized keyword.
+    /// <c>isbn</c> keeps Books rows whose normalized ISBN matches;
+    /// <c>q</c> keeps rows whose title contains the keyword (any Adverts type)
+    /// or whose Books ISBN matches the normalized keyword.
     /// </summary>
     public class FakeAdvertSearchService : IAdvertSearchService
     {
@@ -32,7 +32,7 @@ namespace EcoscolarWebApi.Services
             {
                 var needle = Normalize(query.Isbn);
                 result = result.Where(a =>
-                    a.Type == CatalogAdvertTypeCodes.Book
+                    a.Type == CatalogAdvertTypeCodes.Books
                     && a.Isbn is not null
                     && Normalize(a.Isbn).Contains(needle, StringComparison.Ordinal));
             }
@@ -43,7 +43,7 @@ namespace EcoscolarWebApi.Services
                 var normalizedIsbnProbe = Normalize(keyword);
                 result = result.Where(a =>
                     a.Title.Contains(keyword, StringComparison.OrdinalIgnoreCase)
-                    || (a.Type == CatalogAdvertTypeCodes.Book
+                    || (a.Type == CatalogAdvertTypeCodes.Books
                         && a.Isbn is not null
                         && Normalize(a.Isbn).Contains(normalizedIsbnProbe, StringComparison.Ordinal)));
             }
@@ -65,7 +65,7 @@ namespace EcoscolarWebApi.Services
                 Type = s.Type,
                 Isbn = s.Isbn,
                 Category = s.Category,
-                Subject = s.Subject,
+                Subjects = s.Subjects,
                 Grade = s.Grade,
                 Price = s.Price,
                 Description = entry.Description
@@ -83,10 +83,10 @@ namespace EcoscolarWebApi.Services
                     Id = Guid.Parse("6d4b9d4a-1dd1-4a38-8d68-7af4d9cb3c01"),
                     Title = "Exemple annonce 1",
                     Price = 12.50m,
-                    Type = CatalogAdvertTypeCodes.Book,
+                    Type = CatalogAdvertTypeCodes.Books,
                     Isbn = null,
                     Category = "General",
-                    Subject = null,
+                    Subjects = null,
                     Grade = null
                 }, demoDesc),
                 new(new AdvertSummaryDto
@@ -94,10 +94,10 @@ namespace EcoscolarWebApi.Services
                     Id = Guid.Parse("9a2d7d6e-8b4c-4d55-a901-2ec6f6c4d202"),
                     Title = "Exemple annonce 2",
                     Price = 7.00m,
-                    Type = CatalogAdvertTypeCodes.Book,
+                    Type = CatalogAdvertTypeCodes.Books,
                     Isbn = null,
                     Category = "General",
-                    Subject = null,
+                    Subjects = null,
                     Grade = null
                 }, demoDesc),
                 new(new AdvertSummaryDto
@@ -105,10 +105,10 @@ namespace EcoscolarWebApi.Services
                     Id = Guid.Parse("3f8e5c9b-2a7e-4f1a-9c3d-5b6e7f8a9c03"),
                     Title = "Exemple annonce 3",
                     Price = 15.00m,
-                    Type = CatalogAdvertTypeCodes.Book,
+                    Type = CatalogAdvertTypeCodes.Books,
                     Isbn = "978-3-16-148410-0",
                     Category = "Fiction",
-                    Subject = "Mathematics",
+                    Subjects = "Mathematics",
                     Grade = "Grade 10"
                 }, demoDesc),
                 new(new AdvertSummaryDto
@@ -119,7 +119,7 @@ namespace EcoscolarWebApi.Services
                     Type = CatalogAdvertTypeCodes.Product,
                     Isbn = null,
                     Category = "Fournitures",
-                    Subject = null,
+                    Subjects = null,
                     Grade = null
                 }, demoDesc),
                 new(new AdvertSummaryDto
@@ -130,7 +130,7 @@ namespace EcoscolarWebApi.Services
                     Type = CatalogAdvertTypeCodes.Product,
                     Isbn = null,
                     Category = "Fournitures",
-                    Subject = null,
+                    Subjects = null,
                     Grade = null
                 }, demoDesc),
                 new(new AdvertSummaryDto
@@ -141,7 +141,7 @@ namespace EcoscolarWebApi.Services
                     Type = CatalogAdvertTypeCodes.Service,
                     Isbn = null,
                     Category = null,
-                    Subject = "Mathématiques",
+                    Subjects = "Mathématiques",
                     Grade = "Collège"
                 }, demoDesc),
                 new(new AdvertSummaryDto
@@ -152,7 +152,7 @@ namespace EcoscolarWebApi.Services
                     Type = CatalogAdvertTypeCodes.Service,
                     Isbn = null,
                     Category = null,
-                    Subject = "Physique-Chimie",
+                    Subjects = "Physique-Chimie",
                     Grade = "Lycée"
                 }, demoDesc)
             };

@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace EcoscolarWebApi.Migrations
+namespace EcoScolarWebApi.Migrations
 {
     [DbContext(typeof(EcoscolarDbContext))]
     partial class EcoscolarDbContextModelSnapshot : ModelSnapshot
@@ -150,6 +150,85 @@ namespace EcoscolarWebApi.Migrations
                         });
                 });
 
+            modelBuilder.Entity("EcoscolarWebApi.Models.Language", b =>
+                {
+                    b.Property<string>("Label")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Label");
+
+                    b.ToTable("Languages");
+
+                    b.HasData(
+                        new
+                        {
+                            Label = "FR",
+                            Name = "Français"
+                        },
+                        new
+                        {
+                            Label = "DE",
+                            Name = "Deutsch"
+                        },
+                        new
+                        {
+                            Label = "IT",
+                            Name = "Italian"
+                        });
+                });
+
+            modelBuilder.Entity("EcoscolarWebApi.Models.Location", b =>
+                {
+                    b.Property<int>("LocationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("LocationId"));
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PostalCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Region")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("LocationId");
+
+                    b.ToTable("Location");
+
+                    b.HasData(
+                        new
+                        {
+                            LocationId = 1,
+                            City = "Lausanne",
+                            PostalCode = "1000",
+                            Region = "Vaud"
+                        },
+                        new
+                        {
+                            LocationId = 2,
+                            City = "Montreux",
+                            PostalCode = "1820",
+                            Region = "Vaud"
+                        },
+                        new
+                        {
+                            LocationId = 3,
+                            City = "Martigny",
+                            PostalCode = "1920",
+                            Region = "Valais"
+                        });
+                });
+
             modelBuilder.Entity("EcoscolarWebApi.Models.Pictures", b =>
                 {
                     b.Property<long>("PictureId")
@@ -278,7 +357,7 @@ namespace EcoscolarWebApi.Migrations
 
                     b.HasKey("SchoolGradeId");
 
-                    b.ToTable("SchoolGrade");
+                    b.ToTable("SchoolGrades");
 
                     b.HasData(
                         new
@@ -345,7 +424,7 @@ namespace EcoscolarWebApi.Migrations
 
                     b.HasKey("SubjectId");
 
-                    b.ToTable("Subject");
+                    b.ToTable("Subjects");
 
                     b.HasData(
                         new
@@ -430,6 +509,9 @@ namespace EcoscolarWebApi.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
+                    b.Property<string>("BirthdayDate")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
@@ -444,14 +526,23 @@ namespace EcoscolarWebApi.Migrations
                     b.Property<string>("FirstName")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("IsOnboarded")
+                        .HasColumnType("bit");
+
                     b.Property<string>("LastName")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("LocationId")
+                        .HasColumnType("int");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");
 
                     b.Property<DateTimeOffset?>("LockoutEnd")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Nickname")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
@@ -481,6 +572,8 @@ namespace EcoscolarWebApi.Migrations
                         .HasColumnType("nvarchar(256)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("LocationId");
 
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
@@ -515,6 +608,25 @@ namespace EcoscolarWebApi.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("UserFavorites");
+                });
+
+            modelBuilder.Entity("EcoscolarWebApi.Models.UserLanguage", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Label")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("LanguageLevel")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("UserId", "Label");
+
+                    b.HasIndex("Label");
+
+                    b.ToTable("UserLanguages");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -741,18 +853,28 @@ namespace EcoscolarWebApi.Migrations
 
             modelBuilder.Entity("EcoscolarWebApi.Models.Pictures", b =>
                 {
-                    b.HasOne("EcoscolarWebApi.Models.PhysicalItems", "Advert")
+                    b.HasOne("EcoscolarWebApi.Models.PhysicalItems", "Adverts")
                         .WithMany("Pictures")
                         .HasForeignKey("AdvertId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Advert");
+                    b.Navigation("Adverts");
+                });
+
+            modelBuilder.Entity("EcoscolarWebApi.Models.User", b =>
+                {
+                    b.HasOne("EcoscolarWebApi.Models.Location", "Location")
+                        .WithMany("Users")
+                        .HasForeignKey("LocationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Location");
                 });
 
             modelBuilder.Entity("EcoscolarWebApi.Models.UserFavorite", b =>
                 {
-                    b.HasOne("EcoscolarWebApi.Models.Adverts", "Advert")
+                    b.HasOne("EcoscolarWebApi.Models.Adverts", "Adverts")
                         .WithMany()
                         .HasForeignKey("AdvertId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -764,7 +886,26 @@ namespace EcoscolarWebApi.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.Navigation("Advert");
+                    b.Navigation("Adverts");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("EcoscolarWebApi.Models.UserLanguage", b =>
+                {
+                    b.HasOne("EcoscolarWebApi.Models.Language", "Language")
+                        .WithMany("UserLanguages")
+                        .HasForeignKey("Label")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EcoscolarWebApi.Models.User", "User")
+                        .WithMany("Languages")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Language");
 
                     b.Navigation("User");
                 });
@@ -828,21 +969,21 @@ namespace EcoscolarWebApi.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("EcoscolarWebApi.Models.SchoolGrades", "SchoolGrade")
-                        .WithMany("AdvertServices")
+                    b.HasOne("EcoscolarWebApi.Models.SchoolGrades", "SchoolGrades")
+                        .WithMany()
                         .HasForeignKey("SchoolGradeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("EcoscolarWebApi.Models.Subjects", "Subject")
-                        .WithMany("AdvertServices")
+                    b.HasOne("EcoscolarWebApi.Models.Subjects", "Subjects")
+                        .WithMany()
                         .HasForeignKey("SubjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("SchoolGrade");
+                    b.Navigation("SchoolGrades");
 
-                    b.Navigation("Subject");
+                    b.Navigation("Subjects");
                 });
 
             modelBuilder.Entity("EcoscolarWebApi.Models.PhysicalItems", b =>
@@ -853,12 +994,11 @@ namespace EcoscolarWebApi.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("EcoscolarWebApi.Models.ProductCategories", "ProductCategory")
-                        .WithMany("PhysicalItems")
-                        .HasForeignKey("ProductCategoryId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                    b.HasOne("EcoscolarWebApi.Models.ProductCategories", "ProductCategories")
+                        .WithMany()
+                        .HasForeignKey("ProductCategoryId");
 
-                    b.Navigation("ProductCategory");
+                    b.Navigation("ProductCategories");
                 });
 
             modelBuilder.Entity("EcoscolarWebApi.Models.Books", b =>
@@ -869,38 +1009,30 @@ namespace EcoscolarWebApi.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("EcoscolarWebApi.Models.BookCategories", "BookCategory")
-                        .WithMany("Books")
+                    b.HasOne("EcoscolarWebApi.Models.BookCategories", "BookCategories")
+                        .WithMany()
                         .HasForeignKey("BookCategoryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("BookCategory");
+                    b.Navigation("BookCategories");
                 });
 
-            modelBuilder.Entity("EcoscolarWebApi.Models.BookCategories", b =>
+            modelBuilder.Entity("EcoscolarWebApi.Models.Language", b =>
                 {
-                    b.Navigation("Books");
+                    b.Navigation("UserLanguages");
                 });
 
-            modelBuilder.Entity("EcoscolarWebApi.Models.ProductCategories", b =>
+            modelBuilder.Entity("EcoscolarWebApi.Models.Location", b =>
                 {
-                    b.Navigation("PhysicalItems");
-                });
-
-            modelBuilder.Entity("EcoscolarWebApi.Models.SchoolGrades", b =>
-                {
-                    b.Navigation("AdvertServices");
-                });
-
-            modelBuilder.Entity("EcoscolarWebApi.Models.Subjects", b =>
-                {
-                    b.Navigation("AdvertServices");
+                    b.Navigation("Users");
                 });
 
             modelBuilder.Entity("EcoscolarWebApi.Models.User", b =>
                 {
                     b.Navigation("Favorites");
+
+                    b.Navigation("Languages");
                 });
 
             modelBuilder.Entity("EcoscolarWebApi.Models.PhysicalItems", b =>

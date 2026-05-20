@@ -1,6 +1,7 @@
 using EcoscolarWebApi.Data;
 using EcoscolarWebApi.Models;
 using EcoscolarWebApi.Services;
+using EcoscolarWebApi.Services.Contracts;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
@@ -28,9 +29,27 @@ namespace EcoscolarWebApi
             var stripeSecretKey = builder.Configuration["Stripe:SecretKey"];
             StripeConfiguration.ApiKey = stripeSecretKey;
 
-            // Add identity services to the builder
+            // Add services to the builder
             builder.Services.AddIdentityApiEndpoints<User>()
                 .AddEntityFrameworkStores<EcoscolarDbContext>();
+
+            builder.Services.ConfigureApplicationCookie(options =>
+            {
+                options.Cookie.Name = "Ecoscolar.Auth.Session";
+                options.Cookie.HttpOnly = true;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                options.Cookie.SameSite = SameSiteMode.None;
+                options.ExpireTimeSpan = TimeSpan.FromDays(14);
+                options.SlidingExpiration = true;
+
+                // Optional: Where to redirect if an unauthenticated user tries to access a protected route
+                // (Note: For APIs returning JSON, we usually return 401 instead of redirecting)
+                //options.Events.OnRedirectToLogin = context =>
+                //{
+                //    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                //    return Task.CompletedTask;
+                //};
+            });
 
             // Add services to the container.
             builder.Services.AddControllers().AddJsonOptions(options =>
@@ -81,9 +100,14 @@ namespace EcoscolarWebApi
                     {
                         policy.WithOrigins("http://localhost:3000")
                               .AllowAnyHeader()
-                              .AllowAnyMethod();
+                              .AllowAnyMethod()
+                              .AllowCredentials();
                     });
             });
+
+            // Add business logic services
+            builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddTransient<IEmailSender<User>, DevEmailSenderService>();
 
             builder.Services.AddHealthChecks();
 
@@ -129,7 +153,7 @@ namespace EcoscolarWebApi
 
             // Map controllers to the application
             app.MapControllers();
-            app.MapIdentityApi<User>();
+            app.MapGroup("/api/v1/auth").MapIdentityApi<User>();
 
             // Run the application
             app.Run();
