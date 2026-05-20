@@ -30,14 +30,14 @@ namespace EcoscolarWebApi.Utils.DTOs.Adverts
     /// <summary>
     /// DTO used for creating new product adverts, inheriting from AdvertCreateDto and adding specific properties related to products, such as an array of image URLs and the condition of the product.
     /// </summary>
-    /// <param name="Title">The title of the product Adverts</param>
-    /// <param name="Description">The description of the product Adverts</param>
-    /// <param name="Price">The price of the product Adverts</param>
-    /// <param name="UserId">The ID of the user who is creating the product Adverts</param>
-    /// <param name="Images">The array of image URLs for the product Adverts</param>
-    /// <param name="Condition">The condition of the product Adverts</param>
-    /// <param name="ProductCategoryId">The ID of the product category to which the product Adverts belongs</param>
-    public record ProductCreateDto(string Title, string Description, decimal Price, string UserId, string[] Images, Condition Condition, long? ProductCategoryId = null)
+    /// <param name="Title">The title of the product advert</param>
+    /// <param name="Description">The description of the product advert</param>
+    /// <param name="Price">The price of the product advert</param>
+    /// <param name="UserId">The ID of the user who is creating the product advert</param>
+    /// <param name="Images">The array of image URLs for the product advert</param>
+    /// <param name="Condition">The condition of the product advert</param>
+    /// <param name="ProductCategoryId">The ID of the product category to which the product advert belongs</param>
+    public record ProductCreateDto(string Title, string Description, decimal Price, string UserId, Pictures[] Images, Condition Condition, long? ProductCategoryId = null)
         : AdvertCreateDto(Title, Description, Price, UserId)
     {
         /// <summary>
@@ -62,7 +62,7 @@ namespace EcoscolarWebApi.Utils.DTOs.Adverts
             {
                 product.Condition = Condition;
                 product.ProductCategoryId = ProductCategoryId;
-                product.Pictures = Images.Select(url => new Pictures { Label = url }).ToList();
+                product.Pictures = Images.Select(img => new Pictures { Label = img.Label }).ToList();
             }
         }
     }
