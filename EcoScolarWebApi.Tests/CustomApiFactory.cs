@@ -1,6 +1,8 @@
 using DotNet.Testcontainers.Builders;
 using EcoscolarWebApi;
 using EcoscolarWebApi.Data;
+using System.Data.Common;
+using Microsoft.Data.SqlClient;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -8,46 +10,70 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Testcontainers.MsSql;
 using Xunit;
+using Respawn;
 
 public class CustomApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
-    // 1. On déclare le conteneur SQL Server
+    // SQL Server container declaration
     private readonly MsSqlContainer _dbContainer = new MsSqlBuilder()
         .WithImage("mcr.microsoft.com/mssql/server:2022-latest")
         .Build();
 
-    // 2. On démarre le conteneur avant le début des tests
+    private DbConnection _dbConnection = default!;
+    private Respawner _respawner = default!;
+
+    // Turn on the SQL container
     public async Task InitializeAsync()
     {
         await _dbContainer.StartAsync();
+
+        // Open Respawn connection
+        _dbConnection = new SqlConnection(_dbContainer.GetConnectionString());
+        await _dbConnection.OpenAsync();
+
+        // ignore migration history for respawn
+        _respawner = await Respawner.CreateAsync(_dbConnection, new RespawnerOptions
+        {
+            DbAdapter = DbAdapter.SqlServer,
+            TablesToIgnore = new Respawn.Graph.Table[] { "__EFMigrationsHistory" }
+        });
+    }
+
+    // Mathod called for empty database before test
+    public async Task ResetDatabaseAsync()
+    {
+        await _respawner.ResetAsync(_dbConnection);
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.ConfigureTestServices(services =>
         {
-            // 3. On retire le DbContext existant (celui de production/développement)
+            // Delete existing DbContext
             var descriptor = services.SingleOrDefault(
                 d => d.ServiceType == typeof(DbContextOptions<EcoscolarDbContext>));
             if (descriptor != null) services.Remove(descriptor);
 
-            // 4. On injecte un nouveau DbContext qui pointe vers le conteneur jetable
+            // Inject new DbContext pointing on container
             services.AddDbContext<EcoscolarDbContext>(options =>
             {
                 options.UseSqlServer(_dbContainer.GetConnectionString());
             });
 
-            // 5. On applique les migrations EF Core pour créer les tables
+            // EF Core migration for create tables
             var sp = services.BuildServiceProvider();
             using var scope = sp.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<EcoscolarDbContext>();
-            db.Database.Migrate(); // Crée le schéma de DB dans le conteneur
+            db.Database.Migrate(); // Create database schema in container
         });
     }
 
-    // 6. On détruit le conteneur à la fin des tests
+    // Destroy container at the end of the test
     public new async Task DisposeAsync()
     {
+        await _dbConnection.CloseAsync();
         await _dbContainer.DisposeAsync();
     }
 }
+
+

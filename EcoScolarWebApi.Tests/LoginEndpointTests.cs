@@ -5,7 +5,6 @@ using Microsoft.Extensions.DependencyInjection;
 using EcoscolarWebApi.Models;
 using Xunit;
 
-// On injecte la Factory via IClassFixture
 public class LoginEndpointTests : IClassFixture<CustomApiFactory>
 {
     private readonly HttpClient _client;
@@ -14,20 +13,22 @@ public class LoginEndpointTests : IClassFixture<CustomApiFactory>
     public LoginEndpointTests(CustomApiFactory factory)
     {
         _factory = factory;
-        // CreateClient() démarre l'API en mémoire et nous donne un client HTTP configuré pour l'attaquer
+        // CreateClient() starts API in memory
         _client = factory.CreateClient();
+
+        // Reset database before test
+        factory.ResetDatabaseAsync().GetAwaiter().GetResult();
     }
 
     [Fact]
     public async Task Login_WithValidCredentials_ReturnsOkAndToken()
     {
-        // 1. Arrange : Préparer la base de données
-        // On récupère un scope d'injection de dépendances pour accéder au UserManager
+        // Injection scope fot access to UserManager
         using (var scope = _factory.Services.CreateScope())
         {
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
 
-            // On vérifie que l'utilisateur n'existe pas déjà pour éviter les conflits si d'autres tests tournent
+            // check that the user does not already exist to avoid conflicts if other tests are running
             var existingUser = await userManager.FindByEmailAsync("test@example.com");
             if (existingUser == null)
             {
@@ -37,7 +38,7 @@ public class LoginEndpointTests : IClassFixture<CustomApiFactory>
                     Email = "test@example.com"
                 };
                 
-                // UserManager va se charger de hasher le mot de passe correctement
+                // Hash password 
                 var result = await userManager.CreateAsync(user, "Password123!");
                 if (!result.Succeeded)
                 {
@@ -46,29 +47,28 @@ public class LoginEndpointTests : IClassFixture<CustomApiFactory>
             }
         }
 
-        // Le payload que l'on va envoyer à l'API (avec le mot de passe en clair)
+        // Payload send to API
         var loginRequest = new
         {
             Email = "test@example.com",
             Password = "Password123!"
         };
 
-        // 2. Act : Appeler le endpoint /login de MapIdentityApi
+        // Call endpoint
         var response = await _client.PostAsJsonAsync("/login", loginRequest);
 
-        // 3. Assert : Vérifier le comportement
-        // On s'assure que le status code est 200 OK
+        // Check if the response code is 200
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        // On désérialise la réponse JSON de l'API Identity
+        // Read JSON
         var loginResponse = await response.Content.ReadFromJsonAsync<IdentityLoginResponse>();
 
-        // On vérifie que le token d'accès est bien présent
+        // Check if token is present
         Assert.NotNull(loginResponse);
         Assert.False(string.IsNullOrWhiteSpace(loginResponse.AccessToken));
     }
 
-    // Petite classe interne pour mapper la réponse JSON de MapIdentityApi
+    // JSON response mapping
     private class IdentityLoginResponse
     {
         public string TokenType { get; set; }
