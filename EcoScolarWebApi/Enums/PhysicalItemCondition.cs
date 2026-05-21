@@ -7,7 +7,7 @@ namespace EcoScolarWebApi.Enums;
 /// Enumeration that represents the condition of an item.
 /// It can be NEW, LIKE NEW or USED.
 /// </summary>
-public enum Condition
+public enum PhysicalItemCondition
 {
     [EnumMember(Value = "NEW")]
     [JsonPropertyName("NEW")]
