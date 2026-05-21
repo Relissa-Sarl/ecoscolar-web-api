@@ -114,3 +114,44 @@ Use the following credentials to test the application:
 - **Password**: `P@ssw0rd!`
 
 ### Step 4: Start the program
+
+## Docker container
+
+This project can be build into a docker container.
+
+The Docker infrastructure uses a `.env` file to manage database credentials and port mapping. You must create this file at the project root (same directory as `docker-compose.yaml`).
+
+Create a `.env` file or modify the `sample.env` one and paste the following configuration:
+
+```env
+# ===== NGINX =====
+NGINX_PORT=8080
+
+# ===== MSSQL Server =====
+MSSQL_SA_PASSWORD=Ec0Scolar!12345
+
+STRIPE_SECRET_KEY=
+```
+
+### Step 1: Build the Environment
+
+You can build the container with this command line
+
+```bash
+docker compose build
+```
+
+### Step 2: Start the container
+
+Since the build is finish, write this command line for start the container
+```bash
+docker compose up -d
+```
+
+### Step 3: Close the container
+
+When you're done using the container, you can write this command line for close the container
+
+```bash
+docker compose down
+```
