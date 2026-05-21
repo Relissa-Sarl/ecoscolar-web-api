@@ -15,6 +15,11 @@ namespace EcoScolarWebApi.Tests.Integration;
 
 /// <summary>
 /// T8-3 · intégration création annonce livre (AdvertsController + EF InMemory).
+/// Approche retenue à la place de <c>feature/creation-advert-book</c> (Testcontainers + HttpClient) :
+/// pas de Docker requis, namespaces/routes alignés sur develop, persistance EF vérifiée.
+/// Les POST /adverts/books ne sont pas [Authorize] au sprint 1 ; le login JWT est couvert par
+/// <see cref="LoginIntegrationTests"/> et <see cref="JwtProtectedRouteIntegrationTests"/>.
+/// Les cas valides/invalides complémentaires sont dans <c>AdvertTest.cs</c> (Thomas Rey).
 /// </summary>
 public class BookCreateIntegrationTests : IDisposable
 {
