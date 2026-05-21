@@ -43,3 +43,6 @@ app.MapControllers();
 app.MapGroup("/api/v1/auth").MapIdentityApi<User>();
 
 app.Run();
+
+// Expose entry point for WebApplicationFactory-based integration tests (CustomApiFactory).
+public partial class Program;

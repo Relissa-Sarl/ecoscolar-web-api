@@ -16,7 +16,48 @@ Here are the main languages and tools used to build this project:
 ![SQL Server](https://img.shields.io/badge/SQL%20Server-CC2927?style=for-the-badge&logo=microsoft-sql-server&logoColor=white)
 
 ### Testing
-- **TUnit**: A modern unit testing framework for .NET. Tests are written using standard attributes and run via the .NET CLI (`dotnet test`) or Test Explorer.
+- **xUnit** + **FluentAssertions** : tests unitaires et d'intégration
+- Lancer via `dotnet test` (CLI) ou l'Explorateur de tests Visual Studio
+
+## Tests
+
+### Commandes générales
+
+```powershell
+# Toute la suite de tests
+dotnet test EcoScolarWebApi.Tests/EcoScolarWebApi.Tests.csproj
+
+# Tests d'intégration uniquement
+dotnet test EcoScolarWebApi.Tests/EcoScolarWebApi.Tests.csproj --filter "FullyQualifiedName~Integration"
+```
+
+### Sprint T8 — tests par sous-tâche
+
+| Tâche | Classe | Commande |
+|-------|--------|----------|
+| **T8-1** Login API | `LoginIntegrationTests` | `dotnet test --filter "FullyQualifiedName~LoginIntegrationTests"` |
+| **T8-2** Route JWT | `JwtProtectedRouteIntegrationTests` | `dotnet test --filter "FullyQualifiedName~JwtProtectedRouteIntegrationTests"` |
+| **T8-3** Création livre | `BookCreateIntegrationTests` | `dotnet test --filter "FullyQualifiedName~BookCreateIntegrationTests"` |
+| **T8-4** Recherche livre | `AdvertSearchServiceIntegrationTests` | `dotnet test --filter "FullyQualifiedName~AdvertSearchServiceIntegrationTests"` |
+
+Les tests T8-1 à T8-3 utilisent **EF InMemory** (pas de Docker requis).  
+`AdvertSearchServiceIntegrationTests` (T8-4) utilise aussi InMemory.
+
+#### T8-3 — choix vs `feature/creation-advert-book`
+
+La branche `feature/creation-advert-book` (Bangumiii, Testcontainers + `HttpClient`) **n'est pas mergée** :
+
+- namespaces et chemins API obsolètes par rapport à `develop`
+- instabilité Docker/Testcontainers en local/CI
+- couverture redondante avec `AdvertTest.cs` (unitaire) + `BookCreateIntegrationTests` (InMemory)
+
+Le flux auth HTTP (login → JWT) est couvert par T8-1/T8-2 ; la création livre par `BookCreateIntegrationTests`.
+
+Exemple avec chemin explicite du projet :
+
+```powershell
+dotnet test EcoScolarWebApi.Tests/EcoScolarWebApi.Tests.csproj --filter "FullyQualifiedName~AdvertSearchServiceIntegrationTests"
+```
 
 ## C# Development & Naming Conventions
 
