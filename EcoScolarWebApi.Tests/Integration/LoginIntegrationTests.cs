@@ -56,6 +56,41 @@ public class LoginIntegrationTests : IDisposable
 		result.Succeeded.Should().BeFalse();
 	}
 
+	[Fact]
+	public async Task Login_WithUnknownEmail_UserNotFound()
+	{
+		var user = await _userManager.FindByEmailAsync("unknown@example.com");
+
+		user.Should().BeNull();
+	}
+
+	[Fact]
+	public async Task Register_StoresEmailCorrectly()
+	{
+		const string email = "register.store@example.com";
+		const string password = "Password123!";
+
+		(await _userManager.CreateAsync(new User { UserName = email, Email = email }, password))
+			.Succeeded.Should().BeTrue();
+
+		var stored = await _userManager.FindByEmailAsync(email);
+		stored.Should().NotBeNull();
+		stored!.Email.Should().Be(email);
+		stored.UserName.Should().Be(email);
+	}
+
+	[Fact]
+	public async Task Register_WithDuplicateEmail_Fails()
+	{
+		const string email = "duplicate@example.com";
+
+		(await _userManager.CreateAsync(new User { UserName = email, Email = email }, "Password123!"))
+			.Succeeded.Should().BeTrue();
+
+		var duplicate = await _userManager.CreateAsync(new User { UserName = email, Email = email }, "Password123!");
+		duplicate.Succeeded.Should().BeFalse();
+	}
+
 	public void Dispose()
 	{
 		_context.Database.EnsureDeleted();
