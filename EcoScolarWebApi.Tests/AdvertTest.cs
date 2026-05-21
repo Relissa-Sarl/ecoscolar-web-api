@@ -81,7 +81,7 @@ public class AdvertsControllerTests : IDisposable
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
-                Condition = Condition.NEW,
+                Condition = PhysicalItemCondition.NEW,
                 ISBN = "12345",
                 Author = "John",
                 Publisher = "Pub",
@@ -100,7 +100,7 @@ public class AdvertsControllerTests : IDisposable
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
-                Condition = Condition.LIKE_NEW,
+                Condition = PhysicalItemCondition.LIKE_NEW,
                 Pictures = pictures2
             },
             new TutoringAdvert
@@ -182,7 +182,7 @@ public class AdvertsControllerTests : IDisposable
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
-                Condition = Condition.NEW,
+                Condition = PhysicalItemCondition.NEW,
                 ISBN = "12345",
                 Author = "John",
                 Publisher = "Pub",
@@ -201,7 +201,7 @@ public class AdvertsControllerTests : IDisposable
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
-                Condition = Condition.NEW,
+                Condition = PhysicalItemCondition.NEW,
                 ISBN = "67890",
                 Author = "Doe",
                 Publisher = "Smith",
@@ -289,7 +289,7 @@ public class AdvertsControllerTests : IDisposable
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
-                Condition = Condition.NEW,
+                Condition = PhysicalItemCondition.NEW,
                 Pictures = pictures
             },
             new PhysicalItem
@@ -303,7 +303,7 @@ public class AdvertsControllerTests : IDisposable
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
-                Condition = Condition.NEW,
+                Condition = PhysicalItemCondition.NEW,
                 Pictures = pictures2
             },
             new TutoringAdvert
@@ -376,7 +376,7 @@ public class AdvertsControllerTests : IDisposable
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
-                Condition = Condition.NEW,
+                Condition = PhysicalItemCondition.NEW,
                 ProductCategoryId = productCategory.ProductCategoryId,
                 Pictures = pictures
             },
@@ -391,7 +391,7 @@ public class AdvertsControllerTests : IDisposable
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
-                Condition = Condition.NEW,
+                Condition = PhysicalItemCondition.NEW,
                 ProductCategoryId = productCategory2.ProductCategoryId,
                 Pictures = pictures2
             },
@@ -406,7 +406,7 @@ public class AdvertsControllerTests : IDisposable
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
-                Condition = Condition.USED,
+                Condition = PhysicalItemCondition.USED,
                 ProductCategoryId = productCategory.ProductCategoryId,
                 Pictures = pictures3
             }
@@ -463,7 +463,7 @@ public class AdvertsControllerTests : IDisposable
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
-                Condition = Condition.NEW,
+                Condition = PhysicalItemCondition.NEW,
                 Pictures = pictures
             },
             new PhysicalItem
@@ -477,7 +477,7 @@ public class AdvertsControllerTests : IDisposable
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
-                Condition = Condition.NEW,
+                Condition = PhysicalItemCondition.NEW,
                 Pictures = pictures2
             },
             new PhysicalItem
@@ -491,7 +491,7 @@ public class AdvertsControllerTests : IDisposable
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
-                Condition = Condition.USED,
+                Condition = PhysicalItemCondition.USED,
                 Pictures = pictures3
             }
         };
@@ -549,7 +549,7 @@ public class AdvertsControllerTests : IDisposable
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
-                Condition = Condition.NEW,
+                Condition = PhysicalItemCondition.NEW,
                 ProductCategoryId = productCategory.ProductCategoryId,
                 Pictures = pictures
             },
@@ -564,7 +564,7 @@ public class AdvertsControllerTests : IDisposable
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
-                Condition = Condition.NEW,
+                Condition = PhysicalItemCondition.NEW,
                 ProductCategoryId = productCategory2.ProductCategoryId,
                 Pictures = pictures2
             },
@@ -579,7 +579,7 @@ public class AdvertsControllerTests : IDisposable
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
-                Condition = Condition.USED,
+                Condition = PhysicalItemCondition.USED,
                 ProductCategoryId = productCategory.ProductCategoryId,
                 Pictures = pictures3
             }
@@ -645,7 +645,7 @@ public class AdvertsControllerTests : IDisposable
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
-                Condition = Condition.NEW,
+                Condition = PhysicalItemCondition.NEW,
                 Pictures = pictures
             },
             new TutoringAdvert
@@ -721,7 +721,7 @@ public class AdvertsControllerTests : IDisposable
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
-                Condition = Condition.NEW,
+                Condition = PhysicalItemCondition.NEW,
                 Pictures = pictures
             },
             new TutoringAdvert
@@ -796,7 +796,7 @@ public class AdvertsControllerTests : IDisposable
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
-                Condition = Condition.NEW,
+                Condition = PhysicalItemCondition.NEW,
                 Pictures = pictures
             },
             new TutoringAdvert
@@ -887,7 +887,7 @@ public class AdvertsControllerTests : IDisposable
             Status = AdvertStatus.ACTIVE,
             CreatedAt = DateTime.UtcNow,
             NotificationDate = DateTime.UtcNow,
-            Condition = Condition.NEW,
+            Condition = PhysicalItemCondition.NEW,
             ISBN = "12345",
             Author = "John",
             Publisher = "Pub",
@@ -953,7 +953,7 @@ public class AdvertsControllerTests : IDisposable
             Status = AdvertStatus.ACTIVE,
             CreatedAt = DateTime.UtcNow,
             NotificationDate = DateTime.UtcNow,
-            Condition = Condition.NEW,
+            Condition = PhysicalItemCondition.NEW,
             ISBN = "12345",
             Author = "John",
             Publisher = "Pub",
@@ -1053,7 +1053,7 @@ public class AdvertsControllerTests : IDisposable
             Status = AdvertStatus.ACTIVE,
             CreatedAt = DateTime.UtcNow,
             NotificationDate = DateTime.UtcNow,
-            Condition = Condition.NEW,
+            Condition = PhysicalItemCondition.NEW,
             Pictures = pictures
         };
         _context.Adverts.Add(advert);
@@ -1199,7 +1199,7 @@ public class AdvertsControllerTests : IDisposable
             Status = AdvertStatus.ACTIVE,
             CreatedAt = DateTime.UtcNow,
             NotificationDate = DateTime.UtcNow,
-            Condition = Condition.NEW,
+            Condition = PhysicalItemCondition.NEW,
             Pictures = pictures
         };
         _context.Adverts.Add(advert);
@@ -1290,7 +1290,7 @@ public class AdvertsControllerTests : IDisposable
                 new Picture { Label = "http://example.com/newpic1.jpg" },
                 new Picture { Label = "http://example.com/newpic2.jpg" }
             },
-            Condition: Condition.NEW,
+            Condition: PhysicalItemCondition.NEW,
             CategoryId: 1,
             Isbn: "54321",
             Author: "Jane",
@@ -1332,7 +1332,7 @@ public class AdvertsControllerTests : IDisposable
             new Picture { Label = "http://example.com/newpic1.jpg" },
             new Picture { Label = "http://example.com/newpic2.jpg" }
             },
-            Condition: Condition.NEW,
+            Condition: PhysicalItemCondition.NEW,
             CategoryId: 1,
             Isbn: "54321",
             Author: "Jane",
@@ -1377,7 +1377,7 @@ public class AdvertsControllerTests : IDisposable
                 new Picture { Label = "http://example.com/newpic1.jpg" },
                 new Picture { Label = "http://example.com/newpic2.jpg" }
             },
-            Condition: Condition.NEW,
+            Condition: PhysicalItemCondition.NEW,
             ProductCategoryId: 1
         );
 
@@ -1414,7 +1414,7 @@ public class AdvertsControllerTests : IDisposable
             new Picture { Label = "http://example.com/newpic1.jpg" },
             new Picture { Label = "http://example.com/newpic2.jpg" }
             },
-            Condition: Condition.NEW,
+            Condition: PhysicalItemCondition.NEW,
             ProductCategoryId: 1
         );
 
@@ -1540,7 +1540,7 @@ public class AdvertsControllerTests : IDisposable
             Status = AdvertStatus.ACTIVE,
             CreatedAt = DateTime.UtcNow,
             NotificationDate = DateTime.UtcNow,
-            Condition = Condition.NEW,
+            Condition = PhysicalItemCondition.NEW,
             ISBN = "12345",
             Author = "John",
             Publisher = "Pub",
@@ -1561,7 +1561,7 @@ public class AdvertsControllerTests : IDisposable
                 new Picture { Label = "http://example.com/newpic1.jpg" },
                 new Picture { Label = "http://example.com/newpic2.jpg" }
             },
-            Condition: Condition.NEW,
+            Condition: PhysicalItemCondition.NEW,
             CategoryId: 1,
             Isbn: "54321",
             Author: "Jane",
@@ -1615,7 +1615,7 @@ public class AdvertsControllerTests : IDisposable
             Status = AdvertStatus.ACTIVE,
             CreatedAt = DateTime.UtcNow,
             NotificationDate = DateTime.UtcNow,
-            Condition = Condition.NEW,
+            Condition = PhysicalItemCondition.NEW,
             ISBN = "12345",
             Author = "John",
             Publisher = "Pub",
@@ -1636,7 +1636,7 @@ public class AdvertsControllerTests : IDisposable
                 new Picture { Label = "http://example.com/newpic1.jpg" },
                 new Picture { Label = "http://example.com/newpic2.jpg" }
             },
-            Condition: Condition.NEW,
+            Condition: PhysicalItemCondition.NEW,
             CategoryId: 1,
             Isbn: "54321",
             Author: "Jane",
@@ -1673,7 +1673,7 @@ public class AdvertsControllerTests : IDisposable
                 new Picture { Label = "http://example.com/newpic1.jpg" },
                 new Picture { Label = "http://example.com/newpic2.jpg" }
             },
-            Condition: Condition.NEW,
+            Condition: PhysicalItemCondition.NEW,
             CategoryId: 1,
             Isbn: "54321",
             Author: "Jane",
@@ -1717,7 +1717,7 @@ public class AdvertsControllerTests : IDisposable
             Status = AdvertStatus.ACTIVE,
             CreatedAt = DateTime.UtcNow,
             NotificationDate = DateTime.UtcNow,
-            Condition = Condition.NEW,
+            Condition = PhysicalItemCondition.NEW,
             Pictures = pictures
         };
         _context.Adverts.Add(advert);
@@ -1732,7 +1732,7 @@ public class AdvertsControllerTests : IDisposable
                 new Picture { Label = "http://example.com/newpic1.jpg" },
                 new Picture { Label = "http://example.com/newpic2.jpg" }
             },
-            Condition: Condition.NEW
+            Condition: PhysicalItemCondition.NEW
         );
 
         // Act
@@ -1775,7 +1775,7 @@ public class AdvertsControllerTests : IDisposable
             Status = AdvertStatus.ACTIVE,
             CreatedAt = DateTime.UtcNow,
             NotificationDate = DateTime.UtcNow,
-            Condition = Condition.NEW,
+            Condition = PhysicalItemCondition.NEW,
             Pictures = pictures
         };
         _context.Adverts.Add(advert);
@@ -1790,7 +1790,7 @@ public class AdvertsControllerTests : IDisposable
                 new Picture { Label = "http://example.com/newpic1.jpg" },
                 new Picture { Label = "http://example.com/newpic2.jpg" }
             },
-            Condition: Condition.NEW
+            Condition: PhysicalItemCondition.NEW
         );
 
         _controller.ModelState.AddModelError("Title", "The Title field is required.");
@@ -1821,7 +1821,7 @@ public class AdvertsControllerTests : IDisposable
                 new Picture { Label = "http://example.com/newpic1.jpg" },
                 new Picture { Label = "http://example.com/newpic2.jpg" }
             },
-            Condition: Condition.NEW
+            Condition: PhysicalItemCondition.NEW
         );
 
         // Act
@@ -2004,7 +2004,7 @@ public class AdvertsControllerTests : IDisposable
             Status = AdvertStatus.ACTIVE,
             CreatedAt = DateTime.UtcNow,
             NotificationDate = DateTime.UtcNow,
-            Condition = Condition.NEW,
+            Condition = PhysicalItemCondition.NEW,
             ISBN = "12345",
             Author = "John",
             Publisher = "Pub",
@@ -2069,7 +2069,7 @@ public class AdvertsControllerTests : IDisposable
             Status = AdvertStatus.ACTIVE,
             CreatedAt = DateTime.UtcNow,
             NotificationDate = DateTime.UtcNow,
-            Condition = Condition.NEW,
+            Condition = PhysicalItemCondition.NEW,
             ISBN = "12345",
             Author = "John",
             Publisher = "Pub",
@@ -2132,7 +2132,7 @@ public class AdvertsControllerTests : IDisposable
             Status = AdvertStatus.ACTIVE,
             CreatedAt = DateTime.UtcNow,
             NotificationDate = DateTime.UtcNow,
-            Condition = Condition.NEW,
+            Condition = PhysicalItemCondition.NEW,
             ISBN = "12345",
             Author = "John",
             Publisher = "Pub",
@@ -2194,7 +2194,7 @@ public class AdvertsControllerTests : IDisposable
             Status = AdvertStatus.ACTIVE,
             CreatedAt = DateTime.UtcNow,
             NotificationDate = DateTime.UtcNow,
-            Condition = Condition.NEW,
+            Condition = PhysicalItemCondition.NEW,
             ISBN = "12345",
             Author = "John",
             Publisher = "Pub",

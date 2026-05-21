@@ -137,7 +137,7 @@ public class UsersControllerTests
 			Status = AdvertStatus.ACTIVE,
 			CreatedAt = DateTime.UtcNow,
 			NotificationDate = DateTime.UtcNow,
-			Condition = Condition.LIKE_NEW
+			Condition = PhysicalItemCondition.LIKE_NEW
 		};
 		var serviceAdvert = new TutoringAdvert
 		{
@@ -348,7 +348,7 @@ public class UsersControllerTests
 			Status = AdvertStatus.ACTIVE,
 			CreatedAt = DateTime.UtcNow,
 			NotificationDate = DateTime.UtcNow,
-			Condition = Condition.LIKE_NEW
+			Condition = PhysicalItemCondition.LIKE_NEW
 		};
 		_context.Adverts.AddRange(advert1, advert2);
 		await _context.SaveChangesAsync();

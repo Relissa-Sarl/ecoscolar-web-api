@@ -8,7 +8,7 @@ namespace EcoScolarWebApi.Models;
 public class PhysicalItem : Advert
 {
     [Required]
-    public Condition Condition { get; set; }
+    public PhysicalItemCondition Condition { get; set; }
 
     [Column(TypeName = "decimal(18,2)")]
     public decimal? Weight { get; set; }

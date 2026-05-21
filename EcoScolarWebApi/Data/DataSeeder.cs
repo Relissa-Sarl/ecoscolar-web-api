@@ -81,7 +81,7 @@ public class DataSeeder
 			.RuleFor(p => p.NotificationDate, (f, p) => p.CreatedAt.AddDays(f.Random.Int(1, 30)))
 			.RuleFor(p => p.Status, f => f.PickRandom<AdvertStatus>())
 			.RuleFor(p => p.UserId, f => f.PickRandom(users).Id)
-			.RuleFor(p => p.Condition, f => f.PickRandom<Condition>())
+			.RuleFor(p => p.Condition, f => f.PickRandom<PhysicalItemCondition>())
 			.RuleFor(p => p.Weight, f => f.Random.Bool(0.7f) ? decimal.Round(f.Random.Decimal(0.2m, 5m), 2) : null)
 			.RuleFor(p => p.ProductCategoryId, f => f.Random.Bool(0.8f) ? f.Random.ListItem(productCategoryIds) : null);
 
@@ -95,7 +95,7 @@ public class DataSeeder
 			.RuleFor(b => b.NotificationDate, (f, b) => b.CreatedAt.AddDays(f.Random.Int(5, 45)))
 			.RuleFor(b => b.Status, f => f.PickRandom<AdvertStatus>())
 			.RuleFor(b => b.UserId, f => f.PickRandom(users).Id)
-			.RuleFor(b => b.Condition, f => f.PickRandom<Condition>())
+			.RuleFor(b => b.Condition, f => f.PickRandom<PhysicalItemCondition>())
 			.RuleFor(b => b.Weight, f => decimal.Round(f.Random.Decimal(0.3m, 2.5m), 2))
 			.RuleFor(b => b.ISBN, f => $"978{f.Random.Long(1000000000L, 9999999999L)}")
 			.RuleFor(b => b.Author, f => f.Name.FullName())

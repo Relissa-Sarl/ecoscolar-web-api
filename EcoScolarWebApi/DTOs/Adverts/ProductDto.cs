@@ -4,7 +4,7 @@ using EcoScolarWebApi.Models;
 namespace EcoScolarWebApi.DTOs.Adverts;
 
 public record ProductReadDto(long Id, string Title, string Description, decimal Price, DateTime PublicationDate, DateTime NotificationDate, AdvertStatus Status, string UserId, string SellerPseudo,
-	List<string> Pictures, Condition Condition, decimal? Weight, long? ProductCategoryId, string? ProductCategoryLabel)
+	List<string> Pictures, PhysicalItemCondition Condition, decimal? Weight, long? ProductCategoryId, string? ProductCategoryLabel)
 {
 	public static ProductReadDto FromEntity(PhysicalItem entity)
 	{
@@ -37,7 +37,7 @@ public record ProductReadDto(long Id, string Title, string Description, decimal 
 /// <param name="Images">The array of image URLs for the product advert</param>
 /// <param name="Condition">The condition of the product advert</param>
 /// <param name="ProductCategoryId">The ID of the product category to which the product advert belongs</param>
-public record ProductCreateDto(string Title, string Description, decimal Price, string UserId, Picture[] Images, Condition Condition, long? ProductCategoryId = null)
+public record ProductCreateDto(string Title, string Description, decimal Price, string UserId, Picture[] Images, PhysicalItemCondition Condition, long? ProductCategoryId = null)
 	: AdvertCreateDto(Title, Description, Price, UserId)
 {
 	/// <summary>
