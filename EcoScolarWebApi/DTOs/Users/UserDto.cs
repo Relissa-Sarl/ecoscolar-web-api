@@ -38,7 +38,7 @@ public record UserReadDto(
 	/// <returns>A UserReadDto populated with data from the specified User entity.</returns>
 	public static UserReadDto FromEntity(User entity) => new	(
 		Id: entity.Id,
-		Nickname: entity.UserName ?? "",
+		Nickname: entity.Nickname ?? "",
 		FirstName: entity.FirstName,
 		LastName: entity.LastName,
 		Email: entity.Email ?? "",
