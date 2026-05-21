@@ -12,6 +12,8 @@ using Testcontainers.MsSql;
 using Xunit;
 using Respawn;
 
+namespace EcoScolarWebApi.Tests;
+
 public class CustomApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
     // SQL Server container declaration
@@ -39,7 +41,7 @@ public class CustomApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         });
     }
 
-    // Mathod called for empty database before test
+    // Method called for empty database before test
     public async Task ResetDatabaseAsync()
     {
         await _respawner.ResetAsync(_dbConnection);

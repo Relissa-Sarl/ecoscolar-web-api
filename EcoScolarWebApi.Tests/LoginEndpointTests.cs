@@ -5,6 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 using EcoscolarWebApi.Models;
 using Xunit;
 
+namespace EcoScolarWebApi.Tests.Integration;
+
 public class LoginEndpointTests : IClassFixture<CustomApiFactory>
 {
     private readonly HttpClient _client;
@@ -23,7 +25,7 @@ public class LoginEndpointTests : IClassFixture<CustomApiFactory>
     [Fact]
     public async Task Login_WithValidCredentials_ReturnsOkAndToken()
     {
-        // Injection scope fot access to UserManager
+        // Injection scope for access to UserManager
         using (var scope = _factory.Services.CreateScope())
         {
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
