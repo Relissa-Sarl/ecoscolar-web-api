@@ -33,7 +33,8 @@ if (app.Environment.IsDevelopment())
 	app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "EcoScolar Web API V1"));
 }
 
-app.UseHttpsRedirection();
+if (!app.Environment.IsEnvironment("Testing"))
+	app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 

@@ -86,6 +86,101 @@ public class UsersControllerTests
 		okResult.Value.Should().BeEquivalentTo(userReadDto);
 	}
 
+	[Fact]
+	public async Task GetMyProfile_ShouldReturnUnauthorized_WhenSessionInvalid()
+	{
+		_userServiceMock.GetCurrentUserProfileAsync(Arg.Any<ClaimsPrincipal>())
+			.Returns(Result<UserReadDto>.Failure("Invalid session.", ErrorType.Unauthorized));
+
+		var result = await _controller.GetMyProfile();
+
+		result.Should().BeOfType<UnauthorizedObjectResult>();
+	}
+
+	#endregion
+
+	#region Tests pour UpdateFullProfile
+
+	[Fact]
+	public async Task UpdateFullProfile_ShouldReturnOk_WhenUpdateSucceeds()
+	{
+		var updatedDto = new UserReadDto(
+			"guid-update",
+			"nick",
+			"First",
+			"Last",
+			"update@example.com",
+			new LocationReadDto("1000", "Lausanne", "Vaud"),
+			"2000-01-01",
+			true,
+			[new SpokenLanguageDto("FR", "Native")]
+		);
+
+		_userServiceMock.UpdateProfileAsync(Arg.Any<ClaimsPrincipal>(), Arg.Any<UserUpdateDto>())
+			.Returns(Result<UserReadDto>.Success(updatedDto));
+
+		var result = await _controller.UpdateFullProfile(new UserUpdateDto(
+			"nick", "First", "Last", "1000", "2000-01-01",
+			[new SpokenLanguageDto("FR", "Native")]));
+
+		var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+		okResult.Value.Should().BeEquivalentTo(updatedDto);
+	}
+
+	[Fact]
+	public async Task UpdateFullProfile_ShouldReturnNotFound_WhenUserMissing()
+	{
+		_userServiceMock.UpdateProfileAsync(Arg.Any<ClaimsPrincipal>(), Arg.Any<UserUpdateDto>())
+			.Returns(Result<UserReadDto>.Failure("User not found", ErrorType.NotFound));
+
+		var result = await _controller.UpdateFullProfile(new UserUpdateDto(
+			"nick", "First", "Last", "1000", "2000-01-01",
+			[new SpokenLanguageDto("FR", "Native")]));
+
+		result.Should().BeOfType<NotFoundObjectResult>();
+	}
+
+	[Fact]
+	public async Task UpdateFullProfile_ShouldReturnBadRequest_WhenPostalCodeInvalid()
+	{
+		_userServiceMock.UpdateProfileAsync(Arg.Any<ClaimsPrincipal>(), Arg.Any<UserUpdateDto>())
+			.Returns(Result<UserReadDto>.Failure("Invalid postal code"));
+
+		var result = await _controller.UpdateFullProfile(new UserUpdateDto(
+			"nick", "First", "Last", "9999", "2000-01-01",
+			[new SpokenLanguageDto("FR", "Native")]));
+
+		result.Should().BeOfType<BadRequestObjectResult>();
+	}
+
+	#endregion
+
+	#region Tests pour GetUserProfile (public)
+
+	[Fact]
+	public async Task GetUserProfile_ShouldReturnOk_WhenProfileIsPublic()
+	{
+		var publicDto = new UserPublicReadDto("guid-public", "public_nick");
+		_userServiceMock.GetPublicProfileAsync("guid-public")
+			.Returns(Result<UserPublicReadDto>.Success(publicDto));
+
+		var result = await _controller.GetUserProfile("guid-public");
+
+		var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+		okResult.Value.Should().BeEquivalentTo(publicDto);
+	}
+
+	[Fact]
+	public async Task GetUserProfile_ShouldReturnNotFound_WhenProfileNotPublic()
+	{
+		_userServiceMock.GetPublicProfileAsync(Arg.Any<string>())
+			.Returns(Result<UserPublicReadDto>.Failure("User not found or profile is not public yet.", ErrorType.NotFound));
+
+		var result = await _controller.GetUserProfile("missing");
+
+		result.Should().BeOfType<NotFoundObjectResult>();
+	}
+
 	#endregion
 
 	#region Tests for GetMyFavorites
