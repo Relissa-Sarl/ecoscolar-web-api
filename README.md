@@ -18,7 +18,37 @@ Here are the main languages and tools used to build this project:
 ### Testing
 - **TUnit**: A modern unit testing framework for .NET. Tests are written using standard attributes and run via the .NET CLI (`dotnet test`) or Test Explorer.
 
+## C# Development & Naming Conventions
+
+Coding practices and naming conventions for the project. Adhering to these rules ensures codebase consistency, readability, and clean architecture.
+
 ---
+
+### 1. Data Transfer Objects (DTOs)
+* **Standard:** Use **Records** instead of traditional classes for all DTOs.
+* **Rationale:** Records are immutable by default, provide built-in value-based equality, and offer a concise syntax that is ideal for passing data between application layers.
+
+### Example:
+```csharp
+namespace EcoScolarWebApi.DTOs;
+
+// Attributs must me in PascalCase
+public record UserDto(int Id, string FirstName, string LastName, string Email);
+```
+
+### 2. Namespaces
+Use File-Scoped Namespaces in all .cs files.
+```csharp
+namespace EcoScolarWebApi.DTOs;
+```
+
+### 3. Database Models & Entity Framework Configuration
+* Standard: * The file name and the class name must always be singular.
+* Use the **[Table("PluralName")]** data annotation attribute to explicitly map the singular class to its corresponding pluralized database table.
+---
+
+### 4. Interfaces & Service Contracts
+Standard: All application interfaces must be grouped together within the Services/Contracts/ directory.
 
 ## Features
 
