@@ -1,0 +1,61 @@
+@EcoscolarWebApi_HostAddress = http://localhost:5001/api/v1/
+
+# Users
+
+POST {{EcoscolarWebApi_HostAddress}}users/register
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "P@ssw0rd!",
+  "firstName": "John",
+  "lastName": "Doe"
+}
+
+###
+
+GET {{EcoscolarWebApi_HostAddress}}users/me
+Accept: application/json
+Authorization: Bearer <JWT_TOKEN>
+
+###
+
+# Payments
+
+POST {{EcoscolarWebApi_HostAddress}}payments/checkout
+Content-Type: application/json
+
+{
+  "productPrice": 9.99
+}
+
+###
+
+POST {{EcoscolarWebApi_HostAddress}}payments/create-transfer
+Content-Type: application/json
+
+{
+  "amount": 1000,
+  "connectedAccountId": "acct_123456789",
+  "transferGroup": "COMMANDE_ID_789"
+}
+
+###
+
+POST {{EcoscolarWebApi_HostAddress}}payments/create-connect-account
+Content-Type: application/json
+
+{
+  "email": "merchant@example.com"
+}
+
+###
+
+POST {{EcoscolarWebApi_HostAddress}}payments/create-account-link
+Content-Type: application/json
+
+{
+  "accountId": "acct_123456789"
+}
+
+###

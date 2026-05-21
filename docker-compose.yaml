@@ -1,0 +1,83 @@
+services:
+
+  ecoscolar-api-database:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: ecoscolar-api-database
+    restart: always
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD}
+    volumes:
+      - mssql-ecoscolar-data:/var/opt/mssql
+    networks:
+      - databases
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P \"${MSSQL_SA_PASSWORD}\" -Q \"SELECT 1\" || exit 1"
+        ]
+      interval: 5s
+      timeout: 5s
+      start_period: 30s
+
+  # -----------------------------
+  # Ecoscolar Web API
+  # -----------------------------
+  ecoscolar-web-api:
+    build: EcoScolarWebApi
+    container_name: ecoscolar-web-api
+    depends_on:
+      ecoscolar-api-database:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_HTTP_PORTS: "8080"
+      ApplyDatabaseMigrations: "true"
+      ConnectionStrings__Default: "Server=ecoscolar-api-database,1433;Initial Catalog=ecoscolar;User ID=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;Encrypt=True"
+      Stripe__SecretKey: ${STRIPE_SECRET_KEY}
+    networks:
+      - ecoscolar
+      - databases
+    labels:
+      - "wud.watch=true"
+      - "wud.trigger.docker.apply=true"
+      - "wud.trigger.docker.apply.mode=onnewimage"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      start_period: 30s
+
+  # -----------------------------
+  # Nginx API Gateway
+  # -----------------------------
+  ecoscolar-gateway-backend:
+    build: ecoscolar-gateway-backend
+    container_name: ecoscolar-gateway-backend
+    ports:
+      - "${NGINX_PORT}:80"
+    depends_on:
+      ecoscolar-web-api:
+        condition: service_healthy
+    networks:
+      - dmz
+      - ecoscolar
+      - databases
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  dmz:
+    driver: bridge
+  databases:
+    driver: bridge
+    internal: true
+  ecoscolar:
+    driver: bridge
+    internal: true
+
+volumes:
+  mssql-ecoscolar-data:

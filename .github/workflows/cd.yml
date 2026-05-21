@@ -1,0 +1,48 @@
+name: CD Pipeline - EcoScolar backend
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    # Define required permissions for the GITHUB_TOKEN
+    permissions:
+      contents: read     # Required to checkout the code
+      packages: write    # Required to push images to ghcr.io
+
+    steps:
+      # Step 1: Checkout the repository code onto the runner
+      - name: Code Checkout
+        uses: actions/checkout@v4
+
+      # Set up QEMU for multi-architecture builds
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      # Set up Docker Buildx which supports multi-platform builds
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: image=moby/buildkit:latest
+
+      # Step 2: Authenticate with the GitHub Container Registry
+      - name: GitHub Container Registry Login
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Step 3: Build the Docker image and push it to the registry
+      - name: Build and Push of Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          # Set the build context to the directory containing the API source and Dockerfile
+          context: ./EcoScolarWebApi
+          push: true
+          # Tag the image with both 'latest' and the specific Git commit SHA for versioning
+          tags: |
+            ghcr.io/relissa-sarl/ecoscolar-web-api:latest
+            ghcr.io/relissa-sarl/ecoscolar-web-api:${{ github.sha }}
+          platforms: linux/amd64,linux/arm64
