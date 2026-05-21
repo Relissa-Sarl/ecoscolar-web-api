@@ -47,7 +47,7 @@ public record BookReadDto(long id, string title, string description, decimal pri
 /// <param name="Publisher">The publisher of the Books Adverts</param>
 /// <param name="Edition">The edition of the Books Adverts</param>
 public record BookCreateDto(
-	string Title, string Description, decimal Price, string UserId, Picture[] Images, PhysicalItemCondition Condition,
+	string Title, string Description, decimal Price, string UserId, string[]? Images, PhysicalItemCondition Condition,
 	long CategoryId, string Isbn, string Author, string Publisher, string Edition, Enums.LanguageEnum WrittenLanguage
 ) : ProductCreateDto(Title, Description, Price, UserId, Images, Condition, ProductCategoryId: null)
 {

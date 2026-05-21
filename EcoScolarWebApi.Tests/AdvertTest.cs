@@ -1286,9 +1286,9 @@ public class AdvertsControllerTests : IDisposable
             Description: "Description of the new book",
             Price: 20m,
             UserId: existingUser.Id,
-            Images: new Picture[] {
-                new Picture { Label = "http://example.com/newpic1.jpg" },
-                new Picture { Label = "http://example.com/newpic2.jpg" }
+            Images: new string[] {
+                "http://example.com/newpic1.jpg",
+                "http://example.com/newpic2.jpg"
             },
             Condition: PhysicalItemCondition.NEW,
             CategoryId: 1,
@@ -1328,9 +1328,9 @@ public class AdvertsControllerTests : IDisposable
             Description: "Description of the new book",
             Price: 20m,
             UserId: existingUser.Id,
-            Images: new Picture[] {
-            new Picture { Label = "http://example.com/newpic1.jpg" },
-            new Picture { Label = "http://example.com/newpic2.jpg" }
+            Images: new string[] {
+                "http://example.com/newpic1.jpg",
+                "http://example.com/newpic2.jpg"
             },
             Condition: PhysicalItemCondition.NEW,
             CategoryId: 1,
@@ -1373,9 +1373,9 @@ public class AdvertsControllerTests : IDisposable
             Description: "Description of the new product",
             Price: 20m,
             UserId: existingUser.Id,
-            Images: new Picture[] {
-                new Picture { Label = "http://example.com/newpic1.jpg" },
-                new Picture { Label = "http://example.com/newpic2.jpg" }
+            Images: new string[] {
+                "http://example.com/newpic1.jpg",
+                "http://example.com/newpic2.jpg"
             },
             Condition: PhysicalItemCondition.NEW,
             ProductCategoryId: 1
@@ -1410,9 +1410,9 @@ public class AdvertsControllerTests : IDisposable
             Description: "Description of the new product",
             Price: 20m,
             UserId: existingUser.Id,
-            Images: new Picture[] {
-            new Picture { Label = "http://example.com/newpic1.jpg" },
-            new Picture { Label = "http://example.com/newpic2.jpg" }
+            Images: new string[] {
+                "http://example.com/newpic1.jpg",
+                "http://example.com/newpic2.jpg"
             },
             Condition: PhysicalItemCondition.NEW,
             ProductCategoryId: 1
@@ -1557,9 +1557,9 @@ public class AdvertsControllerTests : IDisposable
             Description: "New description for the book",
             Price: 20m,
             UserId: existingUser.Id,
-            Images: new Picture[] {
-                new Picture { Label = "http://example.com/newpic1.jpg" },
-                new Picture { Label = "http://example.com/newpic2.jpg" }
+            Images: new string[] {
+                "http://example.com/newpic1.jpg",
+                "http://example.com/newpic2.jpg"
             },
             Condition: PhysicalItemCondition.NEW,
             CategoryId: 1,
@@ -1632,9 +1632,9 @@ public class AdvertsControllerTests : IDisposable
             Description: "New description for the book",
             Price: 20m,
             UserId: existingUser.Id,
-            Images: new Picture[] {
-                new Picture { Label = "http://example.com/newpic1.jpg" },
-                new Picture { Label = "http://example.com/newpic2.jpg" }
+            Images: new string[] {
+                "http://example.com/newpic1.jpg",
+                "http://example.com/newpic2.jpg"
             },
             Condition: PhysicalItemCondition.NEW,
             CategoryId: 1,
@@ -1669,9 +1669,9 @@ public class AdvertsControllerTests : IDisposable
             Description: "New description for the book",
             Price: 20m,
             UserId: existingUser.Id,
-            Images: new Picture[] {
-                new Picture { Label = "http://example.com/newpic1.jpg" },
-                new Picture { Label = "http://example.com/newpic2.jpg" }
+            Images: new string[] {
+                "http://example.com/newpic1.jpg",
+                "http://example.com/newpic2.jpg"
             },
             Condition: PhysicalItemCondition.NEW,
             CategoryId: 1,
@@ -1728,9 +1728,9 @@ public class AdvertsControllerTests : IDisposable
             Description: "Guitare électrique",
             Price: 20m,
             UserId: existingUser.Id,
-            Images: new Picture[] {
-                new Picture { Label = "http://example.com/newpic1.jpg" },
-                new Picture { Label = "http://example.com/newpic2.jpg" }
+            Images: new string[] {
+                "http://example.com/newpic1.jpg",
+                "http://example.com/newpic2.jpg"
             },
             Condition: PhysicalItemCondition.NEW
         );
@@ -1786,9 +1786,9 @@ public class AdvertsControllerTests : IDisposable
             Description: "New description for the product",
             Price: 20m,
             UserId: existingUser.Id,
-            Images: new Picture[] {
-                new Picture { Label = "http://example.com/newpic1.jpg" },
-                new Picture { Label = "http://example.com/newpic2.jpg" }
+            Images: new string[] {
+                "http://example.com/newpic1.jpg",
+                "http://example.com/newpic2.jpg"
             },
             Condition: PhysicalItemCondition.NEW
         );
@@ -1817,9 +1817,9 @@ public class AdvertsControllerTests : IDisposable
             Description: "New description for the product",
             Price: 20m,
             UserId: existingUser.Id,
-            Images: new Picture[] {
-                new Picture { Label = "http://example.com/newpic1.jpg" },
-                new Picture { Label = "http://example.com/newpic2.jpg" }
+            Images: new string[] {
+                "http://example.com/newpic1.jpg",
+                "http://example.com/newpic2.jpg"
             },
             Condition: PhysicalItemCondition.NEW
         );
