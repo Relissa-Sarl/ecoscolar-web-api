@@ -6,7 +6,7 @@ namespace EcoScolarWebApi.DTOs.Adverts;
 /// </summary>
 public static class CatalogAdvertTypeCodes
 {
-    public const string Books = "Books";
+    public const string Books = "BOOK";
     public const string Product = "PRODUCT";
     public const string Service = "SERVICE";
 }
