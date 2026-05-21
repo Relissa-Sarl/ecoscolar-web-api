@@ -1,6 +1,5 @@
 using DotNet.Testcontainers.Builders;
-using EcoscolarWebApi;
-using EcoscolarWebApi.Data;
+using EcoScolarWebApi.Data;
 using System.Data.Common;
 using Microsoft.Data.SqlClient;
 using Microsoft.AspNetCore.Hosting;
@@ -14,7 +13,7 @@ using Respawn;
 
 namespace EcoScolarWebApi.Tests;
 
-public class CustomApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
+public class CustomApiFactory : WebApplicationFactory<global::Program>, IAsyncLifetime
 {
     // SQL Server container declaration
     private readonly MsSqlContainer _dbContainer = new MsSqlBuilder()
