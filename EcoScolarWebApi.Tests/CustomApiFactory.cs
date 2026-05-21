@@ -13,6 +13,7 @@ using Respawn;
 
 namespace EcoScolarWebApi.Tests;
 
+// global::Program évite toute ambiguïté de namespace ; Program est exposé via partial class dans Program.cs.
 public class CustomApiFactory : WebApplicationFactory<global::Program>, IAsyncLifetime
 {
     // SQL Server container declaration

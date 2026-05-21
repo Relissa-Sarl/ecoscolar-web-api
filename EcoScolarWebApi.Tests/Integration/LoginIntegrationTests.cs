@@ -47,7 +47,8 @@ public class LoginIntegrationTests : IDisposable
 	{
 		const string email = "login.bad@example.com";
 
-		await _userManager.CreateAsync(new User { UserName = email, Email = email }, "Password123!");
+		(await _userManager.CreateAsync(new User { UserName = email, Email = email }, "Password123!"))
+			.Succeeded.Should().BeTrue();
 
 		var user = await _userManager.FindByEmailAsync(email);
 		var result = await _signInManager.CheckPasswordSignInAsync(user!, "WrongPassword!", lockoutOnFailure: false);

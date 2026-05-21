@@ -18,17 +18,11 @@ internal static class IntegrationTestIdentityHelper
 
 		services.AddHttpContextAccessor();
 		services.AddAuthentication();
+		services.AddAuthorization();
 
-		services.AddIdentity<User, IdentityRole>(options =>
-			{
-				options.Password.RequireDigit = true;
-				options.Password.RequireLowercase = true;
-				options.Password.RequireUppercase = true;
-				options.Password.RequireNonAlphanumeric = false;
-				options.Password.RequiredLength = 8;
-			})
-			.AddEntityFrameworkStores<EcoscolarDbContext>()
-			.AddDefaultTokenProviders();
+		// Même enregistrement Identity que la prod (AddAuthAndIdentity), sans la config cookie HTTPS.
+		services.AddIdentityApiEndpoints<User>()
+			.AddEntityFrameworkStores<EcoscolarDbContext>();
 
 		services.AddLogging();
 
