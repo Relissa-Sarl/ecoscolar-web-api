@@ -1,10 +1,11 @@
-﻿using EcoscolarWebApi.Controllers;
-using EcoscolarWebApi.Data;
-using EcoscolarWebApi.Models;
-using EcoscolarWebApi.Services.Contracts;
-using EcoscolarWebApi.Utils;
-using EcoscolarWebApi.Utils.DTOs;
-using EcoscolarWebApi.Utils.DTOs.Adverts;
+﻿using EcoScolarWebApi.Commun;
+using EcoScolarWebApi.Controllers;
+using EcoScolarWebApi.Data;
+using EcoScolarWebApi.DTOs.Adverts;
+using EcoScolarWebApi.DTOs.Users;
+using EcoScolarWebApi.Enums;
+using EcoScolarWebApi.Models;
+using EcoScolarWebApi.Services.Contracts;
 using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -13,7 +14,7 @@ using NSubstitute;
 using System.Security.Claims;
 using Xunit;
 
-namespace EcoscolarWebApi.Tests.Controllers;
+namespace EcoScolarWebApi.Tests.Controllers;
 
 public class UsersControllerTests
 {
@@ -108,7 +109,7 @@ public class UsersControllerTests
 		var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
 		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-		var bookAdvert = new Books
+		var bookAdvert = new Book
 		{
 			AdvertId = 1,
 			Title = "Book Title",
@@ -116,16 +117,16 @@ public class UsersControllerTests
 			Price = 10,
 			UserId = existingUser.Id,
 			User = existingUser,
-			Status = Utils.Enums.AdvertStatus.ACTIVE,
+			Status = AdvertStatus.ACTIVE,
 			CreatedAt = DateTime.UtcNow,
 			NotificationDate = DateTime.UtcNow,
 			ISBN = "12345",
 			Author = "John",
 			Publisher = "Pub",
 			Edition = "1st",
-			WrittenLanguage = Utils.Enums.Language.FR
+			WrittenLanguage = Enums.LanguageEnum.FR
 		};
-		var physicalItemAdvert = new PhysicalItems
+		var physicalItemAdvert = new PhysicalItem
 		{
 			AdvertId = 2,
 			Title = "Guitar",
@@ -133,12 +134,12 @@ public class UsersControllerTests
 			Price = 120,
 			UserId = existingUser.Id,
 			User = existingUser,
-			Status = Utils.Enums.AdvertStatus.ACTIVE,
+			Status = AdvertStatus.ACTIVE,
 			CreatedAt = DateTime.UtcNow,
 			NotificationDate = DateTime.UtcNow,
-			Condition = Utils.Enums.Condition.LIKE_NEW
+			Condition = PhysicalItemCondition.LIKE_NEW
 		};
-		var serviceAdvert = new AdvertServices
+		var serviceAdvert = new TutoringAdvert
 		{
 			AdvertId = 3,
 			Title = "Math tutoring",
@@ -146,13 +147,13 @@ public class UsersControllerTests
 			Price = 30,
 			UserId = existingUser.Id,
 			User = existingUser,
-			Status = Utils.Enums.AdvertStatus.ACTIVE,
+			Status = AdvertStatus.ACTIVE,
 			CreatedAt = DateTime.UtcNow,
 			NotificationDate = DateTime.UtcNow,
 			StudyLevel = "High School",
 			SubjectId = 1,
 			SchoolGradeId = 1,
-			TeachingLanguage = Utils.Enums.Language.FR
+			TeachingLanguage = Enums.LanguageEnum.FR
 		};
 
 		var favoriteBook = new UserFavorite
@@ -188,9 +189,9 @@ public class UsersControllerTests
 		var returnedFavorites = okResult.Value as IEnumerable<AdvertReadDto>;
 		returnedFavorites.Should().NotBeNull();
 		returnedFavorites.Should().HaveCount(3);
-		returnedFavorites.Should().Contain(a => a.id == bookAdvert.AdvertId && a.type == "BOOK");
-		returnedFavorites.Should().Contain(a => a.id == physicalItemAdvert.AdvertId && a.type == "PRODUCT");
-		returnedFavorites.Should().Contain(a => a.id == serviceAdvert.AdvertId && a.type == "SERVICE");
+		returnedFavorites.Should().Contain(a => a.Id == bookAdvert.AdvertId && a.Type == "BOOK");
+		returnedFavorites.Should().Contain(a => a.Id == physicalItemAdvert.AdvertId && a.Type == "PRODUCT");
+		returnedFavorites.Should().Contain(a => a.Id == serviceAdvert.AdvertId && a.Type == "SERVICE");
 
 		// Cleanup for in memory db persistence between tests
 		_context.UserFavorites.RemoveRange(favoriteBook, favoritePhysical, favoriteService);
@@ -235,7 +236,7 @@ public class UsersControllerTests
 		var existingUser = new User { Id = "guid-toggle-1" };
 		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-		var advert = new Books
+		var advert = new Book
 		{
 			AdvertId = 2,
 			Title = "Another book",
@@ -245,7 +246,7 @@ public class UsersControllerTests
 			Author = "John",
 			Publisher = "Pub",
 			Edition = "1st",
-			WrittenLanguage = Utils.Enums.Language.FR
+			WrittenLanguage = Enums.LanguageEnum.FR
 		};
 		_context.Adverts.Add(advert);
 		await _context.SaveChangesAsync();
@@ -268,7 +269,7 @@ public class UsersControllerTests
 		var existingUser = new User { Id = "guid-toggle-2" };
 		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-		var advert = new Books
+		var advert = new Book
 		{
 			AdvertId = 3,
 			Title = "ToBeDeleted",
@@ -278,7 +279,7 @@ public class UsersControllerTests
 			Author = "John",
 			Publisher = "Pub",
 			Edition = "1st",
-			WrittenLanguage = Utils.Enums.Language.FR
+			WrittenLanguage = Enums.LanguageEnum.FR
 		};
 		_context.Adverts.Add(advert);
 
@@ -319,7 +320,7 @@ public class UsersControllerTests
 		// Arrange
 		var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
 		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
-		var advert1 = new Books
+		var advert1 = new Book
 		{
 			AdvertId = 1,
 			Title = "Book Title",
@@ -327,16 +328,16 @@ public class UsersControllerTests
 			Price = 10,
 			UserId = existingUser.Id,
 			User = existingUser,
-			Status = Utils.Enums.AdvertStatus.ACTIVE,
+			Status = AdvertStatus.ACTIVE,
 			CreatedAt = DateTime.UtcNow,
 			NotificationDate = DateTime.UtcNow,
 			ISBN = "12345",
 			Author = "John",
 			Publisher = "Pub",
 			Edition = "1st",
-			WrittenLanguage = Utils.Enums.Language.FR
+			WrittenLanguage = Enums.LanguageEnum.FR
 		};
-		var advert2 = new PhysicalItems
+		var advert2 = new PhysicalItem
 		{
 			AdvertId = 2,
 			Title = "Guitar",
@@ -344,10 +345,10 @@ public class UsersControllerTests
 			Price = 120,
 			UserId = existingUser.Id,
 			User = existingUser,
-			Status = Utils.Enums.AdvertStatus.ACTIVE,
+			Status = AdvertStatus.ACTIVE,
 			CreatedAt = DateTime.UtcNow,
 			NotificationDate = DateTime.UtcNow,
-			Condition = Utils.Enums.Condition.LIKE_NEW
+			Condition = PhysicalItemCondition.LIKE_NEW
 		};
 		_context.Adverts.AddRange(advert1, advert2);
 		await _context.SaveChangesAsync();
@@ -360,8 +361,8 @@ public class UsersControllerTests
 		var returnedAdverts = okResult.Value as IEnumerable<AdvertReadDto>;
 		returnedAdverts.Should().NotBeNull();
 		returnedAdverts.Should().HaveCount(2);
-		returnedAdverts.Should().Contain(a => a.id == advert1.AdvertId && a.type == "BOOK");
-		returnedAdverts.Should().Contain(a => a.id == advert2.AdvertId && a.type == "PRODUCT");
+		returnedAdverts.Should().Contain(a => a.Id == advert1.AdvertId && a.Type == "BOOK");
+		returnedAdverts.Should().Contain(a => a.Id == advert2.AdvertId && a.Type == "PRODUCT");
 	}
 
 	[Fact]

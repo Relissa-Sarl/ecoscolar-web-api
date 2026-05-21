@@ -1,16 +1,15 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 
-namespace EcoscolarWebApi.Models
+namespace EcoScolarWebApi.Models;
+
+[Table("UserLanguages")]
+public class UserLanguage
 {
-    [Table("UserLanguages")]
-    public class UserLanguage
-    {
-        public string UserId { get; set; }
-        public User User { get; set; }
+    public string UserId { get; set; }
+    public User User { get; set; }
 
-        public string Label { get; set; }
-        public Language Language { get; set; } 
+    public string Label { get; set; }
+    public Language Language { get; set; } 
 
-        public string LanguageLevel { get; set; }
-    }
+    public string LanguageLevel { get; set; }
 }
