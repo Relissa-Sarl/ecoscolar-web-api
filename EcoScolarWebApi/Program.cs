@@ -33,7 +33,8 @@ if (app.Environment.IsDevelopment())
 	app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "EcoScolar Web API V1"));
 }
 
-app.UseHttpsRedirection();
+if (!app.Environment.IsEnvironment("Testing"))
+	app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -43,3 +44,6 @@ app.MapControllers();
 app.MapGroup("/api/v1/auth").MapIdentityApi<User>();
 
 app.Run();
+
+// Expose entry point for WebApplicationFactory-based integration tests (CustomApiFactory).
+public partial class Program;

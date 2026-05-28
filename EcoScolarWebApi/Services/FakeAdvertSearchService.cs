@@ -52,7 +52,7 @@ public class FakeAdvertSearchService : IAdvertSearchService
 		return Task.FromResult<IEnumerable<AdvertSummaryDto>>(result.ToList());
 	}
 
-	public Task<AdvertDetailDto?> GetDetailAsync(Guid id, CancellationToken cancellationToken = default)
+	public Task<AdvertDetailDto?> GetDetailAsync(long id, CancellationToken cancellationToken = default)
 	{
 		var entry = Catalog.FirstOrDefault(e => e.Summary.Id == id);
 		if (entry == null)
@@ -81,7 +81,7 @@ public class FakeAdvertSearchService : IAdvertSearchService
 		{
 			new(new AdvertSummaryDto
 			{
-				Id = Guid.Parse("6d4b9d4a-1dd1-4a38-8d68-7af4d9cb3c01"),
+				Id = 1,
 				Title = "Exemple annonce 1",
 				Price = 12.50m,
 				Type = CatalogAdvertTypeCodes.Books,
@@ -92,7 +92,7 @@ public class FakeAdvertSearchService : IAdvertSearchService
 			}, demoDesc),
 			new(new AdvertSummaryDto
 			{
-				Id = Guid.Parse("9a2d7d6e-8b4c-4d55-a901-2ec6f6c4d202"),
+				Id = 2,
 				Title = "Exemple annonce 2",
 				Price = 7.00m,
 				Type = CatalogAdvertTypeCodes.Books,
@@ -103,7 +103,7 @@ public class FakeAdvertSearchService : IAdvertSearchService
 			}, demoDesc),
 			new(new AdvertSummaryDto
 			{
-				Id = Guid.Parse("3f8e5c9b-2a7e-4f1a-9c3d-5b6e7f8a9c03"),
+				Id = 3,
 				Title = "Exemple annonce 3",
 				Price = 15.00m,
 				Type = CatalogAdvertTypeCodes.Books,
@@ -114,7 +114,7 @@ public class FakeAdvertSearchService : IAdvertSearchService
 			}, demoDesc),
 			new(new AdvertSummaryDto
 			{
-				Id = Guid.Parse("c4d8f2a1-6e9b-4c7d-a5f3-1e2d3c4b5a01"),
+				Id = 4,
 				Title = "Calculatrice scientifique Casio",
 				Price = 42.99m,
 				Type = CatalogAdvertTypeCodes.Product,
@@ -125,7 +125,7 @@ public class FakeAdvertSearchService : IAdvertSearchService
 			}, demoDesc),
 			new(new AdvertSummaryDto
 			{
-				Id = Guid.Parse("c4d8f2a1-6e9b-4c7d-a5f3-1e2d3c4b5a02"),
+				Id = 5,
 				Title = "Cartable à roulettes bleu marine",
 				Price = 59.90m,
 				Type = CatalogAdvertTypeCodes.Product,
@@ -136,7 +136,7 @@ public class FakeAdvertSearchService : IAdvertSearchService
 			}, demoDesc),
 			new(new AdvertSummaryDto
 			{
-				Id = Guid.Parse("e7b3c91d-5f44-4a8e-b2c6-9d8e7f6a5b03"),
+				Id = 6,
 				Title = "Cours particuliers mathématiques",
 				Price = 25.00m,
 				Type = CatalogAdvertTypeCodes.Service,
@@ -147,7 +147,7 @@ public class FakeAdvertSearchService : IAdvertSearchService
 			}, demoDesc),
 			new(new AdvertSummaryDto
 			{
-				Id = Guid.Parse("e7b3c91d-5f44-4a8e-b2c6-9d8e7f6a5b04"),
+				Id = 7,
 				Title = "Soutien physique chimie niveau lycée",
 				Price = 30.00m,
 				Type = CatalogAdvertTypeCodes.Service,

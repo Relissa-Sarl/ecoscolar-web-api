@@ -38,6 +38,10 @@ services:
     networks:
       - ecoscolar
       - databases
+    labels:
+      - "wud.watch=true"
+      - "wud.trigger.docker.apply=true"
+      - "wud.trigger.docker.apply.mode=onnewimage"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 10s

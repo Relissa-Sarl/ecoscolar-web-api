@@ -14,10 +14,18 @@ public static class ServiceCollectionExtensions
 {
 	public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration config)
 	{
-		var connectionString = config.GetConnectionString("Default")
-			?? throw new InvalidOperationException("Connection string 'Default' is missing.");
+		if (config.GetValue("UseInMemoryDatabase", defaultValue: false))
+		{
+			var databaseName = config.GetValue<string>("InMemoryDatabaseName") ?? Guid.NewGuid().ToString();
+			services.AddDbContext<EcoscolarDbContext>(options => options.UseInMemoryDatabase(databaseName));
+		}
+		else
+		{
+			var connectionString = config.GetConnectionString("Default")
+				?? throw new InvalidOperationException("Connection string 'Default' is missing.");
 
-		services.AddDbContext<EcoscolarDbContext>(options => options.UseSqlServer(connectionString));
+			services.AddDbContext<EcoscolarDbContext>(options => options.UseSqlServer(connectionString));
+		}
 
 		StripeConfiguration.ApiKey = config["Stripe:SecretKey"];
 

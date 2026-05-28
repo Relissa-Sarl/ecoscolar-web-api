@@ -10,7 +10,6 @@ namespace EcoScolarWebApi.Services;
 /// Catalogue summaries/detail sur <see cref="Advert"/> (livres, produits hors livre, services).
 /// Filtre <c>isbn</c> : lignes résolues comme annonces reliées à <see cref="Book"/>.
 /// Filtre <c>q</c> : titre ou ISBN (pour les lignes livre uniquement dans la sous-requête).
-/// <see cref="AdvertSummaryDto.Id"/> encode <see cref="Advert.AdvertId"/> en <see cref="Guid"/>.
 /// </summary>
 public sealed class AdvertSearchService : IAdvertSearchService
 {
@@ -78,36 +77,33 @@ public sealed class AdvertSearchService : IAdvertSearchService
 		return adverts.Select(a => MapSummary(a, booksDict, servicesDict)).ToList();
 	}
 
-	public async Task<AdvertDetailDto?> GetDetailAsync(Guid id, CancellationToken cancellationToken = default)
+	public async Task<AdvertDetailDto?> GetDetailAsync(long id, CancellationToken cancellationToken = default)
 	{
-		if (!TryAdvertIdFromCatalogGuid(id, out var advertId))
-			return null;
-
 		var bookDetail = await _context.Books
 			.AsNoTracking()
 			.Include(b => b.BookCategory)
 			.Include(b => b.Pictures)
-			.FirstOrDefaultAsync(b => b.AdvertId == advertId, cancellationToken);
+			.FirstOrDefaultAsync(b => b.AdvertId == id, cancellationToken);
 		if (bookDetail != null)
-			return ToDetailFromBook(bookDetail, id);
+			return ToDetailFromBook(bookDetail);
 
 		var serviceDetail = await _context.Services
 			.AsNoTracking()
 			.Include(s => s.Subject)
 			.Include(s => s.SchoolGrade)
-			.FirstOrDefaultAsync(s => s.AdvertId == advertId, cancellationToken);
+			.FirstOrDefaultAsync(s => s.AdvertId == id, cancellationToken);
 		if (serviceDetail != null)
-			return ToDetailFromService(serviceDetail, id);
+			return ToDetailFromService(serviceDetail);
 
 		var productDetail = await _context.Products
 			.AsNoTracking()
 			.Include(p => p.Pictures)
 			.Where(p =>
-				p.AdvertId == advertId
+				p.AdvertId == id
 				&& !_context.Set<Book>().Any(Books => Books.AdvertId == p.AdvertId))
 			.FirstOrDefaultAsync(cancellationToken);
 
-		return productDetail == null ? null : ToDetailFromPhysical(productDetail, id);
+		return productDetail == null ? null : ToDetailFromPhysical(productDetail);
 	}
 
 	private static AdvertSummaryDto MapSummary(
@@ -123,7 +119,7 @@ public sealed class AdvertSearchService : IAdvertSearchService
 					var src = fullBk ?? bk;
 					return new AdvertSummaryDto
 					{
-						Id = CatalogIdFromAdvertId(bk.AdvertId),
+						Id = bk.AdvertId,
 						Title = bk.Title,
 						Price = bk.Price,
 						Type = CatalogAdvertTypeCodes.Books,
@@ -139,7 +135,7 @@ public sealed class AdvertSearchService : IAdvertSearchService
 					var src = fullSvc ?? svc;
 					return new AdvertSummaryDto
 					{
-						Id = CatalogIdFromAdvertId(svc.AdvertId),
+						Id = svc.AdvertId,
 						Title = svc.Title,
 						Price = svc.Price,
 						Type = CatalogAdvertTypeCodes.Service,
@@ -152,7 +148,7 @@ public sealed class AdvertSearchService : IAdvertSearchService
 			case PhysicalItem phy when phy is not Book:
 				return new AdvertSummaryDto
 				{
-					Id = CatalogIdFromAdvertId(phy.AdvertId),
+					Id = phy.AdvertId,
 					Title = phy.Title,
 					Price = phy.Price,
 					Type = CatalogAdvertTypeCodes.Product,
@@ -166,13 +162,13 @@ public sealed class AdvertSearchService : IAdvertSearchService
 		}
 	}
 
-	private static AdvertDetailDto ToDetailFromBook(Book b, Guid catalogId)
+	private static AdvertDetailDto ToDetailFromBook(Book b)
 	{
 		string? imageUrl = b.Pictures?.FirstOrDefault()?.Label;
 
 		return new AdvertDetailDto
 		{
-			Id = catalogId,
+			Id = b.AdvertId,
 			Title = b.Title,
 			Type = CatalogAdvertTypeCodes.Books,
 			Isbn = string.IsNullOrWhiteSpace(b.ISBN) ? null : b.ISBN,
@@ -185,11 +181,11 @@ public sealed class AdvertSearchService : IAdvertSearchService
 		};
 	}
 
-	private static AdvertDetailDto ToDetailFromService(TutoringAdvert s, Guid catalogId)
+	private static AdvertDetailDto ToDetailFromService(TutoringAdvert s)
 	{
 		return new AdvertDetailDto
 		{
-			Id = catalogId,
+			Id = s.AdvertId,
 			Title = s.Title,
 			Type = CatalogAdvertTypeCodes.Service,
 			Isbn = null,
@@ -202,12 +198,12 @@ public sealed class AdvertSearchService : IAdvertSearchService
 		};
 	}
 
-	private static AdvertDetailDto ToDetailFromPhysical(PhysicalItem p, Guid catalogId)
+	private static AdvertDetailDto ToDetailFromPhysical(PhysicalItem p)
 	{
 		string? imageUrl = p.Pictures?.FirstOrDefault()?.Label;
 		return new AdvertDetailDto
 		{
-			Id = catalogId,
+			Id = p.AdvertId,
 			Title = p.Title,
 			Type = CatalogAdvertTypeCodes.Product,
 			Isbn = null,
@@ -218,27 +214,6 @@ public sealed class AdvertSearchService : IAdvertSearchService
 			Description = p.Description ?? string.Empty,
 			ImageUrl = imageUrl
 		};
-	}
-
-	private static Guid CatalogIdFromAdvertId(long advertId)
-	{
-		var bytes = new byte[16];
-		BitConverter.TryWriteBytes(bytes.AsSpan(), advertId);
-		return new Guid(bytes);
-	}
-
-	private static bool TryAdvertIdFromCatalogGuid(Guid catalogId, out long advertId)
-	{
-		var bytes = catalogId.ToByteArray();
-		advertId = 0;
-		for (var i = 8; i < 16; i++)
-		{
-			if (bytes[i] != 0)
-				return false;
-		}
-
-		advertId = BitConverter.ToInt64(bytes, 0);
-		return true;
 	}
 
 	private static string Normalize(string? isbnText)
