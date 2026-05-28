@@ -118,6 +118,6 @@ public class UserService : IUserService
 			);
 
 		// Return the safe public DTO
-		return Result<UserPublicReadDto>.Success(UserPublicReadDto.fromEntity(user));
+		return Result<UserPublicReadDto>.Success(UserPublicReadDto.FromEntity(user));
 	}
 }
