@@ -15,7 +15,7 @@ namespace EcoScolarWebApi.Controllers;
 [ApiController]
 public class AuthController : ControllerBase
 {
-	private readonly IUserService _userService;             // User service instance reference
+	private readonly IUserService _userService;             // Seller service instance reference
 	private readonly SignInManager<User> _signInManager;    // Sign in manager provided by Identity
 
 	/// <summary>

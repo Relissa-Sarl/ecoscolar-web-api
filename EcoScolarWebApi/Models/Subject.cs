@@ -15,5 +15,5 @@ public class Subject
 
     [Required]
     [StringLength(100)]
-    public string Code { get; set; }
+    public string Code { get; set; } // TODO - Rename in MCD Subject -> Code
 }

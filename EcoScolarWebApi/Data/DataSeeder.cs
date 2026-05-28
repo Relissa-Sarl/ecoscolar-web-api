@@ -19,7 +19,7 @@ public class DataSeeder
 		var faker = new Faker("fr_CH");
 		var users = new List<User>();
 
-		// Create User to test
+		// Create Seller to test
 		var testUser = new User
 		{
 			Id = Guid.NewGuid().ToString(),
@@ -80,7 +80,7 @@ public class DataSeeder
 			.RuleFor(p => p.CreatedAt, f => f.Date.Recent(90, DateTime.UtcNow))
 			.RuleFor(p => p.NotificationDate, (f, p) => p.CreatedAt.AddDays(f.Random.Int(1, 30)))
 			.RuleFor(p => p.Status, f => f.PickRandom<AdvertStatus>())
-			.RuleFor(p => p.UserId, f => f.PickRandom(users).Id)
+			.RuleFor(p => p.SellerId, f => f.PickRandom(users).Id)
 			.RuleFor(p => p.Condition, f => f.PickRandom<PhysicalItemCondition>())
 			.RuleFor(p => p.Weight, f => f.Random.Bool(0.7f) ? decimal.Round(f.Random.Decimal(0.2m, 5m), 2) : null)
 			.RuleFor(p => p.ProductCategoryId, f => f.Random.Bool(0.8f) ? f.Random.ListItem(productCategoryIds) : null);
@@ -94,7 +94,7 @@ public class DataSeeder
 			.RuleFor(b => b.CreatedAt, f => f.Date.Recent(180, DateTime.UtcNow))
 			.RuleFor(b => b.NotificationDate, (f, b) => b.CreatedAt.AddDays(f.Random.Int(5, 45)))
 			.RuleFor(b => b.Status, f => f.PickRandom<AdvertStatus>())
-			.RuleFor(b => b.UserId, f => f.PickRandom(users).Id)
+			.RuleFor(b => b.SellerId, f => f.PickRandom(users).Id)
 			.RuleFor(b => b.Condition, f => f.PickRandom<PhysicalItemCondition>())
 			.RuleFor(b => b.Weight, f => decimal.Round(f.Random.Decimal(0.3m, 2.5m), 2))
 			.RuleFor(b => b.ISBN, f => $"978{f.Random.Long(1000000000L, 9999999999L)}")
@@ -114,7 +114,7 @@ public class DataSeeder
 			.RuleFor(s => s.CreatedAt, f => f.Date.Recent(60, DateTime.UtcNow))
 			.RuleFor(s => s.NotificationDate, (f, s) => s.CreatedAt.AddDays(f.Random.Int(3, 20)))
 			.RuleFor(s => s.Status, f => f.PickRandom<AdvertStatus>())
-			.RuleFor(s => s.UserId, f => f.PickRandom(users).Id)
+			.RuleFor(s => s.SellerId, f => f.PickRandom(users).Id)
 			.RuleFor(s => s.TeachingLanguage, f => f.PickRandom<Enums.LanguageEnum>())
 			.RuleFor(s => s.StudyLevel, f => f.Random.ListItem(schoolGradeList).Name)
 			.RuleFor(s => s.SubjectId, f => f.Random.ListItem(subjectList).SubjectId)
@@ -136,7 +136,7 @@ public class DataSeeder
                 pictures.Add(new Picture
                 {
                     Label = $"https://picsum.photos/seed/{item.AdvertId}-{i}/800/600",
-                    AdvertId = item.AdvertId
+                    PhysicalItemId = item.AdvertId
                 });
             }
         }

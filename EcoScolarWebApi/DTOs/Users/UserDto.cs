@@ -32,17 +32,17 @@ public record UserReadDto(
 )
 {
 	/// <summary>
-	/// Creates a new UserReadDto instance from the specified User entity.
+	/// Creates a new UserReadDto instance from the specified Seller entity.
 	/// </summary>
-	/// <param name="entity">The User entity to convert. Cannot be null.</param>
-	/// <returns>A UserReadDto populated with data from the specified User entity.</returns>
+	/// <param name="entity">The Seller entity to convert. Cannot be null.</param>
+	/// <returns>A UserReadDto populated with data from the specified Seller entity.</returns>
 	public static UserReadDto FromEntity(User entity) => new	(
 		Id: entity.Id,
 		Nickname: entity.UserName ?? "",
 		FirstName: entity.FirstName,
 		LastName: entity.LastName,
 		Email: entity.Email ?? "",
-		BirthdayDate: entity.BirthdayDate,
+		BirthdayDate: entity.DateOfBirth,
 		IsOnboarded: entity.IsOnboarded,
 		Location: LocationReadDto.FromEntity(entity.Location) ?? null,
 		//GlobalRating: 0,

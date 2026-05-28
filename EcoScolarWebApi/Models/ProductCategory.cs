@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace EcoScolarWebApi.Models;
 
 [Table("ProductCategories")]
-public class ProductCategory
+public class ProductCategory // TODO : This entity is not in the MCD
 {
     [Key]
     public long ProductCategoryId { get; set; }
