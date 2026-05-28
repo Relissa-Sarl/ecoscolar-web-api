@@ -1220,7 +1220,7 @@ public class AdvertsControllerTests : IDisposable
     {
         // Arrange
         var query = new AdvertSearchQuery { Q = "Math" };
-        var expectedSummaries = new List<AdvertSummaryDto> { new AdvertSummaryDto { Id = Guid.NewGuid() } };
+        var expectedSummaries = new List<AdvertSummaryDto> { new AdvertSummaryDto { Id = 1 } };
 
         _searchService.SearchSummariesAsync(query, Arg.Any<CancellationToken>())
             .Returns(expectedSummaries);
@@ -1239,7 +1239,7 @@ public class AdvertsControllerTests : IDisposable
     public async Task GetSummaryDetail_ReturnsOk_WhenItemExists()
     {
         // Arrange
-        var id = Guid.NewGuid();
+        var id = 42L;
         var expectedDetail = new AdvertDetailDto { Id = id };
 
         _searchService.GetDetailAsync(id, Arg.Any<CancellationToken>())
@@ -1257,7 +1257,7 @@ public class AdvertsControllerTests : IDisposable
     public async Task GetSummaryDetail_ReturnsNotFound_WhenItemDoesNotExist()
     {
         // Arrange
-        var id = Guid.NewGuid();
+        var id = 42L;
         _searchService.GetDetailAsync(id, Arg.Any<CancellationToken>())
             .Returns((AdvertDetailDto?)null);
 

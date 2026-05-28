@@ -297,10 +297,10 @@ public class AdvertsController : ControllerBase
 	}
 
 	/// <summary>
-	/// Mock catalogue detail by GUID (same dataset as /summary). GET api/v1/adverts/summary/{id}
+	/// Mock catalogue detail by id (same dataset as /summary). GET api/v1/adverts/summary/{id}
 	/// </summary>
-	[HttpGet("summary/{id:guid}")]
-	public async Task<IActionResult> GetSummaryDetail(Guid id, CancellationToken cancellationToken = default)
+	[HttpGet("summary/{id:long}")]
+	public async Task<IActionResult> GetSummaryDetail(long id, CancellationToken cancellationToken = default)
 	{
 		var detail = await _advertSearchService.GetDetailAsync(id, cancellationToken);
 		if (detail is null)
