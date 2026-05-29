@@ -7,6 +7,7 @@ using EcoScolarWebApi.Enums;
 using EcoScolarWebApi.Models;
 using EcoScolarWebApi.Services.Contracts;
 using FluentAssertions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -391,6 +392,50 @@ public class UsersControllerTests
 
 		var favoriteInDb = await _context.UserFavorites.FirstOrDefaultAsync(u => u.UserId == existingUser.Id && u.AdvertId == 3);
 		favoriteInDb.Should().BeNull();
+	}
+
+	#endregion
+
+	#region Tests for CreateSearchAlert
+
+	[Fact]
+	public async Task CreateSearchAlert_ShouldReturnNotFound_WhenUserDoesNotExist()
+	{
+		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns((User?)null);
+
+		var result = await _controller.CreateSearchAlert(new CreateSearchAlertDto { Q = "Biologie" });
+
+		result.Should().BeOfType<NotFoundObjectResult>();
+	}
+
+	[Fact]
+	public async Task CreateSearchAlert_ShouldReturnBadRequest_WhenNoCriteria()
+	{
+		var existingUser = new User { Id = "guid-alert-0", UserName = "alert@test.ch" };
+		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+
+		var result = await _controller.CreateSearchAlert(new CreateSearchAlertDto());
+
+		result.Should().BeOfType<BadRequestObjectResult>();
+	}
+
+	[Fact]
+	public async Task CreateSearchAlert_ShouldReturnCreated_WhenCriteriaValid()
+	{
+		var existingUser = new User { Id = "guid-alert-1", UserName = "alert@test.ch" };
+		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+
+		var result = await _controller.CreateSearchAlert(new CreateSearchAlertDto { Q = "Calculatrice" });
+
+		var created = result.Should().BeOfType<ObjectResult>().Subject;
+		created.StatusCode.Should().Be(StatusCodes.Status201Created);
+		var alertDto = created.Value.Should().BeOfType<SearchAlertReadDto>().Subject;
+		alertDto.Q.Should().Be("Calculatrice");
+		alertDto.Id.Should().BeGreaterThan(0);
+
+		var inDb = await _context.SearchAlerts.FirstOrDefaultAsync(a => a.UserId == existingUser.Id);
+		inDb.Should().NotBeNull();
+		inDb!.AdvertSearch.Should().Be("Calculatrice");
 	}
 
 	#endregion

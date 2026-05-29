@@ -14,16 +14,16 @@ public record SearchAlertReadDto(
     DateTime CreatedAt
 )
 {
-    public static SearchAlertReadDto FromEntity(UserSearchAlert entity) => new(
-        Id: entity.Id,
-        Q: entity.Q,
-        Isbn: entity.Isbn,
-        Category: entity.Category,
-        MinPrice: entity.MinPrice,
+    public static SearchAlertReadDto FromEntity(SearchAlert entity) => new(
+        Id: entity.ResearchId,
+        Q: string.IsNullOrWhiteSpace(entity.AdvertSearch) ? null : entity.AdvertSearch,
+        Isbn: entity.ISBN,
+        Category: entity.BookCategory?.Name,
+        MinPrice: null,
         MaxPrice: entity.MaxPrice,
-        Subjects: entity.Subjects,
-        Grade: entity.Grade,
-        CreatedAt: entity.CreatedAt
+        Subjects: entity.Subject?.Name,
+        Grade: null,
+        CreatedAt: DateTime.UtcNow
     );
 }
 

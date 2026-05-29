@@ -21,7 +21,6 @@ public class EcoscolarDbContext(DbContextOptions<EcoscolarDbContext> options) : 
     public DbSet<Picture> Pictures { get; set; } = default!;
     public DbSet<ProductCategory> ProductCategories { get; set; } = default!;
     public DbSet<UserFavorite> UserFavorites { get; set; } = default!;
-    public DbSet<UserSearchAlert> UserSearchAlerts { get; set; } = default!;
     public DbSet<SchoolGrade> SchoolGrades { get; set; } = default!;
     public DbSet<Subject> Subjects { get; set; } = default!;
     public DbSet<BookCategory> BookCategories { get; set; } = default!;
@@ -52,13 +51,6 @@ public class EcoscolarDbContext(DbContextOptions<EcoscolarDbContext> options) : 
             .HasOne(uf => uf.Advert)
             .WithMany()
             .HasForeignKey(uf => uf.AdvertId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        // User Search Alerts
-        builder.Entity<UserSearchAlert>()
-            .HasOne(a => a.User)
-            .WithMany()
-            .HasForeignKey(a => a.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
         // Dispute
