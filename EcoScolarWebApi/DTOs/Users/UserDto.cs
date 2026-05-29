@@ -82,6 +82,9 @@ string Region
 {
     public static LocationReadDto? FromEntity(Location location)
     {
+        if (location is null)
+            return null;
+
         return new LocationReadDto(
             PostalCode: location.PostalCode,
             City: location.City,
