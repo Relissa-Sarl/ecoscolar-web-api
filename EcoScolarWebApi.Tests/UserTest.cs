@@ -479,6 +479,43 @@ public class UsersControllerTests
 
 	#endregion
 
+	#region Tests for GetMySearchAlerts
+
+	[Fact]
+	public async Task GetMySearchAlerts_ShouldReturnNotFound_WhenUserDoesNotExist()
+	{
+		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns((User?)null);
+
+		var result = await _controller.GetMySearchAlerts();
+
+		result.Should().BeOfType<NotFoundObjectResult>();
+	}
+
+	[Fact]
+	public async Task GetMySearchAlerts_ShouldReturnOnlyCurrentUserAlerts_OrderedByResearchIdDesc()
+	{
+		var userA = new User { Id = "guid-alert-get-a", UserName = "a@test.ch" };
+		var userB = new User { Id = "guid-alert-get-b", UserName = "b@test.ch" };
+		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(userA);
+
+		_context.SearchAlerts.AddRange(
+			new SearchAlert { UserId = userA.Id, AdvertSearch = "Old", AdvertType = CatalogAdvertTypeCodes.Books },
+			new SearchAlert { UserId = userA.Id, AdvertSearch = "New", AdvertType = CatalogAdvertTypeCodes.Books },
+			new SearchAlert { UserId = userB.Id, AdvertSearch = "Other", AdvertType = CatalogAdvertTypeCodes.Books }
+		);
+		await _context.SaveChangesAsync();
+
+		var result = await _controller.GetMySearchAlerts();
+
+		var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+		var alerts = okResult.Value.Should().BeAssignableTo<IEnumerable<SearchAlertReadDto>>().Subject.ToList();
+		alerts.Should().HaveCount(2);
+		alerts[0].Q.Should().Be("New");
+		alerts[1].Q.Should().Be("Old");
+	}
+
+	#endregion
+
 	#region Tests for GetMyAdverts
 	[Fact]
     public async Task GetMyAdverts_ShouldReturnNotFound_WhenUserDoesNotExist()
