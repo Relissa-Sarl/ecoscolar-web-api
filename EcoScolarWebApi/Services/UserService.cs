@@ -1,4 +1,5 @@
-﻿using EcoScolarWebApi.Commun;
+﻿using EcoscolarWebApi.Commun;
+using EcoScolarWebApi.Commun;
 using EcoScolarWebApi.Data;
 using EcoScolarWebApi.DTOs.Users;
 using EcoScolarWebApi.Models;
@@ -120,4 +121,66 @@ public class UserService : IUserService
 		// Return the safe public DTO
 		return Result<UserPublicReadDto>.Success(UserPublicReadDto.FromEntity(user));
 	}
+
+    /// <summary>
+    ///	Anonymize the currently connected user profile when deleting his account
+    /// </summary>
+    /// <param name="userPrincipal">Connected user principal</param>
+    /// <returns>A Result object with a boolean value; otherwise, a failure result indicating the reason.</returns>
+    public async Task<Result<bool>> AnonymizeProfileAsync(ClaimsPrincipal userPrincipal)
+    {
+        var userId = _userManager.GetUserId(userPrincipal);
+
+        if (string.IsNullOrEmpty(userId))
+            return Result<bool>.Failure("SESSION_INVALID", ErrorType.Unauthorized);
+
+        var currentUser = await _userManager.Users
+            .Include(u => u.Favorites)
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (currentUser == null)
+            return Result<bool>.Failure("SEESION_EXPIRED", ErrorType.NotFound);
+
+        // Hash personal information to anonymize the user while keeping the nickname unique
+        string salt = Guid.NewGuid().ToString();
+
+        currentUser.FirstName = Hasher.HashString(currentUser.FirstName ?? salt);
+        currentUser.LastName = Hasher.HashString(currentUser.LastName ?? salt);
+        currentUser.Nickname = $"DeletedUser_{salt[..8]}"; // Ensure nickname remains unique
+
+        if (!string.IsNullOrEmpty(currentUser.DateOfBirth) && currentUser.DateOfBirth.Length >= 4)
+        {
+            string year = currentUser.DateOfBirth[..4];
+            currentUser.DateOfBirth = $"{year}-01-01";
+        }
+        else
+            currentUser.DateOfBirth = "2000-01-01";
+
+        // Hash the native Identity User properties
+        var anonymousEmail = $"{salt[..8]}@deleted.ecoscolar.com";
+        await _userManager.SetEmailAsync(currentUser, anonymousEmail);
+        await _userManager.SetUserNameAsync(currentUser, anonymousEmail);
+
+        currentUser.NormalizedEmail = anonymousEmail.ToUpper();
+        currentUser.NormalizedUserName = anonymousEmail.ToUpper();
+        currentUser.PasswordHash = Guid.NewGuid().ToString();
+        currentUser.PhoneNumber = null;
+
+        // Delete user favorites and mark as not onboarded to hide the profile from public listings
+        currentUser.Favorites.Clear();
+        currentUser.IsOnboarded = false;
+
+        // Save the data
+        var updateResult = await _userManager.UpdateAsync(currentUser);
+        if (!updateResult.Succeeded)
+        {
+            var errors = updateResult.Errors.Select(e => e.Description);
+            return Result<bool>.Failure(errors);
+        }
+
+        // Sign out the user to invalidate their session
+        await _signInManager.SignOutAsync();
+
+        return Result<bool>.Success(true);
+    }
 }

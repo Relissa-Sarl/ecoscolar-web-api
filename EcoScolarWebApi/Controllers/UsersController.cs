@@ -85,8 +85,19 @@ public class UsersController : ControllerBase
 	[HttpDelete("me")]
 	public async Task<IActionResult> DeleteMyProfile()
 	{
-		return null;
-	}
+        var result = await _userService.AnonymizeProfileAsync(User);
+
+        if (result.IsSuccess)
+            return Ok(new { message = "The account has successfully got anonymized" });
+
+        return result.ErrorType switch
+        {
+            ErrorType.NotFound => NotFound(new { result.Errors }),
+            ErrorType.Unauthorized => Unauthorized(new { result.Errors }),
+
+            _ => BadRequest(new { result.Errors })
+        };
+    }
 
 	#endregion ===
 
