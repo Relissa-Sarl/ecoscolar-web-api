@@ -296,6 +296,45 @@ public class UsersControllerTests
 
 	#endregion
 
+	#region Tests for DeleteSearchAlert
+
+	[Fact]
+	public async Task DeleteSearchAlert_ShouldReturnNotFound_WhenAlertDoesNotExist()
+	{
+		var existingUser = new User { Id = "guid-alert-del-0", UserName = "alert@test.ch" };
+		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+
+		var result = await _controller.DeleteSearchAlert(999);
+
+		result.Should().BeOfType<NotFoundObjectResult>();
+	}
+
+	[Fact]
+	public async Task DeleteSearchAlert_ShouldReturnNoContent_WhenAlertOwnedByUser()
+	{
+		var existingUser = new User { Id = "guid-alert-del-1", UserName = "alert@test.ch" };
+		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+
+		_context.SearchAlerts.Add(new SearchAlert
+		{
+			UserId = existingUser.Id,
+			AdvertSearch = "Biologie",
+			AdvertType = CatalogAdvertTypeCodes.Books
+		});
+		await _context.SaveChangesAsync();
+
+		var alertId = _context.SearchAlerts.First().ResearchId;
+
+		var result = await _controller.DeleteSearchAlert(alertId);
+
+		result.Should().BeOfType<NoContentResult>();
+
+		var inDb = await _context.SearchAlerts.FindAsync(alertId);
+		inDb.Should().BeNull();
+	}
+
+	#endregion
+
 	#region Tests pour ToggleFavorite
 
 	[Fact]

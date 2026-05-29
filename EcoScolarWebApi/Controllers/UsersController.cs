@@ -150,6 +150,29 @@ public class UsersController : ControllerBase
 		return Ok(alerts.Select(SearchAlertReadDto.FromEntity));
 	}
 
+	/// <summary>
+	/// Deletes a search alert owned by the authenticated user.
+	/// DELETE /api/v1/users/me/search-alerts/{id}
+	/// </summary>
+	[HttpDelete("me/search-alerts/{id:int}")]
+	public async Task<IActionResult> DeleteSearchAlert(int id)
+	{
+		var currentUser = await _userManager.GetUserAsync(User);
+		if (currentUser == null)
+			return NotFound(new { message = "Seller not found." });
+
+		var alert = await _context.SearchAlerts
+			.FirstOrDefaultAsync(a => a.ResearchId == id && a.UserId == currentUser.Id);
+
+		if (alert == null)
+			return NotFound(new { message = "Search alert not found." });
+
+		_context.SearchAlerts.Remove(alert);
+		await _context.SaveChangesAsync();
+
+		return NoContent();
+	}
+
 	#endregion ===
 
 	#region Public profiles
