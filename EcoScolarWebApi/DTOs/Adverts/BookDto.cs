@@ -55,7 +55,7 @@ public record BookCreateDto(
 	/// Converts the BookCreateDto to a Books entity.
 	/// </summary>
 	/// <returns>The Books entity</returns>
-	public Book ToEntity()
+	public new Book ToEntity()
 	{
 		var Books = new Book();
 		this.MapToEntity(Books);

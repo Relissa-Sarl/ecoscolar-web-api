@@ -27,7 +27,7 @@ public class DataSeeder
 			Email = "albert@einstein.ch",
 			EmailConfirmed = true,
 			FirstName = "Albert",
-			LastName = "Epstein"
+			LastName = "Mouille"
 		};
 		users.Add(testUser);
 
