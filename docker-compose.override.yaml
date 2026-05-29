@@ -1,0 +1,7 @@
+services:
+  ecoscolar-api-database:
+    ports:
+      - "1433:1433"
+    networks:
+      - databases
+      - dmz
