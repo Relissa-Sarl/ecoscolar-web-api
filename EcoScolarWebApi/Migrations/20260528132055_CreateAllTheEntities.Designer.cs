@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EcoScolarWebApi.Migrations
 {
     [DbContext(typeof(EcoscolarDbContext))]
-    [Migration("20260521082320_UpdateDatabase")]
-    partial class UpdateDatabase
+    [Migration("20260528132055_CreateAllTheEntities")]
+    partial class CreateAllTheEntities
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -47,6 +47,10 @@ namespace EcoScolarWebApi.Migrations
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<string>("SellerId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
@@ -55,13 +59,9 @@ namespace EcoScolarWebApi.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.HasKey("AdvertId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("SellerId");
 
                     b.ToTable("Adverts");
 
@@ -153,6 +153,77 @@ namespace EcoScolarWebApi.Migrations
                         });
                 });
 
+            modelBuilder.Entity("EcoScolarWebApi.Models.Dispute", b =>
+                {
+                    b.Property<int>("DisputeId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("DisputeId"));
+
+                    b.Property<DateTime>("Date")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Resolution")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("TransactionId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("DisputeId");
+
+                    b.HasIndex("TransactionId");
+
+                    b.ToTable("Disputes");
+                });
+
+            modelBuilder.Entity("EcoScolarWebApi.Models.Flag", b =>
+                {
+                    b.Property<int>("FlagId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("FlagId"));
+
+                    b.Property<DateTime>("Date")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("FlaggedId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ReporterId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("FlagId");
+
+                    b.HasIndex("FlaggedId");
+
+                    b.HasIndex("ReporterId");
+
+                    b.ToTable("Flags");
+                });
+
             modelBuilder.Entity("EcoScolarWebApi.Models.Language", b =>
                 {
                     b.Property<string>("Label")
@@ -240,19 +311,46 @@ namespace EcoScolarWebApi.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("PictureId"));
 
-                    b.Property<long>("AdvertId")
-                        .HasColumnType("bigint");
-
                     b.Property<string>("Label")
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<long>("PhysicalItemId")
+                        .HasColumnType("bigint");
+
                     b.HasKey("PictureId");
 
-                    b.HasIndex("AdvertId");
+                    b.HasIndex("PhysicalItemId");
 
                     b.ToTable("Pictures");
+                });
+
+            modelBuilder.Entity("EcoScolarWebApi.Models.PriceOffer", b =>
+                {
+                    b.Property<long>("AdvertId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("BuyerId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("AdvertId", "BuyerId");
+
+                    b.HasIndex("BuyerId");
+
+                    b.ToTable("PriceOffers");
                 });
 
             modelBuilder.Entity("EcoScolarWebApi.Models.ProductCategory", b =>
@@ -340,6 +438,80 @@ namespace EcoScolarWebApi.Migrations
                         });
                 });
 
+            modelBuilder.Entity("EcoScolarWebApi.Models.PublicComment", b =>
+                {
+                    b.Property<int>("CommentId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CommentId"));
+
+                    b.Property<long>("AdvertId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Answer")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("AnsweredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("AuthorId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.HasKey("CommentId");
+
+                    b.HasIndex("AdvertId");
+
+                    b.HasIndex("AuthorId");
+
+                    b.ToTable("PublicComments");
+                });
+
+            modelBuilder.Entity("EcoScolarWebApi.Models.Review", b =>
+                {
+                    b.Property<int>("ReviewId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ReviewId"));
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("Date")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ReviewerId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<long>("TransactionId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("ReviewId");
+
+                    b.HasIndex("ReviewerId");
+
+                    b.HasIndex("TransactionId");
+
+                    b.ToTable("Reviews");
+                });
+
             modelBuilder.Entity("EcoScolarWebApi.Models.SchoolGrade", b =>
                 {
                     b.Property<long>("SchoolGradeId")
@@ -405,6 +577,49 @@ namespace EcoScolarWebApi.Migrations
                             Code = "S2-ECG",
                             Name = "Secondaire II - ECG"
                         });
+                });
+
+            modelBuilder.Entity("EcoScolarWebApi.Models.SearchAlert", b =>
+                {
+                    b.Property<int>("ResearchId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ResearchId"));
+
+                    b.Property<string>("AdvertSearch")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AdvertType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long?>("BookCategoryId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ISBN")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("MaxPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<long?>("SubjectId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("ResearchId");
+
+                    b.HasIndex("BookCategoryId");
+
+                    b.HasIndex("SubjectId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("SearchAlerts");
                 });
 
             modelBuilder.Entity("EcoScolarWebApi.Models.Subject", b =>
@@ -504,6 +719,57 @@ namespace EcoScolarWebApi.Migrations
                         });
                 });
 
+            modelBuilder.Entity("EcoScolarWebApi.Models.Transaction", b =>
+                {
+                    b.Property<long>("TransactionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("TransactionId"));
+
+                    b.Property<long>("AdvertId")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("BuyerConsent")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("BuyerId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("Date")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<DateTime?>("ExpirationReservationTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("PlatformFee")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("ReminderDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("SellerConsent")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("StripeSessionId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("TransactionId");
+
+                    b.HasIndex("AdvertId");
+
+                    b.HasIndex("BuyerId");
+
+                    b.ToTable("Transactions");
+                });
+
             modelBuilder.Entity("EcoScolarWebApi.Models.User", b =>
                 {
                     b.Property<string>("Id")
@@ -512,11 +778,11 @@ namespace EcoScolarWebApi.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
-                    b.Property<string>("BirthdayDate")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DateOfBirth")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Email")
@@ -599,6 +865,9 @@ namespace EcoScolarWebApi.Migrations
 
                     b.Property<long>("AdvertId")
                         .HasColumnType("bigint");
+
+                    b.Property<string>("SellerId")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("UserId")
                         .IsRequired()
@@ -805,7 +1074,7 @@ namespace EcoScolarWebApi.Migrations
 
                     b.HasIndex("SubjectId");
 
-                    b.ToTable("Services");
+                    b.ToTable("TutoringAdverts");
                 });
 
             modelBuilder.Entity("EcoScolarWebApi.Models.Book", b =>
@@ -845,24 +1114,155 @@ namespace EcoScolarWebApi.Migrations
 
             modelBuilder.Entity("EcoScolarWebApi.Models.Advert", b =>
                 {
+                    b.HasOne("EcoScolarWebApi.Models.User", "Seller")
+                        .WithMany()
+                        .HasForeignKey("SellerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Seller");
+                });
+
+            modelBuilder.Entity("EcoScolarWebApi.Models.Dispute", b =>
+                {
+                    b.HasOne("EcoScolarWebApi.Models.Transaction", "Transaction")
+                        .WithMany()
+                        .HasForeignKey("TransactionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Transaction");
+                });
+
+            modelBuilder.Entity("EcoScolarWebApi.Models.Flag", b =>
+                {
+                    b.HasOne("EcoScolarWebApi.Models.User", "Flagged")
+                        .WithMany()
+                        .HasForeignKey("FlaggedId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EcoScolarWebApi.Models.User", "Reporter")
+                        .WithMany()
+                        .HasForeignKey("ReporterId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Flagged");
+
+                    b.Navigation("Reporter");
+                });
+
+            modelBuilder.Entity("EcoScolarWebApi.Models.Picture", b =>
+                {
+                    b.HasOne("EcoScolarWebApi.Models.PhysicalItem", "PhysicalItem")
+                        .WithMany("Pictures")
+                        .HasForeignKey("PhysicalItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PhysicalItem");
+                });
+
+            modelBuilder.Entity("EcoScolarWebApi.Models.PriceOffer", b =>
+                {
+                    b.HasOne("EcoScolarWebApi.Models.Advert", "Advert")
+                        .WithMany()
+                        .HasForeignKey("AdvertId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EcoScolarWebApi.Models.User", "Buyer")
+                        .WithMany()
+                        .HasForeignKey("BuyerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Advert");
+
+                    b.Navigation("Buyer");
+                });
+
+            modelBuilder.Entity("EcoScolarWebApi.Models.PublicComment", b =>
+                {
+                    b.HasOne("EcoScolarWebApi.Models.Advert", "Advert")
+                        .WithMany()
+                        .HasForeignKey("AdvertId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EcoScolarWebApi.Models.User", "Author")
+                        .WithMany()
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Advert");
+
+                    b.Navigation("Author");
+                });
+
+            modelBuilder.Entity("EcoScolarWebApi.Models.Review", b =>
+                {
+                    b.HasOne("EcoScolarWebApi.Models.User", "Reviewer")
+                        .WithMany()
+                        .HasForeignKey("ReviewerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("EcoScolarWebApi.Models.Transaction", "Transaction")
+                        .WithMany()
+                        .HasForeignKey("TransactionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Reviewer");
+
+                    b.Navigation("Transaction");
+                });
+
+            modelBuilder.Entity("EcoScolarWebApi.Models.SearchAlert", b =>
+                {
+                    b.HasOne("EcoScolarWebApi.Models.BookCategory", "BookCategory")
+                        .WithMany()
+                        .HasForeignKey("BookCategoryId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("EcoScolarWebApi.Models.Subject", "Subject")
+                        .WithMany()
+                        .HasForeignKey("SubjectId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("EcoScolarWebApi.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("BookCategory");
+
+                    b.Navigation("Subject");
+
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("EcoScolarWebApi.Models.Picture", b =>
+            modelBuilder.Entity("EcoScolarWebApi.Models.Transaction", b =>
                 {
-                    b.HasOne("EcoScolarWebApi.Models.PhysicalItem", "Adverts")
-                        .WithMany("Pictures")
+                    b.HasOne("EcoScolarWebApi.Models.Advert", "Advert")
+                        .WithMany()
                         .HasForeignKey("AdvertId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Adverts");
+                    b.HasOne("EcoScolarWebApi.Models.User", "Buyer")
+                        .WithMany()
+                        .HasForeignKey("BuyerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Advert");
+
+                    b.Navigation("Buyer");
                 });
 
             modelBuilder.Entity("EcoScolarWebApi.Models.User", b =>
@@ -877,7 +1277,7 @@ namespace EcoScolarWebApi.Migrations
 
             modelBuilder.Entity("EcoScolarWebApi.Models.UserFavorite", b =>
                 {
-                    b.HasOne("EcoScolarWebApi.Models.Advert", "Adverts")
+                    b.HasOne("EcoScolarWebApi.Models.Advert", "Advert")
                         .WithMany()
                         .HasForeignKey("AdvertId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -889,7 +1289,7 @@ namespace EcoScolarWebApi.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.Navigation("Adverts");
+                    b.Navigation("Advert");
 
                     b.Navigation("User");
                 });

@@ -32,8 +32,8 @@ public class Advert
     public AdvertStatus Status { get; set; }
 
     [Required]
-    public string UserId { get; set; }
+    public string SellerId { get; set; }
 
-    [ForeignKey("UserId")]
-    public virtual User User { get; set; }
+    [ForeignKey(nameof(SellerId))] // TODO : Rename to SellerId
+    public virtual User Seller { get; set; }
 }

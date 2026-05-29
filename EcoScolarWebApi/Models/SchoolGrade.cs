@@ -15,5 +15,5 @@ public class SchoolGrade
 
     [Required]
     [StringLength(100)]
-    public string Code { get; set; }
+    public string Code { get; set; } // Rename in MCD SchoolGrade -> Code
 }

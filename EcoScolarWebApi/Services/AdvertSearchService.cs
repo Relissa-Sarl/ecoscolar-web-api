@@ -158,7 +158,7 @@ public sealed class AdvertSearchService : IAdvertSearchService
 					Grade = null
 				};
 			default:
-				throw new InvalidOperationException($"Unknown Adverts CLR type '{a.GetType().Name}'.");
+				throw new InvalidOperationException($"Unknown PhysicalItem CLR type '{a.GetType().Name}'.");
 		}
 	}
 

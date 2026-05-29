@@ -19,7 +19,7 @@ namespace EcoScolarWebApi.Controllers;
 public class UsersController : ControllerBase
 {
 	private readonly UserManager<User> _userManager;
-	private readonly IUserService _userService;            // User service for handling user-related operations
+	private readonly IUserService _userService;            // Seller service for handling user-related operations
 	private readonly EcoscolarDbContext _context;
 
 	/// <summary>
@@ -44,7 +44,7 @@ public class UsersController : ControllerBase
 	[HttpGet("me")]
 	public async Task<IActionResult> GetMyProfile()
 	{
-		// Pass the HTTP session's User directly to the service
+		// Pass the HTTP session's Seller directly to the service
 		var result = await _userService.GetCurrentUserProfileAsync(User);
 
 		// If successful, return 200 OK along with the user's data
@@ -113,11 +113,11 @@ public class UsersController : ControllerBase
 	{
 		var currentUser = await _userManager.GetUserAsync(User);
 		if (currentUser == null)
-			return NotFound(new { message = "User not found." });
+			return NotFound(new { message = "Seller not found." });
 
 		var adverts = await _context.Adverts
-			.Where(a => a.UserId == currentUser.Id)
-			.Include(a => a.User)
+			.Where(a => a.SellerId == currentUser.Id)
+			.Include(a => a.Seller)
 			.ToListAsync();
 		List<long> physicalItemIds = adverts.OfType<PhysicalItem>()
 			.Select(item => item.AdvertId)
@@ -125,7 +125,7 @@ public class UsersController : ControllerBase
 		if (physicalItemIds.Any())
 		{
 			await _context.Pictures
-				.Where(Pictures => physicalItemIds.Contains(Pictures.AdvertId))
+				.Where(Pictures => physicalItemIds.Contains(Pictures.PhysicalItemId))
 				.LoadAsync();
 		}
 		return Ok(adverts.Select(AdvertReadDto.FromEntity));
@@ -143,13 +143,13 @@ public class UsersController : ControllerBase
 	{
 		var currentUser = await _userManager.GetUserAsync(User);
 		if (currentUser == null)
-			return NotFound(new { message = "User not found." });
+			return NotFound(new { message = "Seller not found." });
 
 		var favorites = await _context.UserFavorites
 			.Where(uf => uf.UserId == currentUser.Id)
-			.Include(uf => uf.Adverts)
-			.ThenInclude(a => a.User)
-			.Select(uf => uf.Adverts)
+			.Include(uf => uf.Advert)
+			.ThenInclude(a => a.Seller)
+			.Select(uf => uf.Advert)
 			.ToListAsync();
 
 		List<long> physicalItemIds = [.. favorites.OfType<PhysicalItem>().Select(item => item.AdvertId)];
@@ -157,7 +157,7 @@ public class UsersController : ControllerBase
 		if (physicalItemIds.Any())
 		{
 			await _context.Pictures
-				.Where(Pictures => physicalItemIds.Contains(Pictures.AdvertId))
+				.Where(Pictures => physicalItemIds.Contains(Pictures.PhysicalItemId))
 				.LoadAsync();
 		}
 
@@ -165,22 +165,22 @@ public class UsersController : ControllerBase
 	}
 
 	/// <summary>
-	/// Toggles a specific Adverts in the authenticated user's favorites list. Add to favorites if not present, otherwise remove it.
+	/// Toggles a specific PhysicalItem in the authenticated user's favorites list. Add to favorites if not present, otherwise remove it.
 	/// 
 	/// Url: PATCH /api/v1/users/me/favorites/{advertId}
 	/// </summary>
-	/// <param name="advertId">The ID of the Adverts to toggle in favorites</param>
-	/// <returns>A status indicating whether the Adverts is currently a favorite or not</returns>
+	/// <param name="advertId">The ID of the PhysicalItem to toggle in favorites</param>
+	/// <returns>A status indicating whether the PhysicalItem is currently a favorite or not</returns>
 	[HttpPatch("me/favorites/{advertId}")]
 	public async Task<IActionResult> ToggleFavorite(long advertId)
 	{
 		var currentUser = await _userManager.GetUserAsync(User);
 		if (currentUser == null)
-			return NotFound(new { message = "User not found." });
+			return NotFound(new { message = "Seller not found." });
 
 		var Adverts = await _context.Adverts.FindAsync(advertId);
 		if (Adverts == null)
-			return NotFound(new { message = "Adverts not found." });
+			return NotFound(new { message = "PhysicalItem not found." });
 
 		var favorite = await _context.UserFavorites
 			.FirstOrDefaultAsync(uf => uf.UserId == currentUser.Id && uf.AdvertId == advertId);

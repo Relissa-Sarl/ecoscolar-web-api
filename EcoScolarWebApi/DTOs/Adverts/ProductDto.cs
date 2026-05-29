@@ -17,8 +17,8 @@ public record ProductReadDto(long Id, string Title, string Description, decimal 
 			PublicationDate: entity.CreatedAt,
 			NotificationDate: entity.NotificationDate,
 			Status: entity.Status,
-			UserId: entity.UserId,
-			SellerPseudo: entity.User?.UserName ?? "Anonyme",
+			UserId: entity.SellerId,
+			SellerPseudo: entity.Seller?.UserName ?? "Anonyme",
 			Condition: entity.Condition,
 			Weight: entity.Weight ?? null,
 			ProductCategoryId: entity.ProductCategoryId ?? null,
@@ -53,9 +53,9 @@ public record ProductCreateDto(string Title, string Description, decimal Price, 
 	}
 
 	/// <summary>
-	/// Maps the properties of the ProductCreateDto to an existing Adverts entity, specifically to a PhysicalItems entity.
+	/// Maps the properties of the ProductCreateDto to an existing PhysicalItem entity, specifically to a PhysicalItems entity.
 	/// </summary>
-	/// <param name="entity">The Adverts entity to map to</param>
+	/// <param name="entity">The PhysicalItem entity to map to</param>
 	public override void MapToEntity(Advert entity)
 	{
 		base.MapToEntity(entity);

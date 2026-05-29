@@ -5,7 +5,7 @@ using System.Security.Claims;
 namespace EcoScolarWebApi.Services.Contracts;
 
 /// <summary>
-/// User service interface.
+/// Seller service interface.
 /// </summary>
 public interface IUserService
 {

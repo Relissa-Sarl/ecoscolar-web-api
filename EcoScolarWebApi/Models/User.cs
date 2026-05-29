@@ -7,7 +7,7 @@ namespace EcoScolarWebApi.Models;
 
 public class User : IdentityUser
 {
-	// === User properties ===
+	// === Seller properties ===
 
 	public string? FirstName { get; set; }
 
@@ -15,7 +15,7 @@ public class User : IdentityUser
 
 	public string? Nickname { get; set; }
 
-	public string? BirthdayDate { get; set; }
+	public string? DateOfBirth { get; set; }
 
 	[Required]
 	public bool IsOnboarded { get; set; } = false;

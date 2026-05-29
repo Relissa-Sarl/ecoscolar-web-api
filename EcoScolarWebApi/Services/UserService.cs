@@ -14,14 +14,14 @@ namespace EcoScolarWebApi.Services;
 /// </summary>  
 public class UserService : IUserService
 {
-	private readonly UserManager<User> _userManager;            // User manager
+	private readonly UserManager<User> _userManager;            // Seller manager
 	private readonly SignInManager<User> _signInManager;        // Sign-in manager
 	private readonly EcoscolarDbContext _context;               // Database context
 
 	/// <summary>
 	/// Initialize the service with required dependencies.
 	/// </summary>
-	/// <param name="userManager">User manager.</param>
+	/// <param name="userManager">Seller manager.</param>
 	/// <param name="dbContext">Database context.</param>
 	/// <param name="signInManager">Sign-in manager.</param>
 	public UserService(UserManager<User> userManager, EcoscolarDbContext dbContext, SignInManager<User> signInManager)
@@ -56,7 +56,7 @@ public class UserService : IUserService
 			.FirstOrDefaultAsync(u => u.Id == userId);
 
 		if (currentUser == null)
-			return Result<UserReadDto>.Failure("User not found or session expired.", ErrorType.NotFound);
+			return Result<UserReadDto>.Failure("Seller not found or session expired.", ErrorType.NotFound);
 
 		// Build the dto for the response
 		var userDto = UserReadDto.FromEntity(currentUser);
@@ -72,7 +72,7 @@ public class UserService : IUserService
 			.FirstOrDefaultAsync(u => u.Id == currentUserId);
 
 		if (currentUser == null)
-			return Result<UserReadDto>.Failure("User not found", ErrorType.NotFound);
+			return Result<UserReadDto>.Failure("Seller not found", ErrorType.NotFound);
 
 		var location = await _context.Locations.FirstOrDefaultAsync(l => l.PostalCode == dto.PostalCode);
 		if (location == null)
@@ -81,7 +81,7 @@ public class UserService : IUserService
 		currentUser.Nickname = dto.Nickname;
 		currentUser.FirstName = dto.FirstName;
 		currentUser.LastName = dto.LastName;
-		currentUser.BirthdayDate = dto.BirthdayDate;
+		currentUser.DateOfBirth = dto.BirthdayDate;
 		currentUser.LocationId = location.LocationId;
 
 		currentUser.Languages.Clear();
@@ -113,11 +113,11 @@ public class UserService : IUserService
 		// If the user doesn't exist, OR if they haven't finished onboarding yet
 		if (user == null || !user.IsOnboarded)
 			return Result<UserPublicReadDto>.Failure(
-				"User not found or profile is not public yet.",
+				"Seller not found or profile is not public yet.",
 				ErrorType.NotFound
 			);
 
 		// Return the safe public DTO
-		return Result<UserPublicReadDto>.Success(UserPublicReadDto.fromEntity(user));
+		return Result<UserPublicReadDto>.Success(UserPublicReadDto.FromEntity(user));
 	}
 }

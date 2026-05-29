@@ -1,5 +1,6 @@
 ﻿using Asp.Versioning;
 using EcoScolarWebApi.Data;
+using EcoScolarWebApi.Mappers;
 using EcoScolarWebApi.Models;
 using EcoScolarWebApi.Services;
 using EcoScolarWebApi.Services.Contracts;
@@ -12,7 +13,13 @@ namespace EcoScolarWebApi.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-	public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration config)
+    public static IServiceCollection AddMappersServices(this IServiceCollection services, IConfiguration config)
+    {
+        services.AddSingleton<SubjectMapper>();
+        return services;
+    }
+
+    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration config)
 	{
 		if (config.GetValue("UseInMemoryDatabase", defaultValue: false))
 		{

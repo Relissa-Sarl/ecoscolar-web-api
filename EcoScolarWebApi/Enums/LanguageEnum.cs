@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 namespace EcoScolarWebApi.Enums;
 
 /// <summary>
-/// Enumeration that represents the language of an Adverts.
+/// Enumeration that represents the language of an PhysicalItem.
 /// It can be FR, DE or IT.
 /// </summary>
 public enum LanguageEnum

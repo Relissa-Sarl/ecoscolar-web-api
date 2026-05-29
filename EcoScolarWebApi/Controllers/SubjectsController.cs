@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using EcoScolarWebApi.Data;
 using EcoScolarWebApi.DTOs.ReferenceData;
+using EcoScolarWebApi.Mappers;
 using EcoScolarWebApi.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,36 +14,42 @@ namespace EcoScolarWebApi.Controllers;
 public class SubjectsController : ControllerBase
 {
     private readonly EcoscolarDbContext _context;
-    public SubjectsController(EcoscolarDbContext context)
+    private readonly SubjectMapper _mapper; // Étape 1 : Injection du mapper
+
+    public SubjectsController(EcoscolarDbContext context, SubjectMapper mapper)
     {
         _context = context;
+        _mapper = mapper;
     }
 
-    // GET: api/Subjects
+    // GET: api/v1/Subjects
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Subject>>> GetSubjects()
+    public async Task<ActionResult<IEnumerable<SubjectResponse>>> GetSubjects()
     {
-        return await _context.Subjects.ToListAsync();
+        var subjects = await _context.Subjects.ToListAsync();
+
+        // Utilisation de Mapperly pour la liste
+        return Ok(_mapper.ToResponseList(subjects));
     }
 
-    // GET: api/Subjects/5
+    // GET: api/v1/Subjects/5
     [HttpGet("{subjectid}")]
-    public async Task<ActionResult<Subject>> GetSubjects(long subjectid)
+    public async Task<ActionResult<SubjectResponse>> GetSubjects(long subjectid)
     {
-        var subjects = await _context.Subjects.FindAsync(subjectid);
+        var subject = await _context.Subjects.FindAsync(subjectid);
 
-        if (subjects == null)
+        if (subject == null)
         {
             return NotFound();
         }
 
-        return subjects;
+        // Utilisation de Mapperly pour un objet unique
+        return Ok(_mapper.ToResponse(subject));
     }
 
-    // PUT: api/Subjects/5
-    // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+    // PUT: api/v1/Subjects/5
     [HttpPut("{subjectid}")]
-    public async Task<IActionResult> PutSubjects(long subjectid, SubjectCreateUpdateDto dto)
+    public async Task<IActionResult> PutSubjects(long subjectid, SubjectRequest request)
     {
         var existingSubject = await _context.Subjects.FindAsync(subjectid);
 
@@ -51,8 +58,8 @@ public class SubjectsController : ControllerBase
             return NotFound();
         }
 
-        existingSubject.Name = dto.Name;
-        existingSubject.Code = dto.Subject;
+        // Utilisation de Mapperly pour mettre à jour l'entité existante avec les données de la request
+        _mapper.UpdateEntity(request, existingSubject);
 
         try
         {
@@ -73,40 +80,39 @@ public class SubjectsController : ControllerBase
         return NoContent();
     }
 
-    // POST: api/Subjects
-    // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+    // POST: api/v1/Subjects
     [HttpPost]
-    public async Task<ActionResult<Subject>> PostSubjects(SubjectCreateUpdateDto dto)
+    public async Task<ActionResult<SubjectResponse>> PostSubjects(SubjectRequest request)
     {
-        var subject = new Subject
-        {
-            Name = dto.Name,
-            Code = dto.Subject
-        };
+        // Utilisation de Mapperly pour transformer la request en entité
+        var subject = _mapper.ToEntity(request);
 
         _context.Subjects.Add(subject);
         await _context.SaveChangesAsync();
 
-        return CreatedAtAction("GetSubjects", new { subjectid = subject.SubjectId }, subject);
+        // On renvoie le SubjectResponse généré à partir de l'entité tout juste créée
+        var response = _mapper.ToResponse(subject);
+
+        return CreatedAtAction(nameof(GetSubjects), new { subjectid = subject.SubjectId }, response);
     }
 
-    // DELETE: api/Subjects/5
+    // DELETE: api/v1/Subjects/5
     [HttpDelete("{subjectid}")]
-    public async Task<IActionResult> DeleteSubjects(long? subjectid)
+    public async Task<IActionResult> DeleteSubjects(long subjectid)
     {
-        var subjects = await _context.Subjects.FindAsync(subjectid);
-        if (subjects == null)
+        var subject = await _context.Subjects.FindAsync(subjectid);
+        if (subject == null)
         {
             return NotFound();
         }
 
-        _context.Subjects.Remove(subjects);
+        _context.Subjects.Remove(subject);
         await _context.SaveChangesAsync();
 
         return NoContent();
     }
 
-    private bool SubjectsExists(long? subjectid)
+    private bool SubjectsExists(long subjectid)
     {
         return _context.Subjects.Any(e => e.SubjectId == subjectid);
     }

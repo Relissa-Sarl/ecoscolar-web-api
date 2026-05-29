@@ -16,8 +16,8 @@ public record BookReadDto(long id, string title, string description, decimal pri
 			publicationDate: entity.CreatedAt,
 			notificationDate: entity.NotificationDate,
 			status: entity.Status,
-			userId: entity.UserId,
-			sellerPseudo: entity.User?.UserName ?? "Anonyme",
+			userId: entity.SellerId,
+			sellerPseudo: entity.Seller?.UserName ?? "Anonyme",
 			condition: entity.Condition,
 			weight: entity.Weight,
 			bookCategoryId: entity.BookCategoryId,
@@ -35,17 +35,17 @@ public record BookReadDto(long id, string title, string description, decimal pri
 /// <summary>
 /// DTO used for creating new Books adverts, inheriting from ProductCreateDto and adding specific properties related to books, such as category ID, ISBN, author, publisher, and edition.
 /// </summary>
-/// <param name="Title">The title of the Books Adverts</param>
-/// <param name="Description">The description of the Books Adverts</param>
-/// <param name="Price">The price of the Books Adverts</param>
-/// <param name="UserId">The ID of the user who is creating the Books Adverts</param>
-/// <param name="Images">The array of image for the Books Adverts</param>
-/// <param name="Condition">The condition of the Books Adverts</param>
-/// <param name="CategoryId">The ID of the category to which the Books Adverts belongs</param>
-/// <param name="Isbn">The ISBN of the Books Adverts</param>
-/// <param name="Author">The author of the Books Adverts</param>
-/// <param name="Publisher">The publisher of the Books Adverts</param>
-/// <param name="Edition">The edition of the Books Adverts</param>
+/// <param name="Title">The title of the Books PhysicalItem</param>
+/// <param name="Description">The description of the Books PhysicalItem</param>
+/// <param name="Price">The price of the Books PhysicalItem</param>
+/// <param name="UserId">The ID of the user who is creating the Books PhysicalItem</param>
+/// <param name="Images">The array of image for the Books PhysicalItem</param>
+/// <param name="Condition">The condition of the Books PhysicalItem</param>
+/// <param name="CategoryId">The ID of the category to which the Books PhysicalItem belongs</param>
+/// <param name="Isbn">The ISBN of the Books PhysicalItem</param>
+/// <param name="Author">The author of the Books PhysicalItem</param>
+/// <param name="Publisher">The publisher of the Books PhysicalItem</param>
+/// <param name="Edition">The edition of the Books PhysicalItem</param>
 public record BookCreateDto(
 	string Title, string Description, decimal Price, string UserId, string[]? Images, PhysicalItemCondition Condition,
 	long CategoryId, string Isbn, string Author, string Publisher, string Edition, Enums.LanguageEnum WrittenLanguage
@@ -63,9 +63,9 @@ public record BookCreateDto(
 	}
 
 	/// <summary>
-	/// Maps the properties of the BookCreateDto to an existing Adverts entity, specifically to a Books entity.
+	/// Maps the properties of the BookCreateDto to an existing PhysicalItem entity, specifically to a Books entity.
 	/// </summary>
-	/// <param name="entity">The Adverts entity to map to</param>
+	/// <param name="entity">The PhysicalItem entity to map to</param>
 	public override void MapToEntity(Advert entity)
 	{
 		base.MapToEntity(entity);

@@ -48,7 +48,7 @@ public class UsersControllerTests
 	{
 		// Arrange
 		_userServiceMock.GetCurrentUserProfileAsync(Arg.Any<ClaimsPrincipal>())
-			.Returns(Result<UserReadDto>.Failure(new[] { "User not found" }, ErrorType.NotFound));
+			.Returns(Result<UserReadDto>.Failure(new[] { "Seller not found" }, ErrorType.NotFound));
 
 		// Act
 		var result = await _controller.GetMyProfile();
@@ -210,8 +210,8 @@ public class UsersControllerTests
 			Title = "Book Title",
 			Description = "Book Descr",
 			Price = 10,
-			UserId = existingUser.Id,
-			User = existingUser,
+			SellerId = existingUser.Id,
+			Seller = existingUser,
 			Status = AdvertStatus.ACTIVE,
 			CreatedAt = DateTime.UtcNow,
 			NotificationDate = DateTime.UtcNow,
@@ -227,8 +227,8 @@ public class UsersControllerTests
 			Title = "Guitar",
 			Description = "Acoustic",
 			Price = 120,
-			UserId = existingUser.Id,
-			User = existingUser,
+			SellerId = existingUser.Id,
+			Seller = existingUser,
 			Status = AdvertStatus.ACTIVE,
 			CreatedAt = DateTime.UtcNow,
 			NotificationDate = DateTime.UtcNow,
@@ -240,8 +240,8 @@ public class UsersControllerTests
 			Title = "Math tutoring",
 			Description = "Algebra",
 			Price = 30,
-			UserId = existingUser.Id,
-			User = existingUser,
+			SellerId = existingUser.Id,
+			Seller = existingUser,
 			Status = AdvertStatus.ACTIVE,
 			CreatedAt = DateTime.UtcNow,
 			NotificationDate = DateTime.UtcNow,
@@ -255,21 +255,21 @@ public class UsersControllerTests
 		{
 			UserId = existingUser.Id,
 			AdvertId = bookAdvert.AdvertId,
-			Adverts = bookAdvert,
+			Advert = bookAdvert,
 			User = existingUser
 		};
 		var favoritePhysical = new UserFavorite
 		{
 			UserId = existingUser.Id,
 			AdvertId = physicalItemAdvert.AdvertId,
-			Adverts = physicalItemAdvert,
+			Advert = physicalItemAdvert,
 			User = existingUser
 		};
 		var favoriteService = new UserFavorite
 		{
 			UserId = existingUser.Id,
 			AdvertId = serviceAdvert.AdvertId,
-			Adverts = serviceAdvert,
+			Advert = serviceAdvert,
 			User = existingUser
 		};
 
@@ -336,7 +336,7 @@ public class UsersControllerTests
 			AdvertId = 2,
 			Title = "Another book",
 			Description = "Desc",
-			UserId = "other",
+			SellerId = "other",
 			ISBN = "12345",
 			Author = "John",
 			Publisher = "Pub",
@@ -369,7 +369,7 @@ public class UsersControllerTests
 			AdvertId = 3,
 			Title = "ToBeDeleted",
 			Description = "Desc",
-			UserId = "other",
+			SellerId = "other",
 			ISBN = "12345",
 			Author = "John",
 			Publisher = "Pub",
@@ -421,8 +421,8 @@ public class UsersControllerTests
 			Title = "Book Title",
 			Description = "Book Descr",
 			Price = 10,
-			UserId = existingUser.Id,
-			User = existingUser,
+			SellerId = existingUser.Id,
+			Seller = existingUser,
 			Status = AdvertStatus.ACTIVE,
 			CreatedAt = DateTime.UtcNow,
 			NotificationDate = DateTime.UtcNow,
@@ -438,8 +438,8 @@ public class UsersControllerTests
 			Title = "Guitar",
 			Description = "Acoustic",
 			Price = 120,
-			UserId = existingUser.Id,
-			User = existingUser,
+			SellerId = existingUser.Id,
+			Seller = existingUser,
 			Status = AdvertStatus.ACTIVE,
 			CreatedAt = DateTime.UtcNow,
 			NotificationDate = DateTime.UtcNow,

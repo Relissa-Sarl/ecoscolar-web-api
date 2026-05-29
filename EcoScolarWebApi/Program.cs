@@ -8,6 +8,7 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddAuthAndIdentity();
 builder.Services.AddSwaggerAndVersioning();
 builder.Services.AddEcoScolarServices(builder.Configuration);
+builder.Services.AddMappersServices(builder.Configuration);
 
 builder.Services.AddControllers().AddJsonOptions(options =>
 	options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
