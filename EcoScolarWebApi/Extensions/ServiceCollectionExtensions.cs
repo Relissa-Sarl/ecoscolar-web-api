@@ -16,6 +16,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddMappersServices(this IServiceCollection services, IConfiguration config)
     {
         services.AddSingleton<SubjectMapper>();
+        services.AddSingleton<PublicCommentMapper>();
         return services;
     }
 

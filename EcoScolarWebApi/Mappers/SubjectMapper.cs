@@ -7,11 +7,11 @@ namespace EcoScolarWebApi.Mappers;
 [Mapper]
 public partial class SubjectMapper
 {
-    public partial SubjectResponse ToResponse(Subject subject);
-    public partial IEnumerable<SubjectResponse> ToResponseList(IEnumerable<Subject> entities);
+    public partial SubjectResponseDTO ToResponse(Subject subject);
+    public partial IEnumerable<SubjectResponseDTO> ToResponseList(IEnumerable<Subject> entities);
 
     [MapperIgnoreTarget(nameof(Subject.SubjectId))]
-    public partial Subject ToEntity(SubjectRequest request);
+    public partial Subject ToEntity(SubjectRequestDTO request);
     [MapperIgnoreTarget(nameof(Subject.SubjectId))]
-    public partial void UpdateEntity(SubjectRequest request, Subject entity);
+    public partial void UpdateEntity(SubjectRequestDTO request, Subject entity);
 }
