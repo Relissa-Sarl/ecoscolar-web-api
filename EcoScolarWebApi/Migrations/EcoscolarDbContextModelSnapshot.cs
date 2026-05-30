@@ -898,6 +898,49 @@ namespace EcoScolarWebApi.Migrations
                     b.ToTable("UserLanguages");
                 });
 
+            modelBuilder.Entity("EcoScolarWebApi.Models.UserSearchAlert", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Category")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Grade")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Isbn")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("MaxPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("MinPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Q")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Subjects")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserSearchAlerts");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
@@ -1306,6 +1349,17 @@ namespace EcoScolarWebApi.Migrations
                         .IsRequired();
 
                     b.Navigation("Language");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("EcoScolarWebApi.Models.UserSearchAlert", b =>
+                {
+                    b.HasOne("EcoScolarWebApi.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("User");
                 });
