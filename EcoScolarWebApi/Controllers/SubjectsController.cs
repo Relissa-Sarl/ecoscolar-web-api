@@ -24,7 +24,7 @@ public class SubjectsController : ControllerBase
 
     // GET: api/v1/Subjects
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<SubjectResponse>>> GetSubjects()
+    public async Task<ActionResult<IEnumerable<SubjectResponseDTO>>> GetSubjects()
     {
         var subjects = await _context.Subjects.ToListAsync();
 
@@ -34,7 +34,7 @@ public class SubjectsController : ControllerBase
 
     // GET: api/v1/Subjects/5
     [HttpGet("{subjectid}")]
-    public async Task<ActionResult<SubjectResponse>> GetSubjects(long subjectid)
+    public async Task<ActionResult<SubjectResponseDTO>> GetSubjects(long subjectid)
     {
         var subject = await _context.Subjects.FindAsync(subjectid);
 
@@ -49,7 +49,7 @@ public class SubjectsController : ControllerBase
 
     // PUT: api/v1/Subjects/5
     [HttpPut("{subjectid}")]
-    public async Task<IActionResult> PutSubjects(long subjectid, SubjectRequest request)
+    public async Task<IActionResult> PutSubjects(long subjectid, SubjectRequestDTO request)
     {
         var existingSubject = await _context.Subjects.FindAsync(subjectid);
 
@@ -82,7 +82,7 @@ public class SubjectsController : ControllerBase
 
     // POST: api/v1/Subjects
     [HttpPost]
-    public async Task<ActionResult<SubjectResponse>> PostSubjects(SubjectRequest request)
+    public async Task<ActionResult<SubjectResponseDTO>> PostSubjects(SubjectRequestDTO request)
     {
         // Utilisation de Mapperly pour transformer la request en entité
         var subject = _mapper.ToEntity(request);
