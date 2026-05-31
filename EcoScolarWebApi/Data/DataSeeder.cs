@@ -11,9 +11,7 @@ public class DataSeeder
 	public static async Task Seed(EcoscolarDbContext context, UserManager<User> userManager)
 	{
 		if (context.Users.Any())
-		{
 			return; // DB has already been seeded
-		}
 
 		Randomizer.Seed = new Random(2025);
 		var faker = new Faker("fr_CH");
@@ -24,6 +22,7 @@ public class DataSeeder
 		{
 			Id = Guid.NewGuid().ToString(),
 			UserName = "albert@einstein.ch", // Utilisé pour le /login
+			Nickname = "nick-albertoeins",
 			Email = "albert@einstein.ch",
 			EmailConfirmed = true,
 			FirstName = "Albert",
