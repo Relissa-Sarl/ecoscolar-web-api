@@ -59,8 +59,8 @@ public class AdvertQuestionsControllerTests : IDisposable
 	[Fact]
 	public async Task GetQuestions_ReturnsQuestions_WhenAdvertExists()
 	{
-		var seller = new User { Id = "seller-1", UserName = "testuser", Email = "seller@test.ch" };
-		var commenter = new User { Id = "commenter-1", UserName = "userx", Email = "userx@test.ch" };
+		var seller = new User { Id = "seller-1", Nickname = "testuser", Email = "seller@test.ch" };
+		var commenter = new User { Id = "commenter-1", Nickname = "userx", Email = "userx@test.ch" };
 		var advert = new TutoringAdvert
 		{
 			AdvertId = 1,
@@ -104,7 +104,7 @@ public class AdvertQuestionsControllerTests : IDisposable
 		questions.Should().HaveCount(1);
 		questions[0].CommentId.Should().Be(1);
 		questions[0].AuthorId.Should().Be(commenter.Id);
-		questions[0].Author.Should().Be(commenter.UserName);
+		questions[0].Author.Should().Be(commenter.Nickname);
 		questions[0].Content.Should().Be("Est-ce disponible le week-end ?");
 	}
 
@@ -132,8 +132,8 @@ public class AdvertQuestionsControllerTests : IDisposable
 	[Fact]
 	public async Task AskQuestion_CreatesQuestion_AndReturnsCreated()
 	{
-		var seller = new User { Id = "seller-1", UserName = "testuser", Email = "seller@test.ch" };
-		var asker = new User { Id = "user-1", UserName = "userx", Email = "userx@test.ch" };
+		var seller = new User { Id = "seller-1", Nickname = "testuser", Email = "seller@test.ch" };
+		var asker = new User { Id = "user-1", Nickname = "userx", Email = "userx@test.ch" };
 		var advert = new TutoringAdvert
 		{
 			AdvertId = 1,
@@ -163,7 +163,7 @@ public class AdvertQuestionsControllerTests : IDisposable
 		var response = created.Value.Should().BeAssignableTo<QuestionResponseDTO>().Subject;
 
 		response.AuthorId.Should().Be(asker.Id);
-		response.Author.Should().Be(asker.UserName);
+		response.Author.Should().Be(asker.Nickname);	
 		response.Content.Should().Be("Ma question");
 		response.Answer.Should().BeEmpty();
 		response.AnsweredAt.Should().BeNull();
@@ -333,5 +333,37 @@ public class AdvertQuestionsControllerTests : IDisposable
 		response.AnsweredAt.Should().NotBeNull();
 		_context.PublicComments.Single().Answer.Should().Be("Oui, bien sûr");
 		_context.PublicComments.Single().AnsweredAt.Should().NotBeNull();
+	}
+
+	[Fact]
+	public async Task AskQuestion_ReturnsForbid_WhenSellerAsksOwnAdvert()
+	{
+		var seller = new User { Id = "seller-3", UserName = "seller3", Email = "seller3@test.ch" };
+		var advert = new TutoringAdvert
+		{
+			AdvertId = 20,
+			Title = "Cours de physique",
+			Description = "Test advert",
+			Price = 30,
+			Status = EcoScolarWebApi.Enums.AdvertStatus.ACTIVE,
+			CreatedAt = DateTime.UtcNow,
+			NotificationDate = DateTime.UtcNow.AddDays(7),
+			SellerId = seller.Id,
+			Seller = seller,
+			StudyLevel = "Lycée",
+			SubjectId = 1,
+			SchoolGradeId = 1,
+			TeachingLanguage = EcoScolarWebApi.Enums.LanguageEnum.FR
+		};
+
+		_context.Users.Add(seller);
+		_context.Adverts.Add(advert);
+		await _context.SaveChangesAsync();
+
+		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(seller);
+
+		var result = await _controller.AskQuestion(advert.AdvertId, new QuestionRequestDTO("Self question"));
+
+		result.Result.Should().BeOfType<ForbidResult>();
 	}
 }
