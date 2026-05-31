@@ -17,7 +17,7 @@ public record ServiceReadDto(long Id, string Title, string Description, decimal 
 			NotificationDate: entity.NotificationDate,
 			Status: entity.Status,
 			UserId: entity.SellerId,
-			SellerPseudo: entity.Seller?.UserName ?? "Anonyme",
+			SellerPseudo: entity.Seller?.Nickname ?? "Anonyme",
 			SubjectId: entity.SubjectId,
 			SubjectLabel: entity.Subject.Name,
 			SchoolGradeId: entity.SchoolGradeId,

@@ -7,7 +7,7 @@ namespace EcoScolarWebApi.Mappers;
 [Mapper]
 public partial class PublicCommentMapper
 {
-	[MapProperty("Author.UserName", nameof(QuestionResponseDTO.Author))]
+	[MapProperty("Author.Nickname", nameof(QuestionResponseDTO.Author))]
 	public partial QuestionResponseDTO ToQuestionResponse(PublicComment comment);
 
 	public partial AnswerResponseDTO ToAnswerResponse(PublicComment comment);

@@ -18,7 +18,7 @@ public record ProductReadDto(long Id, string Title, string Description, decimal 
 			NotificationDate: entity.NotificationDate,
 			Status: entity.Status,
 			UserId: entity.SellerId,
-			SellerPseudo: entity.Seller?.UserName ?? "Anonyme",
+			SellerPseudo: entity.Seller?.Nickname ?? "Anonyme",
 			Condition: entity.Condition,
 			Weight: entity.Weight ?? null,
 			ProductCategoryId: entity.ProductCategoryId ?? null,

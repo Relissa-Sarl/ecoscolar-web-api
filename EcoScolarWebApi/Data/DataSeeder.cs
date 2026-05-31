@@ -40,6 +40,7 @@ public class DataSeeder
 			var user = new User
 			{
 				Id = Guid.NewGuid().ToString(),
+				Nickname = $"nick-{userName}",
 				UserName = userName,
 				Email = email,
 				EmailConfirmed = true,

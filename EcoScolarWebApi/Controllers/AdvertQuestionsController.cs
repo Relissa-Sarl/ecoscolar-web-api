@@ -37,7 +37,11 @@ public class AdvertQuestionsController(EcoscolarDbContext context, UserManager<U
 		var user = await _userManager.GetUserAsync(User);
 		if (user is null) return Unauthorized();
 
-		if (!await _context.Adverts.AnyAsync(a => a.AdvertId == advertId)) return NotFound();
+		var advert = await _context.Adverts.FindAsync(advertId);
+		if (advert is null) return NotFound();
+
+		// Prevent the seller from asking a question on their own advert
+		if (advert.SellerId == user.Id) return Forbid();
 
 		var publicComment = new PublicComment
 		{
