@@ -173,5 +173,35 @@ public class DataSeeder
 
         context.PublicComments.AddRange(publicComments);
         context.SaveChanges();
+
+        // Seed transactions
+        var transactions = new List<Transaction>
+        {
+            // testUser as buyer
+            new()
+            {
+                AdvertId = physicalItems[1].AdvertId,
+                BuyerId = testUser.Id,
+                Date = DateTime.UtcNow.AddDays(-5),
+                Status = "COMPLETED",
+                PlatformFee = 2.50m,
+                BuyerConsent = true,
+                SellerConsent = true
+            },
+            // testUser as seller
+            new()
+            {
+                AdvertId = physicalItems[0].AdvertId,
+                BuyerId = users[3].Id,
+                Date = DateTime.UtcNow.AddDays(-7),
+                Status = "COMPLETED",
+                PlatformFee = 2.50m,
+                BuyerConsent = true,
+                SellerConsent = true
+            }
+        };
+
+        context.Transactions.AddRange(transactions);
+        context.SaveChanges();
     }
 }
