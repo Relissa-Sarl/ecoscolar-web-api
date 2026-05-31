@@ -2,7 +2,9 @@
 using EcoScolarWebApi.Commun;
 using EcoScolarWebApi.Data;
 using EcoScolarWebApi.DTOs.Adverts;
+using EcoScolarWebApi.DTOs.Reviews;
 using EcoScolarWebApi.DTOs.Users;
+using EcoScolarWebApi.Mappers;
 using EcoScolarWebApi.Models;
 using EcoScolarWebApi.Services.Contracts;
 using Microsoft.AspNetCore.Authorization;
@@ -12,26 +14,20 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EcoScolarWebApi.Controllers;
 
+/// <summary>
+/// UsersController constructor
+/// </summary>
+/// <param name="userService">The user service for handling user-related operations</param>
 [ApiVersion("1.0")]
 [ApiController]
 [Route("api/v{version:apiVersion}/[controller]")]
 [Authorize]
-public class UsersController : ControllerBase
+public class UsersController(IUserService userService, UserManager<User> userManager, EcoscolarDbContext context, ReviewMapper reviewMapper) : ControllerBase
 {
-	private readonly UserManager<User> _userManager;
-	private readonly IUserService _userService;            // Seller service for handling user-related operations
-	private readonly EcoscolarDbContext _context;
-
-	/// <summary>
-	/// UsersController constructor
-	/// </summary>
-	/// <param name="userService">The user service for handling user-related operations</param>
-	public UsersController(IUserService userService, UserManager<User> userManager, EcoscolarDbContext context)
-	{
-		_userService = userService;
-		_userManager = userManager;
-		_context = context;
-	}
+	private readonly UserManager<User> _userManager = userManager;
+	private readonly IUserService _userService = userService;            // Seller service for handling user-related operations
+	private readonly EcoscolarDbContext _context = context;
+	private readonly ReviewMapper _reviewMapper = reviewMapper;
 
 	#region Current user
 
@@ -305,6 +301,22 @@ public class UsersController : ControllerBase
 			return CatalogAdvertTypeCodes.Product;
 
 		return CatalogAdvertTypeCodes.Books;
+	}
+	#endregion
+
+	#region Reviews
+	[HttpGet("{userId}/reviews")]
+	public async Task<ActionResult<IEnumerable<ReviewResponseDTO>>> GetUserReviews(string userId)
+	{
+		var userExists = await _context.Users.AnyAsync(u => u.Id == userId);
+		if (!userExists)
+			return NotFound();
+
+		var reviews = await _reviewMapper.ProjectToReviewResponseDTOs(
+			_context.Reviews.Where(r => r.ReviewedId == userId))
+			.ToListAsync();
+
+		return Ok(reviews);
 	}
 	#endregion
 }

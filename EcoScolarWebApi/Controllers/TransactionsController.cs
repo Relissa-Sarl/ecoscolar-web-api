@@ -60,7 +60,12 @@ public class TransactionsController(EcoscolarDbContext context, UserManager<User
 		_context.Reviews.Add(newReview);
 		await _context.SaveChangesAsync();
 
-		return CreatedAtAction(nameof(CreateReview), new { transactionId }, _reviewMapper.ToReviewResponseDTO(newReview));
+		// Reload the review with related data for the response
+		var reviews = await _reviewMapper.ProjectToReviewResponseDTOs(
+							_context.Reviews.Where(r => r.TransactionId == transactionId))
+							.ToListAsync();
+
+		return CreatedAtAction(nameof(CreateReview), new { transactionId }, reviews);
 	}
 }
 
