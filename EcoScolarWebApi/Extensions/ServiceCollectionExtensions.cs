@@ -17,6 +17,7 @@ public static class ServiceCollectionExtensions
     {
         services.AddSingleton<SubjectMapper>();
         services.AddSingleton<PublicCommentMapper>();
+        services.AddSingleton<ReviewMapper>();
         return services;
     }
 
