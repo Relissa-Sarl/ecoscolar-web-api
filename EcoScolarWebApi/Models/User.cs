@@ -27,6 +27,8 @@ public class User : IdentityUser
 
 	// === Navigation properties ===
 	public Location? Location { get; set; }
+	public virtual ICollection<Review> ReviewsGiven { get; set; } = [];
+	public virtual ICollection<Review> ReviewsReceived { get; set; } = [];
 
 	// === Many-to-many relationships ===
 	public ICollection<UserLanguage> Languages { get; set; } = new List<UserLanguage>();

@@ -68,14 +68,22 @@ public class EcoscolarDbContext(DbContextOptions<EcoscolarDbContext> options) : 
                 .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
             entity.HasOne(r => r.Reviewer)
-                .WithMany()
+                .WithMany(u => u.ReviewsGiven)
                 .HasForeignKey(r => r.ReviewerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(r => r.Reviewed)
+                .WithMany(u => u.ReviewsReceived)
+                .HasForeignKey(r => r.ReviewedId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne(r => r.Transaction)
                 .WithMany()
                 .HasForeignKey(r => r.TransactionId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(r => new { r.TransactionId, r.ReviewerId })
+                .IsUnique();
         });
 
         // Transaction

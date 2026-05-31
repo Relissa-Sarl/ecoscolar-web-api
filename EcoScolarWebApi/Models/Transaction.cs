@@ -37,13 +37,13 @@ public class Transaction
     // === Foreign Keys ===
 
     [Required]
-    public string BuyerId { get; set; }
+    public string BuyerId { get; set; } = default!;
 
-    // === Navigation Properties ===
+	// === Navigation Properties ===
 
-    [ForeignKey(nameof(AdvertId))]
-    public virtual Advert? Advert { get; set; }
+	[ForeignKey(nameof(AdvertId))]
+    public virtual Advert Advert { get; set; } = default!;
 
-    [ForeignKey(nameof(BuyerId))]
-    public virtual User? Buyer { get; set; }
+	[ForeignKey(nameof(BuyerId))]
+    public virtual User Buyer { get; set; } = default!;
 }
