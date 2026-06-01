@@ -5,8 +5,10 @@ using EcoScolarWebApi.DTOs.Adverts;
 using EcoScolarWebApi.DTOs.Users;
 using EcoScolarWebApi.Enums;
 using EcoScolarWebApi.Models;
+using EcoScolarWebApi.Services;
 using EcoScolarWebApi.Services.Contracts;
 using FluentAssertions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -97,11 +99,147 @@ public class UsersControllerTests
 		result.Should().BeOfType<UnauthorizedObjectResult>();
 	}
 
-	#endregion
+    #endregion
 
-	#region Tests pour UpdateFullProfile
+    #region Tests pour AnonymizeProfileAsync (Service)
 
-	[Fact]
+    [Fact]
+    public async Task AnonymizeProfileAsync_ShouldReturnUnauthorized_WhenUserIdIsMissing()
+    {
+        // Arrange
+        var store = Substitute.For<IUserStore<User>>();
+        var userManagerMock = Substitute.For<UserManager<User>>(store, null!, null!, null!, null!, null!, null!, null!, null!);
+        var signInManagerMock = Substitute.For<SignInManager<User>>(userManagerMock, Substitute.For<IHttpContextAccessor>(), Substitute.For<IUserClaimsPrincipalFactory<User>>(), null!, null!, null!, null!);
+
+        var options = new DbContextOptionsBuilder<EcoscolarDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+        using var context = new EcoscolarDbContext(options);
+
+        var userService = new UserService(userManagerMock, context, signInManagerMock);
+
+        userManagerMock.GetUserId(Arg.Any<ClaimsPrincipal>()).Returns((string?)null);
+
+        // Act
+        var result = await userService.AnonymizeProfileAsync(new ClaimsPrincipal());
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.ErrorType.Should().Be(ErrorType.Unauthorized);
+    }
+
+    [Fact]
+    public async Task AnonymizeProfileAsync_ShouldAnonymizeDataAndSignOut_WhenUserExists()
+    {
+        // Arrange
+        var store = Substitute.For<IUserStore<User>>();
+        var userManagerMock = Substitute.For<UserManager<User>>(store, null!, null!, null!, null!, null!, null!, null!, null!);
+        var signInManagerMock = Substitute.For<SignInManager<User>>(userManagerMock, Substitute.For<IHttpContextAccessor>(), Substitute.For<IUserClaimsPrincipalFactory<User>>(), null!, null!, null!, null!);
+
+        var options = new DbContextOptionsBuilder<EcoscolarDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+
+        using var context = new EcoscolarDbContext(options);
+        var userService = new UserService(userManagerMock, context, signInManagerMock);
+
+        var existingUser = new User
+        {
+            Id = "guid-delete-me",
+            FirstName = "Damien",
+            LastName = "Loup",
+            Nickname = "Sikties",
+            DateOfBirth = "1995-05-21",
+            IsOnboarded = true
+        };
+
+        context.Users.Add(existingUser);
+        var favorite = new UserFavorite { UserId = existingUser.Id, AdvertId = 99 };
+        context.UserFavorites.Add(favorite);
+        await context.SaveChangesAsync();
+
+        userManagerMock.GetUserId(Arg.Any<ClaimsPrincipal>()).Returns(existingUser.Id);
+
+        userManagerMock.Users.Returns(context.Users);
+
+        userManagerMock.UpdateAsync(Arg.Any<User>()).Returns(IdentityResult.Success);
+
+        // Act
+        var result = await userService.AnonymizeProfileAsync(new ClaimsPrincipal());
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+
+        existingUser.FirstName.Should().NotBe("Damien");
+        existingUser.LastName.Should().NotBe("Loup");
+        existingUser.Nickname.Should().StartWith("DeletedUser_");
+        existingUser.DateOfBirth.Should().Be("1995-01-01");
+        existingUser.IsOnboarded.Should().BeFalse();
+
+        existingUser.Favorites.Should().BeEmpty();
+
+        // Vérification Identity native
+        existingUser.NormalizedEmail.Should().Contain("@DELETED.ECOSCOLAR.COM");
+        existingUser.NormalizedUserName.Should().Contain("@DELETED.ECOSCOLAR.COM");
+
+        // Vérification de la déconnexion forcée
+        await signInManagerMock.Received(1).SignOutAsync();
+    }
+
+    #endregion
+
+    #region Tests pour DeleteMyProfile
+
+    [Fact]
+    public async Task DeleteMyProfile_ShouldReturnOk_WhenAnonymizationSucceeds()
+    {
+        // Arrange
+        _userServiceMock.AnonymizeProfileAsync(Arg.Any<ClaimsPrincipal>())
+            .Returns(Result<bool>.Success(true));
+
+        // Act
+        var result = await _controller.DeleteMyProfile();
+
+        // Assert
+        var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+        okResult.Value.Should().BeEquivalentTo(new { message = "The account has successfully got anonymized" });
+    }
+
+    [Fact]
+    public async Task DeleteMyProfile_ShouldReturnUnauthorized_WhenSessionIsInvalid()
+    {
+        // Arrange
+        _userServiceMock.AnonymizeProfileAsync(Arg.Any<ClaimsPrincipal>())
+            .Returns(Result<bool>.Failure("SESSION_INVALID", ErrorType.Unauthorized));
+
+        // Act
+        var result = await _controller.DeleteMyProfile();
+
+        // Assert
+        var unauthorizedResult = result.Should().BeOfType<UnauthorizedObjectResult>().Subject;
+        unauthorizedResult.Value.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task DeleteMyProfile_ShouldReturnNotFound_WhenUserSessionExpired()
+    {
+        // Arrange
+        _userServiceMock.AnonymizeProfileAsync(Arg.Any<ClaimsPrincipal>())
+            .Returns(Result<bool>.Failure("SEESION_EXPIRED", ErrorType.NotFound));
+
+        // Act
+        var result = await _controller.ToggleFavorite(1); // Simule une erreur d'entité manquante
+
+        // Act
+        var resultDelete = await _controller.DeleteMyProfile();
+
+        // Assert
+        resultDelete.Should().BeOfType<NotFoundObjectResult>();
+    }
+
+    #endregion
+
+    #region Tests pour UpdateFullProfile
+
+    [Fact]
 	public async Task UpdateFullProfile_ShouldReturnOk_WhenUpdateSucceeds()
 	{
 		var updatedDto = new UserReadDto(
