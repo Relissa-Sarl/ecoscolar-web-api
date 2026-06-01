@@ -40,6 +40,7 @@ public class DataSeeder
 			var user = new User
 			{
 				Id = Guid.NewGuid().ToString(),
+				Nickname = $"nick-{userName}",
 				UserName = userName,
 				Email = email,
 				EmailConfirmed = true,
@@ -86,6 +87,7 @@ public class DataSeeder
 			.RuleFor(p => p.ProductCategoryId, f => f.Random.Bool(0.8f) ? f.Random.ListItem(productCategoryIds) : null);
 
 		var physicalItems = physicalItemsFaker.Generate(25);
+		physicalItems[0].SellerId = testUser.Id;
 
 		var booksFaker = new Faker<Book>("fr_CH")
 			.RuleFor(b => b.Title, f => $"Manuel de {f.Commerce.Department()}")
@@ -142,6 +144,34 @@ public class DataSeeder
         }
 
         context.Pictures.AddRange(pictures);
+        context.SaveChanges();
+
+        var publicComments = new List<PublicComment>
+        {
+            new()
+            {
+                AdvertId = physicalItems[0].AdvertId,
+                AuthorId = users[1].Id,
+                Content = "Peut-on récupérer l'objet rapidement ?",
+                CreatedAt = DateTime.UtcNow.AddDays(-1)
+            },
+            new()
+            {
+                AdvertId = books.First().AdvertId,
+                AuthorId = users[2].Id,
+                Content = "Le manuel est-il encore en bon état ?",
+                CreatedAt = DateTime.UtcNow.AddDays(-2)
+            },
+            new()
+            {
+                AdvertId = physicalItems[0].AdvertId,
+                AuthorId = testUser.Id,
+                Content = "J'ai une question sur cet article de test.",
+                CreatedAt = DateTime.UtcNow.AddDays(-3)
+            }
+        };
+
+        context.PublicComments.AddRange(publicComments);
         context.SaveChanges();
     }
 }

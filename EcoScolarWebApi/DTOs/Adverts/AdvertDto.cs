@@ -49,7 +49,7 @@ public record AdvertReadDto(long Id, string Type, string Title, decimal Price, D
 			NotificationDate: entity.NotificationDate,
 			Status: entity.Status,
 			UserId: entity.SellerId,
-			SellerPseudo: entity.Seller?.UserName ?? "Anonyme",
+			SellerPseudo: entity.Seller?.Nickname ?? "Anonyme",
 			PrimaryImage: primaryImage
 		);
 	}

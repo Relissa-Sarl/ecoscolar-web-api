@@ -17,7 +17,7 @@ public record BookReadDto(long id, string title, string description, decimal pri
 			notificationDate: entity.NotificationDate,
 			status: entity.Status,
 			userId: entity.SellerId,
-			sellerPseudo: entity.Seller?.UserName ?? "Anonyme",
+			sellerPseudo: entity.Seller?.Nickname ?? "Anonyme",
 			condition: entity.Condition,
 			weight: entity.Weight,
 			bookCategoryId: entity.BookCategoryId,
