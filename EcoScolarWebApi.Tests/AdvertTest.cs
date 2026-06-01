@@ -934,7 +934,7 @@ public class AdvertsControllerTests : IDisposable
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-        var grade = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
+        var grade = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", NameFr = "Mathématiques", NameDe = "Mathematik", NameIt = "Matematica", Description = "Livres de mathématiques" };
         _context.Set<BookCategory>().Add(grade);
 
         List<Picture> pictures = new List<Picture>
@@ -1127,8 +1127,8 @@ public class AdvertsControllerTests : IDisposable
         // Arrange
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
-        var subject = new Subject { SubjectId = 1, Name = "Mathématiques", Code = "Maths" };
-        var grade = new SchoolGrade { SchoolGradeId = 1, Name = "Terminale", Code = "Lycée" };
+        var subject = new Subject { SubjectId = 1, Name = "Mathématiques", NameFr = "Mathématiques", NameDe = "Mathematik", NameIt = "Matematica", Code = "Maths" };
+        var grade = new SchoolGrade { SchoolGradeId = 1, Name = "Terminale", NameFr = "Terminale", NameDe = "Abitur", NameIt = "Maturità", Code = "Lycée" };
 
         _context.Set<Subject>().Add(subject);
         _context.Set<SchoolGrade>().Add(grade);
@@ -1277,7 +1277,7 @@ public class AdvertsControllerTests : IDisposable
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-        var bookCategory = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
+        var bookCategory = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", NameFr = "Mathématiques", NameDe = "Mathematik", NameIt = "Matematica", Description = "Livres de mathématiques" };
         _context.Set<BookCategory>().Add(bookCategory);
         await _context.SaveChangesAsync();
 
@@ -1319,7 +1319,7 @@ public class AdvertsControllerTests : IDisposable
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-        var bookCategory = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
+        var bookCategory = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", NameFr = "Mathématiques", NameDe = "Mathematik", NameIt = "Matematica", Description = "Livres de mathématiques" };
         _context.Set<BookCategory>().Add(bookCategory);
         await _context.SaveChangesAsync();
 
@@ -1364,7 +1364,7 @@ public class AdvertsControllerTests : IDisposable
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-        var Category = new ProductCategory{ ProductCategoryId = 1, Name = "Guitare", Description = "Guitares" };
+        var Category = new ProductCategory{ ProductCategoryId = 1, Name = "Guitare", NameFr = "Guitare", NameDe = "Gitarre", NameIt = "Chitarra", Description = "Guitares" };
         _context.Set<ProductCategory>().Add(Category);
         await _context.SaveChangesAsync();
 
@@ -1401,7 +1401,7 @@ public class AdvertsControllerTests : IDisposable
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-        var productCategory = new ProductCategory { ProductCategoryId = 1, Name = "Guitare", Description = "Guitares" };
+        var productCategory = new ProductCategory { ProductCategoryId = 1, Name = "Guitare", NameFr = "Guitare", NameDe = "Gitarre", NameIt = "Chitarra", Description = "Guitares" };
         _context.Set<ProductCategory>().Add(productCategory);
         await _context.SaveChangesAsync();
 
@@ -1441,10 +1441,10 @@ public class AdvertsControllerTests : IDisposable
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-        var subject = new Subject { SubjectId = 1, Name = "Math", Code = "Mathématiques" };
+        var subject = new Subject { SubjectId = 1, Name = "Math", NameFr = "Math", NameDe = "Mathematik", NameIt = "Matematica", Code = "Mathématiques" };
         _context.Set<Subject>().Add(subject);
 
-        var grade = new SchoolGrade { SchoolGradeId = 1, Name = "Terminale", Code = "Lycée" };
+        var grade = new SchoolGrade { SchoolGradeId = 1, Name = "Terminale", NameFr = "Terminale", NameDe = "Abitur", NameIt = "Maturità", Code = "Lycée" };
         _context.Set<SchoolGrade>().Add(grade);
         await _context.SaveChangesAsync();
 
@@ -1454,9 +1454,9 @@ public class AdvertsControllerTests : IDisposable
             Price: 20m,
             UserId: existingUser.Id,
             SubjectId: 1,
-            SchoolLevelId: 1,
+            SchoolGradeId: 1,
             TeachingLanguage: LanguageEnum.FR,
-            SpecificStudyLevel: "Diplôme en Mathématiques"
+            StudyLevel: "Diplôme en Mathématiques"
         );
 
         // Act
@@ -1479,10 +1479,10 @@ public class AdvertsControllerTests : IDisposable
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-        var subject = new Subject { SubjectId = 1, Name = "Math", Code = "Mathématiques" };
+        var subject = new Subject { SubjectId = 1, Name = "Math", NameFr = "Math", NameDe = "Mathematik", NameIt = "Matematica", Code = "Mathématiques" };
         _context.Set<Subject>().Add(subject);
 
-        var grade = new SchoolGrade { SchoolGradeId = 1, Name = "Terminale", Code = "Lycée" };
+        var grade = new SchoolGrade { SchoolGradeId = 1, Name = "Terminale", NameFr = "Terminale", NameDe = "Abitur", NameIt = "Maturità", Code = "Lycée" };
         _context.Set<SchoolGrade>().Add(grade);
         await _context.SaveChangesAsync();
 
@@ -1492,9 +1492,9 @@ public class AdvertsControllerTests : IDisposable
             Price: 20m,
             UserId: existingUser.Id,
             SubjectId: 1,
-            SchoolLevelId: 1,
+            SchoolGradeId: 1,
             TeachingLanguage: LanguageEnum.FR,
-            SpecificStudyLevel: "Diplôme en Mathématiques"
+            StudyLevel: "Diplôme en Mathématiques"
         );
 
         // FORCE VALIDATION ERROR
@@ -1519,7 +1519,7 @@ public class AdvertsControllerTests : IDisposable
         // Arrange
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
-        var bookCategory = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
+        var bookCategory = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", NameFr = "Mathématiques", NameDe = "Mathematik", NameIt = "Matematica", Description = "Livres de mathématiques" };
         _context.Set<BookCategory>().Add(bookCategory);
         await _context.SaveChangesAsync();
 
@@ -1594,7 +1594,7 @@ public class AdvertsControllerTests : IDisposable
         // Arrange
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
-        var bookCategory = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
+        var bookCategory = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", NameFr = "Mathématiques", NameDe = "Mathematik", NameIt = "Matematica", Description = "Livres de mathématiques" };
         _context.Set<BookCategory>().Add(bookCategory);
         await _context.SaveChangesAsync();
 
@@ -1841,9 +1841,9 @@ public class AdvertsControllerTests : IDisposable
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-        var subject = new Subject { SubjectId = 1, Name = "Mathématiques", Code = "Maths" };
-        var subject2 = new Subject { SubjectId = 2, Name = "Français", Code = "Français" };
-        var grade = new SchoolGrade { SchoolGradeId = 1, Name = "Terminale", Code = "Lycée" };
+        var subject = new Subject { SubjectId = 1, Name = "Mathématiques", NameFr = "Mathématiques", NameDe = "Mathematik", NameIt = "Matematica", Code = "Maths" };
+        var subject2 = new Subject { SubjectId = 2, Name = "Français", NameFr = "Français", NameDe = "Französisch", NameIt = "Francese", Code = "Français" };
+        var grade = new SchoolGrade { SchoolGradeId = 1, Name = "Terminale", NameFr = "Terminale", NameDe = "Abitur", NameIt = "Maturità", Code = "Lycée" };
 
         _context.Set<Subject>().Add(subject);
         _context.Set<SchoolGrade>().Add(grade);
@@ -1873,9 +1873,9 @@ public class AdvertsControllerTests : IDisposable
             Price: 40m,
             UserId: existingUser.Id,
             SubjectId: 2,
-            SchoolLevelId: 1,
+            SchoolGradeId: 1,
             TeachingLanguage: LanguageEnum.FR,
-            SpecificStudyLevel: "Diplôme en Langue Française"
+            StudyLevel: "Diplôme en Langue Française"
 
         );
 
@@ -1902,8 +1902,8 @@ public class AdvertsControllerTests : IDisposable
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-        var subject = new Subject { SubjectId = 1, Name = "Mathématiques", Code = "Maths" };
-        var grade = new SchoolGrade { SchoolGradeId = 1, Name = "Terminale", Code = "Lycée" };
+        var subject = new Subject { SubjectId = 1, Name = "Mathématiques", NameFr = "Mathématiques", NameDe = "Mathematik", NameIt = "Matematica", Code = "Maths" };
+        var grade = new SchoolGrade { SchoolGradeId = 1, Name = "Terminale", NameFr = "Terminale", NameDe = "Abitur", NameIt = "Maturità", Code = "Lycée" };
 
         _context.Set<Subject>().Add(subject);
         _context.Set<SchoolGrade>().Add(grade);
@@ -1931,9 +1931,9 @@ public class AdvertsControllerTests : IDisposable
             Price: 40m,
             UserId: existingUser.Id,
             SubjectId: 1,
-            SchoolLevelId: 1,
+            SchoolGradeId: 1,
             TeachingLanguage: LanguageEnum.FR,
-            SpecificStudyLevel: "Diplôme en Langue Française"
+            StudyLevel: "Diplôme en Langue Française"
 
         );
 
@@ -1962,9 +1962,9 @@ public class AdvertsControllerTests : IDisposable
             Price: 40m,
             UserId: existingUser.Id,
             SubjectId: 1,
-            SchoolLevelId: 1,
+            SchoolGradeId: 1,
             TeachingLanguage: LanguageEnum.FR,
-            SpecificStudyLevel: "Diplôme en Langue Française"
+            StudyLevel: "Diplôme en Langue Française"
 
         );
 
@@ -1985,7 +1985,7 @@ public class AdvertsControllerTests : IDisposable
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-        var grade = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
+        var grade = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", NameFr = "Mathématiques", NameDe = "Mathematik", NameIt = "Matematica", Description = "Livres de mathématiques" };
         _context.Set<BookCategory>().Add(grade);
 
         List<Picture> pictures = new List<Picture>
@@ -2050,7 +2050,7 @@ public class AdvertsControllerTests : IDisposable
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-        var grade = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
+        var grade = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", NameFr = "Mathématiques", NameDe = "Mathematik", NameIt = "Matematica", Description = "Livres de mathématiques" };
         _context.Set<BookCategory>().Add(grade);
 
         List<Picture> pictures = new List<Picture>
@@ -2114,7 +2114,7 @@ public class AdvertsControllerTests : IDisposable
         // Arrange
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
-        var grade = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
+        var grade = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", NameFr = "Mathématiques", NameDe = "Mathematik", NameIt = "Matematica", Description = "Livres de mathématiques" };
         _context.Set<BookCategory>().Add(grade);
         List<Picture> pictures = new List<Picture>
         {
@@ -2176,7 +2176,7 @@ public class AdvertsControllerTests : IDisposable
         // Arrange
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
-        var grade = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
+        var grade = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", NameFr = "Mathématiques", NameDe = "Mathematik", NameIt = "Matematica", Description = "Livres de mathématiques" };
         _context.Set<BookCategory>().Add(grade);
         List<Picture> pictures = new List<Picture>
         {
