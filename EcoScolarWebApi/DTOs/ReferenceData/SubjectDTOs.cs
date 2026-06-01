@@ -12,5 +12,8 @@ public record SubjectRequest(
 public record SubjectResponse(
     int SubjectId,
     string Name,
+    string NameFr,
+    string NameDe,
+    string NameIt,
     string Code
 );

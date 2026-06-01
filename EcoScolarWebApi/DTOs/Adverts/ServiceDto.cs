@@ -39,7 +39,7 @@ public record ServiceReadDto(long Id, string Title, string Description, decimal 
 /// <param name="SchoolLevelId">The ID of the school level related to the service PhysicalItem</param>
 /// <param name="TeachingLanguage">The language in which the service will be taught</param>
 /// <param name="SpecificStudyLevel">The specific study level related to the service PhysicalItem</param>
-public record ServiceCreateDto(string Title, string Description, decimal Price, string UserId, long SubjectId, long SchoolLevelId, Enums.LanguageEnum TeachingLanguage, string SpecificStudyLevel)
+public record ServiceCreateDto(string Title, string Description, decimal Price, string UserId, long SubjectId, long SchoolGradeId, Enums.LanguageEnum TeachingLanguage, string StudyLevel)
 	: AdvertCreateDto(Title, Description, Price, UserId)
 {
 	/// <summary>
@@ -63,9 +63,9 @@ public record ServiceCreateDto(string Title, string Description, decimal Price, 
 		if (entity is TutoringAdvert service)
 		{
 			service.SubjectId = SubjectId;
-			service.SchoolGradeId = SchoolLevelId;
+			service.SchoolGradeId = SchoolGradeId;
 			service.TeachingLanguage = TeachingLanguage;
-			service.StudyLevel = SpecificStudyLevel;
+			service.StudyLevel = StudyLevel;
 		}
 	}
 }
