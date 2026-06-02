@@ -167,7 +167,7 @@ public class UserService : IUserService
         currentUser.PhoneNumber = null;
 
         // Delete user favorites and mark as not onboarded to hide the profile from public listings
-        currentUser.Favorites.Clear();
+        _context.UserFavorites.RemoveRange(currentUser.Favorites);
         currentUser.IsOnboarded = false;
 
         // Save the data
