@@ -1,16 +1,16 @@
-
 using Asp.Versioning;
 using EcoScolarWebApi.Data;
 using EcoScolarWebApi.DTOs.ReferenceData;
 using EcoScolarWebApi.Mappers;
-using EcoScolarWebApi.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+
+namespace EcoScolarWebApi.Controllers;
 
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/[controller]")]
 [ApiController]
-public class LanguagesController : Controller
+public class LanguagesController : ControllerBase
 {
     private readonly EcoscolarDbContext _context;
     private readonly LanguageMapper _mapper;
