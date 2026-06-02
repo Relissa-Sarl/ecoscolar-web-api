@@ -157,11 +157,17 @@ public class UserService : IUserService
 
         // Hash the native Identity User properties
         var anonymousEmail = $"{salt[..8]}@deleted.ecoscolar.com";
-        await _userManager.SetEmailAsync(currentUser, anonymousEmail);
-        await _userManager.SetUserNameAsync(currentUser, anonymousEmail);
 
-        currentUser.NormalizedEmail = anonymousEmail.ToUpper();
-        currentUser.NormalizedUserName = anonymousEmail.ToUpper();
+        var setEmailResult = await _userManager.SetEmailAsync(currentUser, anonymousEmail);
+        if (!setEmailResult.Succeeded)
+            return Result<bool>.Failure(setEmailResult.Errors.Select(e => e.Description));
+
+        var setUserNameResult = await _userManager.SetUserNameAsync(currentUser, anonymousEmail);
+        if (!setUserNameResult.Succeeded)
+            return Result<bool>.Failure(setUserNameResult.Errors.Select(e => e.Description));
+
+        currentUser.NormalizedEmail = _userManager.NormalizeEmail(anonymousEmail);
+        currentUser.NormalizedUserName = _userManager.NormalizeName(anonymousEmail);
         currentUser.PasswordHash = Guid.NewGuid().ToString();
         currentUser.PhoneNumber = null;
 
