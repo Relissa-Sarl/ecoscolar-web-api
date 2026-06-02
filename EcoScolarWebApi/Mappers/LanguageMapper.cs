@@ -13,5 +13,6 @@ public partial class LanguageMapper
     [MapperIgnoreTarget(nameof(Language.UserLanguages))]
     public partial Language ToEntity(LanguageRequest request);
     [MapperIgnoreTarget(nameof(Language.UserLanguages))]
+    [MapperIgnoreTarget(nameof(Language.Label))]
     public partial void UpdateEntity(LanguageRequest request, Language entity);
 }
