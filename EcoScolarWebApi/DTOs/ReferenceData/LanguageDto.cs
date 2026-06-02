@@ -1,5 +1,4 @@
-﻿using EcoScolarWebApi.Models;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace EcoScolarWebApi.DTOs.ReferenceData
 {

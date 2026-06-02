@@ -38,6 +38,7 @@ public record ProductReadDto(long Id, string Title, string Description, decimal 
 /// <param name="Images">The array of image URLs for the product advert</param>
 /// <param name="Condition">The condition of the product advert</param>
 /// <param name="ProductCategoryId">The ID of the product category to which the product advert belongs</param>
+/// <param name="Weight">The weight of the product advert</param>
 public record ProductCreateDto(string Title, string Description, decimal Price, string UserId, string[]? Images, PhysicalItemCondition Condition, long? ProductCategoryId = null, decimal? Weight = null)
 	: AdvertCreateDto(Title, Description, Price, UserId)
 {

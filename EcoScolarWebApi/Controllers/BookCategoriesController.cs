@@ -53,6 +53,9 @@ public class BookCategoriesController : ControllerBase
 
         existingCategory.Name = dto.Name;
         existingCategory.Description = dto.Description;
+        existingCategory.NameFr = dto.NameFr;
+        existingCategory.NameDe = dto.NameDe;
+        existingCategory.NameIt = dto.NameIt;
 
         try
         {
@@ -81,7 +84,10 @@ public class BookCategoriesController : ControllerBase
         var bookcategory = new BookCategory
         {
             Name = dto.Name,
-            Description = dto.Description
+            Description = dto.Description,
+            NameDe = dto.NameDe,
+            NameFr = dto.NameFr,
+            NameIt = dto.NameIt
         };
 
         _context.BookCategories.Add(bookcategory);

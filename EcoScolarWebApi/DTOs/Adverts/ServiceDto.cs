@@ -36,9 +36,9 @@ public record ServiceReadDto(long Id, string Title, string Description, decimal 
 /// <param name="Price">The price of the service PhysicalItem</param>
 /// <param name="UserId">The ID of the user who is creating the service PhysicalItem</param>
 /// <param name="SubjectId">The ID of the Subjects related to the service PhysicalItem</param>
-/// <param name="SchoolLevelId">The ID of the school level related to the service PhysicalItem</param>
+/// <param name="SchoolGradeId">The ID of the school grade related to the service PhysicalItem</param>
 /// <param name="TeachingLanguage">The language in which the service will be taught</param>
-/// <param name="SpecificStudyLevel">The specific study level related to the service PhysicalItem</param>
+/// <param name="StudyLevel">The specific study level related to the service PhysicalItem</param>
 public record ServiceCreateDto(string Title, string Description, decimal Price, string UserId, long SubjectId, long SchoolGradeId, Enums.LanguageEnum TeachingLanguage, string StudyLevel)
 	: AdvertCreateDto(Title, Description, Price, UserId)
 {
@@ -54,9 +54,9 @@ public record ServiceCreateDto(string Title, string Description, decimal Price, 
 	}
 
 	/// <summary>
-	/// Maps the properties of the ServiceCreateDto to an existing PhysicalItem entity, specifically to an AdvertServices entity.
+	/// Maps the properties of the ServiceCreateDto to an existing service entity, specifically to an AdvertServices entity.
 	/// </summary>
-	/// <param name="entity">The PhysicalItem entity to map to</param>
+	/// <param name="entity">The service entity to map to</param>
 	public override void MapToEntity(Advert entity)
 	{
 		base.MapToEntity(entity);

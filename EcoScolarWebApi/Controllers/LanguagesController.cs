@@ -47,6 +47,10 @@ public class LanguagesController : ControllerBase
     [HttpPut("{label}")]
     public async Task<IActionResult> PutLanguages(string label, LanguageRequest request)
     {
+        if (!string.Equals(label, request.Label, StringComparison.OrdinalIgnoreCase))
+        {
+            return BadRequest("Route label must match request label.");
+        }
         var existingLanguage = await _context.Languages.FindAsync(label);
         if (existingLanguage == null)
         {
