@@ -223,8 +223,7 @@ public class UsersControllerTests
     {
         // Arrange
         _userServiceMock.AnonymizeProfileAsync(Arg.Any<ClaimsPrincipal>())
-            .Returns(Result<bool>.Failure("SEESION_EXPIRED", ErrorType.NotFound));
-
+            .Returns(Result<bool>.Failure("SESSION_EXPIRED", ErrorType.NotFound));
         // Act
         var result = await _controller.ToggleFavorite(1); // Simule une erreur d'entité manquante
 
