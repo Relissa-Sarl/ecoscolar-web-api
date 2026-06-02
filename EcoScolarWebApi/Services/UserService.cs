@@ -142,10 +142,10 @@ public class UserService : IUserService
             return Result<bool>.Failure("SESSION_EXPIRED", ErrorType.NotFound);
 
         // Hash personal information to anonymize the user while keeping the nickname unique
-        string salt = Guid.NewGuid().ToString();
+        var salt = Guid.NewGuid().ToString("N");
 
-        currentUser.FirstName = Hasher.HashString(currentUser.FirstName ?? salt);
-        currentUser.LastName = Hasher.HashString(currentUser.LastName ?? salt);
+        currentUser.FirstName = Hasher.HashString($"{salt}:{currentUser.FirstName ?? string.Empty}");
+        currentUser.LastName = Hasher.HashString($"{salt}:{currentUser.LastName ?? string.Empty}");
         currentUser.Nickname = $"DeletedUser_{salt[..8]}"; // Ensure nickname remains unique
 
         if (!string.IsNullOrEmpty(currentUser.DateOfBirth) && currentUser.DateOfBirth.Length >= 4)
