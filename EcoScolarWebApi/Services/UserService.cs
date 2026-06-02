@@ -183,6 +183,8 @@ public class UserService : IUserService
             return Result<bool>.Failure(errors);
         }
 
+        await _context.SaveChangesAsync();
+
         // Sign out the user to invalidate their session
         await _signInManager.SignOutAsync();
 

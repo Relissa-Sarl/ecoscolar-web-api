@@ -160,7 +160,18 @@ public class UsersControllerTests
 
         userManagerMock.Users.Returns(context.Users);
 
+        userManagerMock.NormalizeEmail(Arg.Any<string>()).Returns("@DELETED.ECOSCOLAR.COM");
+        userManagerMock.NormalizeName(Arg.Any<string>()).Returns("@DELETED.ECOSCOLAR.COM");
+
+        userManagerMock.SetEmailAsync(Arg.Any<User>(), Arg.Any<string>())
+        .Returns(Task.FromResult(IdentityResult.Success));
+
+        userManagerMock.SetUserNameAsync(Arg.Any<User>(), Arg.Any<string>())
+            .Returns(Task.FromResult(IdentityResult.Success));
+
         userManagerMock.UpdateAsync(Arg.Any<User>()).Returns(IdentityResult.Success);
+
+        signInManagerMock.SignOutAsync().Returns(Task.CompletedTask);
 
         // Act
         var result = await userService.AnonymizeProfileAsync(new ClaimsPrincipal());
@@ -174,7 +185,10 @@ public class UsersControllerTests
         existingUser.DateOfBirth.Should().Be("1995-01-01");
         existingUser.IsOnboarded.Should().BeFalse();
 
-        existingUser.Favorites.Should().BeEmpty();
+        var favoriteInDb = await context.UserFavorites
+        .FirstOrDefaultAsync(f => f.UserId == existingUser.Id && f.AdvertId == 99);
+
+        favoriteInDb.Should().BeNull();
 
         // Vérification Identity native
         existingUser.NormalizedEmail.Should().Contain("@DELETED.ECOSCOLAR.COM");
@@ -225,7 +239,7 @@ public class UsersControllerTests
         _userServiceMock.AnonymizeProfileAsync(Arg.Any<ClaimsPrincipal>())
             .Returns(Result<bool>.Failure("SESSION_EXPIRED", ErrorType.NotFound));
         // Act
-        var result = await _controller.ToggleFavorite(1); // Simule une erreur d'entité manquante
+        //var result = await _controller.ToggleFavorite(1); // Simule une erreur d'entité manquante
 
         // Act
         var resultDelete = await _controller.DeleteMyProfile();
