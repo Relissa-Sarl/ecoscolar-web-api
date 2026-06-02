@@ -1,8 +1,7 @@
-﻿using Docker.DotNet.Models;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 
-namespace EcoscolarWebApi.Commun
+namespace EcoScolarWebApi.Commun
 {
     public class Hasher
     {

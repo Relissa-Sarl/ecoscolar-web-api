@@ -1,5 +1,4 @@
-﻿using EcoscolarWebApi.Commun;
-using EcoScolarWebApi.Commun;
+﻿using EcoScolarWebApi.Commun;
 using EcoScolarWebApi.Data;
 using EcoScolarWebApi.DTOs.Users;
 using EcoScolarWebApi.Models;
