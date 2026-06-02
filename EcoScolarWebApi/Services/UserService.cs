@@ -139,7 +139,7 @@ public class UserService : IUserService
             .FirstOrDefaultAsync(u => u.Id == userId);
 
         if (currentUser == null)
-            return Result<bool>.Failure("SEESION_EXPIRED", ErrorType.NotFound);
+            return Result<bool>.Failure("SESSION_EXPIRED", ErrorType.NotFound);
 
         // Hash personal information to anonymize the user while keeping the nickname unique
         string salt = Guid.NewGuid().ToString();
