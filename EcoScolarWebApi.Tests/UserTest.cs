@@ -160,8 +160,9 @@ public class UsersControllerTests
 
         userManagerMock.Users.Returns(context.Users);
 
-        userManagerMock.UpdateAsync(Arg.Any<User>()).Returns(IdentityResult.Success);
-
+        userManagerMock.SetEmailAsync(Arg.Any<User>(), Arg.Any<string>()).Returns(Task.FromResult(IdentityResult.Success));
+        userManagerMock.SetUserNameAsync(Arg.Any<User>(), Arg.Any<string>()).Returns(Task.FromResult(IdentityResult.Success));
+        userManagerMock.UpdateAsync(Arg.Any<User>()).Returns(Task.FromResult(IdentityResult.Success));
         // Act
         var result = await userService.AnonymizeProfileAsync(new ClaimsPrincipal());
 
