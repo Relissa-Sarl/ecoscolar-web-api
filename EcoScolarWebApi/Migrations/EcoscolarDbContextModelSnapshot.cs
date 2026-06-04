@@ -60,7 +60,7 @@ namespace EcoScolarWebApi.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Adverts");
+                    b.ToTable("Adverts", (string)null);
 
                     b.UseTptMappingStrategy();
                 });
@@ -85,7 +85,7 @@ namespace EcoScolarWebApi.Migrations
 
                     b.HasKey("BookCategoryId");
 
-                    b.ToTable("BookCategories");
+                    b.ToTable("BookCategories", (string)null);
 
                     b.HasData(
                         new
@@ -150,30 +150,6 @@ namespace EcoScolarWebApi.Migrations
                         });
                 });
 
-            modelBuilder.Entity("EcoScolarWebApi.Models.CartItem", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<long>("AdvertId")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AdvertId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("CartItems");
-                });
-
             modelBuilder.Entity("EcoScolarWebApi.Models.Language", b =>
                 {
                     b.Property<string>("Label")
@@ -185,7 +161,7 @@ namespace EcoScolarWebApi.Migrations
 
                     b.HasKey("Label");
 
-                    b.ToTable("Languages");
+                    b.ToTable("Languages", (string)null);
 
                     b.HasData(
                         new
@@ -227,7 +203,7 @@ namespace EcoScolarWebApi.Migrations
 
                     b.HasKey("LocationId");
 
-                    b.ToTable("Location");
+                    b.ToTable("Location", (string)null);
 
                     b.HasData(
                         new
@@ -273,7 +249,7 @@ namespace EcoScolarWebApi.Migrations
 
                     b.HasIndex("AdvertId");
 
-                    b.ToTable("Pictures");
+                    b.ToTable("Pictures", (string)null);
                 });
 
             modelBuilder.Entity("EcoScolarWebApi.Models.ProductCategory", b =>
@@ -296,7 +272,7 @@ namespace EcoScolarWebApi.Migrations
 
                     b.HasKey("ProductCategoryId");
 
-                    b.ToTable("ProductCategories");
+                    b.ToTable("ProductCategories", (string)null);
 
                     b.HasData(
                         new
@@ -381,7 +357,7 @@ namespace EcoScolarWebApi.Migrations
 
                     b.HasKey("SchoolGradeId");
 
-                    b.ToTable("SchoolGrades");
+                    b.ToTable("SchoolGrades", (string)null);
 
                     b.HasData(
                         new
@@ -448,7 +424,7 @@ namespace EcoScolarWebApi.Migrations
 
                     b.HasKey("SubjectId");
 
-                    b.ToTable("Subjects");
+                    b.ToTable("Subjects", (string)null);
 
                     b.HasData(
                         new
@@ -631,7 +607,7 @@ namespace EcoScolarWebApi.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserFavorites");
+                    b.ToTable("UserFavorites", (string)null);
                 });
 
             modelBuilder.Entity("EcoScolarWebApi.Models.UserLanguage", b =>
@@ -650,7 +626,7 @@ namespace EcoScolarWebApi.Migrations
 
                     b.HasIndex("Label");
 
-                    b.ToTable("UserLanguages");
+                    b.ToTable("UserLanguages", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -801,7 +777,7 @@ namespace EcoScolarWebApi.Migrations
 
                     b.HasIndex("ProductCategoryId");
 
-                    b.ToTable("PhysicalItems");
+                    b.ToTable("PhysicalItems", (string)null);
                 });
 
             modelBuilder.Entity("EcoScolarWebApi.Models.TutoringAdvert", b =>
@@ -826,7 +802,7 @@ namespace EcoScolarWebApi.Migrations
 
                     b.HasIndex("SubjectId");
 
-                    b.ToTable("Services");
+                    b.ToTable("Services", (string)null);
                 });
 
             modelBuilder.Entity("EcoScolarWebApi.Models.Book", b =>
@@ -861,7 +837,7 @@ namespace EcoScolarWebApi.Migrations
 
                     b.HasIndex("BookCategoryId");
 
-                    b.ToTable("Books");
+                    b.ToTable("Books", (string)null);
                 });
 
             modelBuilder.Entity("EcoScolarWebApi.Models.Advert", b =>
@@ -871,25 +847,6 @@ namespace EcoScolarWebApi.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("EcoScolarWebApi.Models.CartItem", b =>
-                {
-                    b.HasOne("EcoScolarWebApi.Models.Advert", "Advert")
-                        .WithMany()
-                        .HasForeignKey("AdvertId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("EcoScolarWebApi.Models.User", "User")
-                        .WithMany("CartItems")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("Advert");
 
                     b.Navigation("User");
                 });
@@ -1073,8 +1030,6 @@ namespace EcoScolarWebApi.Migrations
 
             modelBuilder.Entity("EcoScolarWebApi.Models.User", b =>
                 {
-                    b.Navigation("CartItems");
-
                     b.Navigation("Favorites");
 
                     b.Navigation("Languages");

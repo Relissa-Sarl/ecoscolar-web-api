@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
@@ -28,8 +28,6 @@ public class User : IdentityUser
 	// === Navigation properties ===
 	public Location? Location { get; set; }
 
-	// === Many-to-many relationships ===
-	public ICollection<UserLanguage> Languages { get; set; } = new List<UserLanguage>();
+	public virtual ICollection<UserLanguage> Languages { get; set; } = new List<UserLanguage>();
 	public virtual ICollection<UserFavorite> Favorites { get; set; } = [];
-	public virtual ICollection<CartItem> CartItems { get; set; } = [];
 }
