@@ -1,4 +1,5 @@
 ﻿using Bogus;
+using DotNet.Testcontainers.Builders;
 using EcoScolarWebApi.Enums;
 using EcoScolarWebApi.Models;
 using Microsoft.AspNetCore.Identity;
@@ -53,10 +54,10 @@ public class DataSeeder
 		foreach (var user in users)
 		{
 			await userManager.CreateAsync(user, "P@ssw0rd!");
-		}
+        }
 
-		// Refresh the users list from the database to ensure all identities are persisted
-		var userIds = users.Select(u => u.Id).ToList();
+        // Refresh the users list from the database to ensure all identities are persisted
+        var userIds = users.Select(u => u.Id).ToList();
 		users = context.Users.Where(u => userIds.Contains(u.Id)).ToList();
 
 		var bookCategories = context.Set<BookCategory>().AsNoTracking().ToList();
@@ -172,6 +173,13 @@ public class DataSeeder
         };
 
         context.PublicComments.AddRange(publicComments);
+        context.SaveChanges();
+
+        foreach (var user in users)
+            await userManager.AddToRoleAsync(user, "User");
+
+        await userManager.AddToRoleAsync(testUser, "Admin");
+
         context.SaveChanges();
     }
 }

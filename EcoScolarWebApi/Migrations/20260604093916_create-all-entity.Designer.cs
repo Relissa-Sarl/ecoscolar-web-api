@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EcoScolarWebApi.Migrations
 {
     [DbContext(typeof(EcoscolarDbContext))]
-    [Migration("20260528132055_CreateAllTheEntities")]
-    partial class CreateAllTheEntities
+    [Migration("20260604093916_create-all-entity")]
+    partial class createallentity
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -86,6 +86,21 @@ namespace EcoScolarWebApi.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<string>("NameDe")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("NameFr")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("NameIt")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.HasKey("BookCategoryId");
 
                     b.ToTable("BookCategories");
@@ -95,61 +110,91 @@ namespace EcoScolarWebApi.Migrations
                         {
                             BookCategoryId = 1L,
                             Description = "Manuels par niveau et programme cantonal.",
-                            Name = "Manuels scolaires"
+                            Name = "Textbooks",
+                            NameDe = "Schulbücher",
+                            NameFr = "Manuels scolaires",
+                            NameIt = "Libri di scuola"
                         },
                         new
                         {
                             BookCategoryId = 2L,
-                            Description = "Dictionnaires, encyclopédies et atlas scolaires.",
-                            Name = "Ouvrages de référence"
+                            Description = "Ouvrages de référence pour les étudiants.",
+                            Name = "Reference works",
+                            NameDe = "Referenzwerke",
+                            NameFr = "Ouvrages de référence",
+                            NameIt = "Opere di riferimento"
                         },
                         new
                         {
                             BookCategoryId = 3L,
-                            Description = "Français, allemand, italien, anglais et langues locales.",
-                            Name = "Langues"
+                            Description = "Cours et ressources pour l'apprentissage des langues.",
+                            Name = "Languages",
+                            NameDe = "Sprachen",
+                            NameFr = "Langues",
+                            NameIt = "Lingue"
                         },
                         new
                         {
                             BookCategoryId = 4L,
-                            Description = "Supports de mathématiques pour cycles 1 à secondaire II.",
-                            Name = "Mathématiques"
+                            Description = "Manuels et ressources pour l'enseignement des mathématiques.",
+                            Name = "Mathematics",
+                            NameDe = "Mathematik",
+                            NameFr = "Mathématiques",
+                            NameIt = "Matematica"
                         },
                         new
                         {
                             BookCategoryId = 5L,
-                            Description = "Biologie, chimie, physique et sciences de la nature.",
-                            Name = "Sciences naturelles"
+                            Description = "Cours et ressources pour les sciences naturelles.",
+                            Name = "Natural Sciences",
+                            NameDe = "Naturwissenschaften",
+                            NameFr = "Sciences naturelles",
+                            NameIt = "Scienze della natura"
                         },
                         new
                         {
                             BookCategoryId = 6L,
-                            Description = "Histoire suisse, géographie et éducation citoyenne.",
-                            Name = "Histoire et géographie"
+                            Description = "Cours et ressources pour l'histoire et la géographie.",
+                            Name = "History and Geography",
+                            NameDe = "Geschichte und Geographie",
+                            NameFr = "Histoire et géographie",
+                            NameIt = "Storia e geografia"
                         },
                         new
                         {
                             BookCategoryId = 7L,
-                            Description = "Introduction à l'économie, droit et gestion.",
-                            Name = "Économie et droit"
+                            Description = "Cours et ressources pour l'économie et le droit.",
+                            Name = "Economics and Law",
+                            NameDe = "Wirtschaft und Recht",
+                            NameFr = "Économie et droit",
+                            NameIt = "Economia e diritto"
                         },
                         new
                         {
                             BookCategoryId = 8L,
-                            Description = "Supports pour arts visuels, musique et activités créatives.",
-                            Name = "Arts et musique"
+                            Description = "Cours et ressources pour les arts et la musique.",
+                            Name = "Arts and Music",
+                            NameDe = "Kunst und Musik",
+                            NameFr = "Arts et musique",
+                            NameIt = "Arte e musica"
                         },
                         new
                         {
                             BookCategoryId = 9L,
-                            Description = "Initiation au numérique, algorithmique et outils informatiques.",
-                            Name = "Informatique"
+                            Description = "Cours et ressources pour l'informatique.",
+                            Name = "Computer Science",
+                            NameDe = "Informatik",
+                            NameFr = "Informatique",
+                            NameIt = "Informatica"
                         },
                         new
                         {
                             BookCategoryId = 10L,
-                            Description = "Manuels liés aux filières CFC et maturité professionnelle.",
-                            Name = "Formation professionnelle"
+                            Description = "Cours et ressources pour la formation professionnelle.",
+                            Name = "Vocational training",
+                            NameDe = "Berufliche Bildung",
+                            NameFr = "Formation professionnelle",
+                            NameIt = "Formazione professionale"
                         });
                 });
 
@@ -233,6 +278,18 @@ namespace EcoScolarWebApi.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("NameDe")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NameFr")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NameIt")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("Label");
 
                     b.ToTable("Languages");
@@ -241,17 +298,26 @@ namespace EcoScolarWebApi.Migrations
                         new
                         {
                             Label = "FR",
-                            Name = "Français"
+                            Name = "French",
+                            NameDe = "Französisch",
+                            NameFr = "Français",
+                            NameIt = "Francese"
                         },
                         new
                         {
                             Label = "DE",
-                            Name = "Deutsch"
+                            Name = "German",
+                            NameDe = "Deutsch",
+                            NameFr = "Allemand",
+                            NameIt = "Tedesco"
                         },
                         new
                         {
                             Label = "IT",
-                            Name = "Italian"
+                            Name = "Italian",
+                            NameDe = "Italien",
+                            NameFr = "Italien",
+                            NameIt = "Italiano"
                         });
                 });
 
@@ -371,6 +437,21 @@ namespace EcoScolarWebApi.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<string>("NameDe")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("NameFr")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("NameIt")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.HasKey("ProductCategoryId");
 
                     b.ToTable("ProductCategories");
@@ -380,61 +461,91 @@ namespace EcoScolarWebApi.Migrations
                         {
                             ProductCategoryId = 1L,
                             Description = "Papiers, enveloppes, étiquettes et consommables.",
-                            Name = "Papeterie"
+                            Name = "Stationery",
+                            NameDe = "Papierware",
+                            NameFr = "Papeterie",
+                            NameIt = "Cartoleria"
                         },
                         new
                         {
                             ProductCategoryId = 2L,
                             Description = "Stylos, crayons, feutres et surligneurs.",
-                            Name = "Matériel d'écriture"
+                            Name = "Writing supplies",
+                            NameDe = "Schreibmaterial",
+                            NameFr = "Matériel d'écriture",
+                            NameIt = "Materiale da scrittura"
                         },
                         new
                         {
                             ProductCategoryId = 3L,
                             Description = "Cahiers, classeurs, intercalaires et chemises.",
-                            Name = "Cahiers et classeurs"
+                            Name = "Notebooks and binders",
+                            NameDe = "Hefte und Mappe",
+                            NameFr = "Cahiers et classeurs",
+                            NameIt = "Quaderni e cartelle"
                         },
                         new
                         {
                             ProductCategoryId = 4L,
                             Description = "Peinture, pinceaux, papiers dessin et outils créatifs.",
-                            Name = "Matériel artistique"
+                            Name = "Art supplies",
+                            NameDe = "Künstlerisches Material",
+                            NameFr = "Matériel artistique",
+                            NameIt = "Materiale artistico"
                         },
                         new
                         {
                             ProductCategoryId = 5L,
                             Description = "Kits pédagogiques, microscopes et accessoires.",
-                            Name = "Matériel scientifique"
+                            Name = "Scientific equipment",
+                            NameDe = "Wissenschaftliches Material",
+                            NameFr = "Matériel scientifique",
+                            NameIt = "Materiale scientifico"
                         },
                         new
                         {
                             ProductCategoryId = 6L,
                             Description = "Ballons, cordes, protections et matériel EPS.",
-                            Name = "Équipement sportif"
+                            Name = "Sports equipment",
+                            NameDe = "Sportausrüstung",
+                            NameFr = "Équipement sportif",
+                            NameIt = "Equipaggiamento sportivo"
                         },
                         new
                         {
                             ProductCategoryId = 7L,
                             Description = "Claviers, souris, périphériques et accessoires.",
-                            Name = "Matériel informatique"
+                            Name = "Computer equipment",
+                            NameDe = "Informatikmaterial",
+                            NameFr = "Matériel informatique",
+                            NameIt = "Materiale informatico"
                         },
                         new
                         {
                             ProductCategoryId = 8L,
                             Description = "Sacs d'école, cartables et trousses.",
-                            Name = "Sacs et cartables"
+                            Name = "School bags and cases",
+                            NameDe = "Schulrucksäcke und Bücherfächer",
+                            NameFr = "Sacs et cartables",
+                            NameIt = "Ziole e borse scolastiche"
                         },
                         new
                         {
                             ProductCategoryId = 9L,
                             Description = "Calculatrices scientifiques et financières.",
-                            Name = "Calculatrices"
+                            Name = "Calculators",
+                            NameDe = "Taschenrechner",
+                            NameFr = "Calculatrices",
+                            NameIt = "Calcolatrici"
                         },
                         new
                         {
                             ProductCategoryId = 10L,
                             Description = "Blouses, lunettes de protection et consommables.",
-                            Name = "Accessoires de laboratoire"
+                            Name = "Laboratory supplies",
+                            NameDe = "Laboratoriumsausrüstung",
+                            NameFr = "Accessoires de laboratoire",
+                            NameIt = "Accessori del laboratorio"
                         });
                 });
 
@@ -530,6 +641,21 @@ namespace EcoScolarWebApi.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<string>("NameDe")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("NameFr")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("NameIt")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.HasKey("SchoolGradeId");
 
                     b.ToTable("SchoolGrades");
@@ -539,43 +665,64 @@ namespace EcoScolarWebApi.Migrations
                         {
                             SchoolGradeId = 1L,
                             Code = "C1",
-                            Name = "Cycle 1 (1H-4H)"
+                            Name = "Cycle 1 (Grades 1–4)",
+                            NameDe = "Stufe 1 (1H-4H)",
+                            NameFr = "Cycle 1 (1H-4H)",
+                            NameIt = "Livello 1 (1H-4H)"
                         },
                         new
                         {
                             SchoolGradeId = 2L,
                             Code = "C2",
-                            Name = "Cycle 2 (5H-8H)"
+                            Name = "Cycle 2 (Grades 5–8)",
+                            NameDe = "Stufe 2 (5H-8H)",
+                            NameFr = "Cycle 2 (5H-8H)",
+                            NameIt = "Livello 2 (5H-8H)"
                         },
                         new
                         {
                             SchoolGradeId = 3L,
                             Code = "C3",
-                            Name = "Cycle 3 (9H-11H)"
+                            Name = "Cycle 3 (Grades 9–11)",
+                            NameDe = "Stufe 3 (9H-11H)",
+                            NameFr = "Cycle 3 (9H-11H)",
+                            NameIt = "Livello 3 (9H-11H)"
                         },
                         new
                         {
                             SchoolGradeId = 4L,
                             Code = "S2-GYM",
-                            Name = "Secondaire II - Gymnase"
+                            Name = "Upper Secondary School - High School",
+                            NameDe = "Sekundarstufe II - Gymnasium",
+                            NameFr = "Secondaire II - Gymnase",
+                            NameIt = "Secondaria II - Ginnasio"
                         },
                         new
                         {
                             SchoolGradeId = 5L,
                             Code = "S2-MP",
-                            Name = "Secondaire II - Maturité professionnelle"
+                            Name = "Upper Secondary Level – Vocational Maturity",
+                            NameDe = "Sekundarstufe II - Berufsmaturität",
+                            NameFr = "Secondaire II - Maturité professionnelle",
+                            NameIt = "Secondaria II - Maturità professionale"
                         },
                         new
                         {
                             SchoolGradeId = 6L,
                             Code = "S2-CFC",
-                            Name = "Secondaire II - CFC"
+                            Name = "Upper Secondary School – CFC",
+                            NameDe = "Sekundarstufe II - CFC",
+                            NameFr = "Secondaire II - CFC",
+                            NameIt = "Secondaria II - CFC"
                         },
                         new
                         {
                             SchoolGradeId = 7L,
                             Code = "S2-ECG",
-                            Name = "Secondaire II - ECG"
+                            Name = "Upper Secondary Level - ECG",
+                            NameDe = "Sekundarstufe II - ECG",
+                            NameFr = "Secondaire II - ECG",
+                            NameIt = "Secondaria II - ECG"
                         });
                 });
 
@@ -640,6 +787,21 @@ namespace EcoScolarWebApi.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<string>("NameDe")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("NameFr")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("NameIt")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.HasKey("SubjectId");
 
                     b.ToTable("Subjects");
@@ -649,73 +811,109 @@ namespace EcoScolarWebApi.Migrations
                         {
                             SubjectId = 1L,
                             Code = "FR",
-                            Name = "Français"
+                            Name = "French",
+                            NameDe = "Französisch",
+                            NameFr = "Français",
+                            NameIt = "Francese"
                         },
                         new
                         {
                             SubjectId = 2L,
                             Code = "DE",
-                            Name = "Allemand"
+                            Name = "German",
+                            NameDe = "Deutsch",
+                            NameFr = "Allemand",
+                            NameIt = "Tedesco"
                         },
                         new
                         {
                             SubjectId = 3L,
                             Code = "EN",
-                            Name = "Anglais"
+                            Name = "English",
+                            NameDe = "Englisch",
+                            NameFr = "Anglais",
+                            NameIt = "Inglese"
                         },
                         new
                         {
                             SubjectId = 4L,
                             Code = "MATH",
-                            Name = "Mathématiques"
+                            Name = "Mathematics",
+                            NameDe = "Mathematik",
+                            NameFr = "Mathématiques",
+                            NameIt = "Matematica"
                         },
                         new
                         {
                             SubjectId = 5L,
                             Code = "SCI",
-                            Name = "Sciences naturelles"
+                            Name = "Natural Sciences",
+                            NameDe = "Naturwissenschaften",
+                            NameFr = "Sciences naturelles",
+                            NameIt = "Scienze della natura"
                         },
                         new
                         {
                             SubjectId = 6L,
                             Code = "HIST",
-                            Name = "Histoire"
+                            Name = "History",
+                            NameDe = "Geschichte",
+                            NameFr = "Histoire",
+                            NameIt = "Storia"
                         },
                         new
                         {
                             SubjectId = 7L,
                             Code = "GEO",
-                            Name = "Géographie"
+                            Name = "Geography",
+                            NameDe = "Geographie",
+                            NameFr = "Géographie",
+                            NameIt = "Geografia"
                         },
                         new
                         {
                             SubjectId = 8L,
                             Code = "EPS",
-                            Name = "Éducation physique"
+                            Name = "Physical Education",
+                            NameDe = "Physikalische Bildung",
+                            NameFr = "Éducation physique",
+                            NameIt = "Educazione fisica"
                         },
                         new
                         {
                             SubjectId = 9L,
                             Code = "ARTS",
-                            Name = "Arts visuels"
+                            Name = "Visual Arts",
+                            NameDe = "Visuelle Künste",
+                            NameFr = "Arts visuels",
+                            NameIt = "Arti visive"
                         },
                         new
                         {
                             SubjectId = 10L,
                             Code = "MUS",
-                            Name = "Musique"
+                            Name = "Music",
+                            NameDe = "Musik",
+                            NameFr = "Musique",
+                            NameIt = "Musica"
                         },
                         new
                         {
                             SubjectId = 11L,
                             Code = "ECO",
-                            Name = "Économie et droit"
+                            Name = "Economics and Law",
+                            NameDe = "Wirtschaft und Recht",
+                            NameFr = "Économie et droit",
+                            NameIt = "Economia e diritto"
                         },
                         new
                         {
                             SubjectId = 12L,
                             Code = "INFO",
-                            Name = "Informatique"
+                            Name = "Computer Science",
+                            NameDe = "Informatik",
+                            NameFr = "Informatique",
+                            NameIt = "Informatica"
                         });
                 });
 

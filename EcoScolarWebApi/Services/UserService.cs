@@ -1,6 +1,7 @@
 ﻿using EcoScolarWebApi.Commun;
 using EcoScolarWebApi.Data;
 using EcoScolarWebApi.DTOs.Users;
+using EcoScolarWebApi.Mappers;
 using EcoScolarWebApi.Models;
 using EcoScolarWebApi.Services.Contracts;
 using Microsoft.AspNetCore.Identity;
@@ -17,6 +18,7 @@ public class UserService : IUserService
 	private readonly UserManager<User> _userManager;            // Seller manager
 	private readonly SignInManager<User> _signInManager;        // Sign-in manager
 	private readonly EcoscolarDbContext _context;               // Database context
+	private readonly UserMapper _userMapper;
 
 	/// <summary>
 	/// Initialize the service with required dependencies.
@@ -24,12 +26,14 @@ public class UserService : IUserService
 	/// <param name="userManager">Seller manager.</param>
 	/// <param name="dbContext">Database context.</param>
 	/// <param name="signInManager">Sign-in manager.</param>
-	public UserService(UserManager<User> userManager, EcoscolarDbContext dbContext, SignInManager<User> signInManager)
+	/// <param name="userMapper">User mapper.</param>
+	public UserService(UserManager<User> userManager, EcoscolarDbContext dbContext, SignInManager<User> signInManager, UserMapper userMapper)
 	{
 		_userManager = userManager;
 		_context = dbContext;
 		_signInManager = signInManager;
-	}
+        _userMapper = userMapper;
+    }
 
 	/// <summary>
 	/// Retrieves the profile information for the currently authenticated user.
@@ -37,13 +41,13 @@ public class UserService : IUserService
 	/// <param name="user">The claims principal representing the current authenticated user. Cannot be null.</param>
 	/// <returns>The task result contains a Result object with the user's profile data if found; otherwise, 
 	/// a failure result indicating the reason.</returns>
-	public async Task<Result<UserReadDto>> GetCurrentUserProfileAsync(ClaimsPrincipal user)
+	public async Task<Result<UserResponse>> GetCurrentUserProfileAsync(ClaimsPrincipal user)
 	{
 		// Get the current user ID
 		var userId = _userManager.GetUserId(user);
 
 		if (string.IsNullOrEmpty(userId))
-			return Result<UserReadDto>.Failure("Invalid session.", ErrorType.Unauthorized);
+			return Result<UserResponse>.Failure("Invalid session.", ErrorType.Unauthorized);
 
 		// Get the relations for the user
 		var currentUser = await _userManager.Users
@@ -56,15 +60,17 @@ public class UserService : IUserService
 			.FirstOrDefaultAsync(u => u.Id == userId);
 
 		if (currentUser == null)
-			return Result<UserReadDto>.Failure("Seller not found or session expired.", ErrorType.NotFound);
+			return Result<UserResponse>.Failure("Seller not found or session expired.", ErrorType.NotFound);
 
 		// Build the dto for the response
-		var userDto = UserReadDto.FromEntity(currentUser);
+		var userDto = _userMapper.ToResponse(currentUser);
 
-		return Result<UserReadDto>.Success(userDto);
+		var roles = await _userManager.GetRolesAsync(currentUser);
+
+        return Result<UserResponse>.Success(userDto with { Roles = roles.ToArray() });
 	}
 
-	public async Task<Result<UserReadDto>> UpdateProfileAsync(ClaimsPrincipal user, UserUpdateDto dto)
+	public async Task<Result<UserResponse>> UpdateProfileAsync(ClaimsPrincipal user, UserUpdateDto dto)
 	{
 		var currentUserId = _userManager.GetUserId(user);
 		var currentUser = await _userManager.Users
@@ -72,11 +78,11 @@ public class UserService : IUserService
 			.FirstOrDefaultAsync(u => u.Id == currentUserId);
 
 		if (currentUser == null)
-			return Result<UserReadDto>.Failure("Seller not found", ErrorType.NotFound);
+			return Result<UserResponse>.Failure("Seller not found", ErrorType.NotFound);
 
 		var location = await _context.Locations.FirstOrDefaultAsync(l => l.PostalCode == dto.PostalCode);
 		if (location == null)
-			return Result<UserReadDto>.Failure("Invalid postal code");
+			return Result<UserResponse>.Failure("Invalid postal code");
 
 		currentUser.Nickname = dto.Nickname;
 		currentUser.FirstName = dto.FirstName;
@@ -85,10 +91,10 @@ public class UserService : IUserService
 		currentUser.LocationId = location.LocationId;
 
 		currentUser.Languages.Clear();
-		currentUser.Languages = dto.SpokenLanguages.Select(lang => new UserLanguage
+		currentUser.Languages = dto.Languages.Select(lang => new UserLanguage
 		{
-			Label = lang.Language,
-			LanguageLevel = lang.Level
+			Label = lang.Label,
+			LanguageLevel = lang.LanguageLevel
 		}).ToList();
 
 		currentUser.IsOnboarded = true;
@@ -97,10 +103,13 @@ public class UserService : IUserService
 		if (!updateResult.Succeeded)
 		{
 			var errors = updateResult.Errors.Select(e => e.Description);
-			return Result<UserReadDto>.Failure(errors);
+			return Result<UserResponse>.Failure(errors);
 		}
+		var resultRole = await _userManager.AddToRoleAsync(currentUser, "User");
 
-		return Result<UserReadDto>.Success(UserReadDto.FromEntity(currentUser));
+		var roles = await _userManager.GetRolesAsync(currentUser);
+
+        return Result<UserResponse>.Success(_userMapper.ToResponse(currentUser) with { Roles = roles.ToArray() });
 	}
 
 	public async Task<Result<UserPublicReadDto>> GetPublicProfileAsync(string userId)

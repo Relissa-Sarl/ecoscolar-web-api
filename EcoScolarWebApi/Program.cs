@@ -1,12 +1,17 @@
+using EcoScolarWebApi.Data;
 using EcoScolarWebApi.Extensions;
 using EcoScolarWebApi.Models;
+using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Dependency injection configuration
 builder.Services.AddInfrastructure(builder.Configuration);
-builder.Services.AddAuthAndIdentity();
+builder.Services.AddAuthentication();
 builder.Services.AddSwaggerAndVersioning();
+builder.Services.AddIdentity<User, IdentityRole>()
+	.AddEntityFrameworkStores<EcoscolarDbContext>()
+	.AddDefaultTokenProviders();
 builder.Services.AddEcoScolarServices(builder.Configuration);
 builder.Services.AddMappersServices(builder.Configuration);
 

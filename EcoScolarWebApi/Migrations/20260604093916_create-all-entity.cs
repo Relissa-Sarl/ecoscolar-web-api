@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace EcoScolarWebApi.Migrations
 {
     /// <inheritdoc />
-    public partial class CreateAllTheEntities : Migration
+    public partial class createallentity : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -34,6 +34,9 @@ namespace EcoScolarWebApi.Migrations
                     BookCategoryId = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    NameFr = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    NameDe = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    NameIt = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Description = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false)
                 },
                 constraints: table =>
@@ -46,7 +49,10 @@ namespace EcoScolarWebApi.Migrations
                 columns: table => new
                 {
                     Label = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    NameFr = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    NameDe = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    NameIt = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -75,6 +81,9 @@ namespace EcoScolarWebApi.Migrations
                     ProductCategoryId = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    NameFr = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    NameDe = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    NameIt = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Description = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false)
                 },
                 constraints: table =>
@@ -89,6 +98,9 @@ namespace EcoScolarWebApi.Migrations
                     SchoolGradeId = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    NameFr = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    NameDe = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    NameIt = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Code = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false)
                 },
                 constraints: table =>
@@ -103,6 +115,9 @@ namespace EcoScolarWebApi.Migrations
                     SubjectId = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    NameFr = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    NameDe = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    NameIt = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Code = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false)
                 },
                 constraints: table =>
@@ -647,29 +662,29 @@ namespace EcoScolarWebApi.Migrations
 
             migrationBuilder.InsertData(
                 table: "BookCategories",
-                columns: new[] { "BookCategoryId", "Description", "Name" },
+                columns: new[] { "BookCategoryId", "Description", "Name", "NameDe", "NameFr", "NameIt" },
                 values: new object[,]
                 {
-                    { 1L, "Manuels par niveau et programme cantonal.", "Manuels scolaires" },
-                    { 2L, "Dictionnaires, encyclopédies et atlas scolaires.", "Ouvrages de référence" },
-                    { 3L, "Français, allemand, italien, anglais et langues locales.", "Langues" },
-                    { 4L, "Supports de mathématiques pour cycles 1 à secondaire II.", "Mathématiques" },
-                    { 5L, "Biologie, chimie, physique et sciences de la nature.", "Sciences naturelles" },
-                    { 6L, "Histoire suisse, géographie et éducation citoyenne.", "Histoire et géographie" },
-                    { 7L, "Introduction à l'économie, droit et gestion.", "Économie et droit" },
-                    { 8L, "Supports pour arts visuels, musique et activités créatives.", "Arts et musique" },
-                    { 9L, "Initiation au numérique, algorithmique et outils informatiques.", "Informatique" },
-                    { 10L, "Manuels liés aux filières CFC et maturité professionnelle.", "Formation professionnelle" }
+                    { 1L, "Manuels par niveau et programme cantonal.", "Textbooks", "Schulbücher", "Manuels scolaires", "Libri di scuola" },
+                    { 2L, "Ouvrages de référence pour les étudiants.", "Reference works", "Referenzwerke", "Ouvrages de référence", "Opere di riferimento" },
+                    { 3L, "Cours et ressources pour l'apprentissage des langues.", "Languages", "Sprachen", "Langues", "Lingue" },
+                    { 4L, "Manuels et ressources pour l'enseignement des mathématiques.", "Mathematics", "Mathematik", "Mathématiques", "Matematica" },
+                    { 5L, "Cours et ressources pour les sciences naturelles.", "Natural Sciences", "Naturwissenschaften", "Sciences naturelles", "Scienze della natura" },
+                    { 6L, "Cours et ressources pour l'histoire et la géographie.", "History and Geography", "Geschichte und Geographie", "Histoire et géographie", "Storia e geografia" },
+                    { 7L, "Cours et ressources pour l'économie et le droit.", "Economics and Law", "Wirtschaft und Recht", "Économie et droit", "Economia e diritto" },
+                    { 8L, "Cours et ressources pour les arts et la musique.", "Arts and Music", "Kunst und Musik", "Arts et musique", "Arte e musica" },
+                    { 9L, "Cours et ressources pour l'informatique.", "Computer Science", "Informatik", "Informatique", "Informatica" },
+                    { 10L, "Cours et ressources pour la formation professionnelle.", "Vocational training", "Berufliche Bildung", "Formation professionnelle", "Formazione professionale" }
                 });
 
             migrationBuilder.InsertData(
                 table: "Languages",
-                columns: new[] { "Label", "Name" },
+                columns: new[] { "Label", "Name", "NameDe", "NameFr", "NameIt" },
                 values: new object[,]
                 {
-                    { "DE", "Deutsch" },
-                    { "FR", "Français" },
-                    { "IT", "Italian" }
+                    { "DE", "German", "Deutsch", "Allemand", "Tedesco" },
+                    { "FR", "French", "Französisch", "Français", "Francese" },
+                    { "IT", "Italian", "Italien", "Italien", "Italiano" }
                 });
 
             migrationBuilder.InsertData(
@@ -684,52 +699,52 @@ namespace EcoScolarWebApi.Migrations
 
             migrationBuilder.InsertData(
                 table: "ProductCategories",
-                columns: new[] { "ProductCategoryId", "Description", "Name" },
+                columns: new[] { "ProductCategoryId", "Description", "Name", "NameDe", "NameFr", "NameIt" },
                 values: new object[,]
                 {
-                    { 1L, "Papiers, enveloppes, étiquettes et consommables.", "Papeterie" },
-                    { 2L, "Stylos, crayons, feutres et surligneurs.", "Matériel d'écriture" },
-                    { 3L, "Cahiers, classeurs, intercalaires et chemises.", "Cahiers et classeurs" },
-                    { 4L, "Peinture, pinceaux, papiers dessin et outils créatifs.", "Matériel artistique" },
-                    { 5L, "Kits pédagogiques, microscopes et accessoires.", "Matériel scientifique" },
-                    { 6L, "Ballons, cordes, protections et matériel EPS.", "Équipement sportif" },
-                    { 7L, "Claviers, souris, périphériques et accessoires.", "Matériel informatique" },
-                    { 8L, "Sacs d'école, cartables et trousses.", "Sacs et cartables" },
-                    { 9L, "Calculatrices scientifiques et financières.", "Calculatrices" },
-                    { 10L, "Blouses, lunettes de protection et consommables.", "Accessoires de laboratoire" }
+                    { 1L, "Papiers, enveloppes, étiquettes et consommables.", "Stationery", "Papierware", "Papeterie", "Cartoleria" },
+                    { 2L, "Stylos, crayons, feutres et surligneurs.", "Writing supplies", "Schreibmaterial", "Matériel d'écriture", "Materiale da scrittura" },
+                    { 3L, "Cahiers, classeurs, intercalaires et chemises.", "Notebooks and binders", "Hefte und Mappe", "Cahiers et classeurs", "Quaderni e cartelle" },
+                    { 4L, "Peinture, pinceaux, papiers dessin et outils créatifs.", "Art supplies", "Künstlerisches Material", "Matériel artistique", "Materiale artistico" },
+                    { 5L, "Kits pédagogiques, microscopes et accessoires.", "Scientific equipment", "Wissenschaftliches Material", "Matériel scientifique", "Materiale scientifico" },
+                    { 6L, "Ballons, cordes, protections et matériel EPS.", "Sports equipment", "Sportausrüstung", "Équipement sportif", "Equipaggiamento sportivo" },
+                    { 7L, "Claviers, souris, périphériques et accessoires.", "Computer equipment", "Informatikmaterial", "Matériel informatique", "Materiale informatico" },
+                    { 8L, "Sacs d'école, cartables et trousses.", "School bags and cases", "Schulrucksäcke und Bücherfächer", "Sacs et cartables", "Ziole e borse scolastiche" },
+                    { 9L, "Calculatrices scientifiques et financières.", "Calculators", "Taschenrechner", "Calculatrices", "Calcolatrici" },
+                    { 10L, "Blouses, lunettes de protection et consommables.", "Laboratory supplies", "Laboratoriumsausrüstung", "Accessoires de laboratoire", "Accessori del laboratorio" }
                 });
 
             migrationBuilder.InsertData(
                 table: "SchoolGrades",
-                columns: new[] { "SchoolGradeId", "Code", "Name" },
+                columns: new[] { "SchoolGradeId", "Code", "Name", "NameDe", "NameFr", "NameIt" },
                 values: new object[,]
                 {
-                    { 1L, "C1", "Cycle 1 (1H-4H)" },
-                    { 2L, "C2", "Cycle 2 (5H-8H)" },
-                    { 3L, "C3", "Cycle 3 (9H-11H)" },
-                    { 4L, "S2-GYM", "Secondaire II - Gymnase" },
-                    { 5L, "S2-MP", "Secondaire II - Maturité professionnelle" },
-                    { 6L, "S2-CFC", "Secondaire II - CFC" },
-                    { 7L, "S2-ECG", "Secondaire II - ECG" }
+                    { 1L, "C1", "Cycle 1 (Grades 1–4)", "Stufe 1 (1H-4H)", "Cycle 1 (1H-4H)", "Livello 1 (1H-4H)" },
+                    { 2L, "C2", "Cycle 2 (Grades 5–8)", "Stufe 2 (5H-8H)", "Cycle 2 (5H-8H)", "Livello 2 (5H-8H)" },
+                    { 3L, "C3", "Cycle 3 (Grades 9–11)", "Stufe 3 (9H-11H)", "Cycle 3 (9H-11H)", "Livello 3 (9H-11H)" },
+                    { 4L, "S2-GYM", "Upper Secondary School - High School", "Sekundarstufe II - Gymnasium", "Secondaire II - Gymnase", "Secondaria II - Ginnasio" },
+                    { 5L, "S2-MP", "Upper Secondary Level – Vocational Maturity", "Sekundarstufe II - Berufsmaturität", "Secondaire II - Maturité professionnelle", "Secondaria II - Maturità professionale" },
+                    { 6L, "S2-CFC", "Upper Secondary School – CFC", "Sekundarstufe II - CFC", "Secondaire II - CFC", "Secondaria II - CFC" },
+                    { 7L, "S2-ECG", "Upper Secondary Level - ECG", "Sekundarstufe II - ECG", "Secondaire II - ECG", "Secondaria II - ECG" }
                 });
 
             migrationBuilder.InsertData(
                 table: "Subjects",
-                columns: new[] { "SubjectId", "Code", "Name" },
+                columns: new[] { "SubjectId", "Code", "Name", "NameDe", "NameFr", "NameIt" },
                 values: new object[,]
                 {
-                    { 1L, "FR", "Français" },
-                    { 2L, "DE", "Allemand" },
-                    { 3L, "EN", "Anglais" },
-                    { 4L, "MATH", "Mathématiques" },
-                    { 5L, "SCI", "Sciences naturelles" },
-                    { 6L, "HIST", "Histoire" },
-                    { 7L, "GEO", "Géographie" },
-                    { 8L, "EPS", "Éducation physique" },
-                    { 9L, "ARTS", "Arts visuels" },
-                    { 10L, "MUS", "Musique" },
-                    { 11L, "ECO", "Économie et droit" },
-                    { 12L, "INFO", "Informatique" }
+                    { 1L, "FR", "French", "Französisch", "Français", "Francese" },
+                    { 2L, "DE", "German", "Deutsch", "Allemand", "Tedesco" },
+                    { 3L, "EN", "English", "Englisch", "Anglais", "Inglese" },
+                    { 4L, "MATH", "Mathematics", "Mathematik", "Mathématiques", "Matematica" },
+                    { 5L, "SCI", "Natural Sciences", "Naturwissenschaften", "Sciences naturelles", "Scienze della natura" },
+                    { 6L, "HIST", "History", "Geschichte", "Histoire", "Storia" },
+                    { 7L, "GEO", "Geography", "Geographie", "Géographie", "Geografia" },
+                    { 8L, "EPS", "Physical Education", "Physikalische Bildung", "Éducation physique", "Educazione fisica" },
+                    { 9L, "ARTS", "Visual Arts", "Visuelle Künste", "Arts visuels", "Arti visive" },
+                    { 10L, "MUS", "Music", "Musik", "Musique", "Musica" },
+                    { 11L, "ECO", "Economics and Law", "Wirtschaft und Recht", "Économie et droit", "Economia e diritto" },
+                    { 12L, "INFO", "Computer Science", "Informatik", "Informatique", "Informatica" }
                 });
 
             migrationBuilder.CreateIndex(

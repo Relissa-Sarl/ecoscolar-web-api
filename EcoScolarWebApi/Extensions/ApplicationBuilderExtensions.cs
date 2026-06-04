@@ -25,7 +25,13 @@ public static class ApplicationBuilderExtensions
 			var db = scope.ServiceProvider.GetRequiredService<EcoscolarDbContext>();
 			var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
 
+			var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+            if (!await roleManager.RoleExistsAsync("Admin"))
+				await roleManager.CreateAsync(new IdentityRole("Admin"));
+            if (!await roleManager.RoleExistsAsync("User"))
+                await roleManager.CreateAsync(new IdentityRole("User"));
+
 			await DataSeeder.Seed(db, userManager);
-		}
+        }
 	}
 }
