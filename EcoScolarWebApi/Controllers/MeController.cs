@@ -4,89 +4,103 @@ using EcoScolarWebApi.DTOs;
 using EcoScolarWebApi.DTOs.Adverts;
 using EcoScolarWebApi.Enums;
 using System.Security.Claims;
+using EcoScolarWebApi.Data;
+using Microsoft.EntityFrameworkCore;
+using EcoScolarWebApi.Models;
+using Asp.Versioning;
 
 namespace EcoScolarWebApi.Controllers;
 
-[Route("api/[controller]")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/[controller]")]
 [ApiController]
 [Authorize] // Ces routes nécessitent un utilisateur connecté
 public class MeController : ControllerBase
 {
-    // L'injection de dépendances (services) se fera ici plus tard
+    private readonly EcoscolarDbContext _context;
+
+    public MeController(EcoscolarDbContext context)
+    {
+        _context = context;
+    }
 
     [HttpGet("purchases")]
     [ProducesResponseType(typeof(IEnumerable<PurchaseReadDto>), StatusCodes.Status200OK)]
-    public IActionResult GetMyPurchases()
+    public async Task<IActionResult> GetMyPurchases()
     {
-        // TODO: Implémenter la vraie logique avec le service pour récupérer les achats de l'utilisateur
-        // var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-        // Données mockées pour le frontend
-        var mockPurchases = new List<PurchaseReadDto>
-        {
-            new PurchaseReadDto(
-                Id: "pur_101",
-                AdvertId: "adv_500",
-                AdvertTitle: "Calculatrice Casio Graph 90+E",
-                Price: 45.00m,
-                PurchaseDate: DateTime.UtcNow.AddDays(-2),
-                Status: "completed",
-                ImageUrl: "https://example.com/images/casio.jpg",
-                SellerName: "JeanDupont"
-            ),
-            new PurchaseReadDto(
-                Id: "pur_102",
-                AdvertId: "adv_501",
-                AdvertTitle: "Livre Mathématiques TS",
-                Price: 15.50m,
-                PurchaseDate: DateTime.UtcNow.AddDays(-5),
-                Status: "pending",
-                ImageUrl: null,
-                SellerName: "MarieClaire"
-            )
-        };
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized(new { message = "Invalid session." });
 
-        return Ok(mockPurchases);
+        var purchases = await _context.Transactions
+            .Where(t => t.BuyerId == userId)
+            .Include(t => t.Advert)
+                .ThenInclude(a => a.Seller)
+            .Select(t => new PurchaseReadDto(
+                t.TransactionId.ToString(),
+                t.AdvertId.ToString(),
+                t.Advert!.Title,
+                t.Advert.Price,
+                t.Date,
+                t.Status,
+                GetPrimaryImage(t.Advert), // Helper method to extract the image
+                t.Advert.Seller.UserName ?? "Anonyme"
+            ))
+            .ToListAsync();
+
+        return Ok(purchases);
     }
 
     [HttpGet("sales")]
     [ProducesResponseType(typeof(IEnumerable<AdvertReadDto>), StatusCodes.Status200OK)]
-    public IActionResult GetMySales()
+    public async Task<IActionResult> GetMySales()
     {
-        // TODO: Implémenter la vraie logique avec le service pour récupérer les ventes de l'utilisateur
-        // var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-        // Données mockées pour le frontend (en utilisant AdvertReadDto)
-        var mockSales = new List<AdvertReadDto>
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized(new { message = "Invalid session." });
+
+        var sales = await _context.Adverts
+            .Where(a => a.SellerId == userId)
+            .Include(a => a.Seller)
+            // Left join with transactions to get the buyer if sold
+            .Select(a => new
+            {
+                Advert = a,
+                Transaction = _context.Transactions.Include(t => t.Buyer).FirstOrDefault(t => t.AdvertId == a.AdvertId)
+            })
+            .ToListAsync();
+
+        // We need to fetch pictures separately to avoid complex queries or cartesian explosions
+        var physicalItemIds = sales.Select(s => s.Advert).OfType<PhysicalItem>().Select(item => item.AdvertId).ToList();
+        if (physicalItemIds.Any())
         {
-            new AdvertReadDto(
-                Id: 201,
-                Type: "PRODUCT",
-                Title: "Sac à dos Eastpak",
-                Price: 20.00m,
-                PublicationDate: DateTime.UtcNow.AddDays(-10),
-                NotificationDate: DateTime.UtcNow.AddMonths(3),
-                Status: AdvertStatus.ACTIVE,
-                UserId: "user_777",
-                SellerPseudo: "MoiMeme",
-                PrimaryImage: "https://example.com/images/sac.jpg",
-                BuyerName: null // Pas encore vendu
-            ),
-            new AdvertReadDto(
-                Id: 202,
-                Type: "BOOK",
-                Title: "Dictionnaire Le Robert",
-                Price: 10.00m,
-                PublicationDate: DateTime.UtcNow.AddDays(-20),
-                NotificationDate: DateTime.UtcNow.AddMonths(3),
-                Status: AdvertStatus.SOLD, // Vendu
-                UserId: "user_777",
-                SellerPseudo: "MoiMeme",
-                PrimaryImage: null,
-                BuyerName: "Alice Dubois" // Le nom de l'acheteur
-            )
-        };
+            await _context.Pictures
+                .Where(p => physicalItemIds.Contains(p.PhysicalItemId))
+                .LoadAsync();
+        }
 
-        return Ok(mockSales);
+        var dtos = sales.Select(s =>
+        {
+            var dto = AdvertReadDto.FromEntity(s.Advert);
+            // If we have a transaction, we update the buyer name in the record
+            if (s.Transaction != null && s.Transaction.Buyer != null)
+            {
+               dto = dto with { BuyerName = s.Transaction.Buyer.FirstName + " " + s.Transaction.Buyer.LastName };
+            }
+            return dto;
+        });
+
+        return Ok(dtos);
+    }
+
+    private static string? GetPrimaryImage(Advert advert)
+    {
+        if (advert is PhysicalItem physicalItem && physicalItem.Pictures != null && physicalItem.Pictures.Any())
+        {
+            return physicalItem.Pictures.First().Label;
+        }
+        return null;
     }
 }

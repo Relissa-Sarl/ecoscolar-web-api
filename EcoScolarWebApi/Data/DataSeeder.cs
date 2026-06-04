@@ -58,6 +58,9 @@ public class DataSeeder
 		var userIds = users.Select(u => u.Id).ToList();
 		users = context.Users.Where(u => userIds.Contains(u.Id)).ToList();
 
+        // Re-assign testUser with the one saved in db to have its proper relations
+        testUser = users.First(u => u.Email == "albert@einstein.ch");
+
 		var bookCategories = context.Set<BookCategory>().AsNoTracking().ToList();
 		var subjects = context.Set<Subject>().AsNoTracking().ToList();
 		var schoolGrades = context.Set<SchoolGrade>().AsNoTracking().ToList();
@@ -122,6 +125,15 @@ public class DataSeeder
 
 		var services = servicesFaker.Generate(18);
 
+        // Force some adverts to be sold/owned by albert for testing purposes
+        // 1. Give Albert some sales
+        physicalItems[0].SellerId = testUser.Id;
+        physicalItems[0].Status = AdvertStatus.SOLD;
+        physicalItems[1].SellerId = testUser.Id;
+        physicalItems[1].Status = AdvertStatus.ACTIVE;
+        books[0].SellerId = testUser.Id;
+        books[0].Status = AdvertStatus.SOLD;
+
 		context.Products.AddRange(physicalItems);
 		context.Books.AddRange(books);
 		context.Services.AddRange(services);
@@ -142,6 +154,44 @@ public class DataSeeder
         }
 
         context.Pictures.AddRange(pictures);
+        context.SaveChanges();
+
+        // 2. Give Albert some purchases (Transactions)
+        var otherUsersAdverts = context.Adverts
+            .Where(a => a.SellerId != testUser.Id)
+            .Take(2)
+            .ToList();
+
+        var transactions = new List<Transaction>();
+        foreach (var advert in otherUsersAdverts)
+        {
+            transactions.Add(new Transaction
+            {
+                AdvertId = advert.AdvertId,
+                BuyerId = testUser.Id,
+                Date = DateTime.UtcNow.AddDays(-faker.Random.Int(1, 10)),
+                Status = "Completed",
+                PlatformFee = 1.50m,
+                BuyerConsent = true,
+                SellerConsent = true
+            });
+            advert.Status = AdvertStatus.SOLD; // Update advert status
+        }
+
+        // Add a sale for Albert with a transaction to see the buyer
+        var albertSoldAdvert = physicalItems[0];
+        transactions.Add(new Transaction
+        {
+                AdvertId = albertSoldAdvert.AdvertId,
+                BuyerId = users.First(u => u.Id != testUser.Id).Id,
+                Date = DateTime.UtcNow.AddDays(-faker.Random.Int(1, 10)),
+                Status = "Completed",
+                PlatformFee = 1.50m,
+                BuyerConsent = true,
+                SellerConsent = true
+        });
+
+        context.Transactions.AddRange(transactions);
         context.SaveChanges();
     }
 }
