@@ -45,11 +45,63 @@ public class SupportController(ISupportContactService supportContactService) : C
         if (result.IsSuccess)
             return Ok(result.Data);
 
-        return result.ErrorType switch
+        return MapError(result);
+    }
+
+    /// <summary>
+    /// Gets one support ticket. GET /api/v1/support/mine/{id}
+    /// </summary>
+    [HttpGet("mine/{id:int}")]
+    [Authorize]
+    public async Task<IActionResult> GetMyTicket(int id)
+    {
+        var result = await supportContactService.GetMyTicketAsync(User, id);
+
+        if (result.IsSuccess)
+            return Ok(result.Data);
+
+        return MapError(result);
+    }
+
+    /// <summary>
+    /// Lists conversation messages. GET /api/v1/support/mine/{id}/messages
+    /// </summary>
+    [HttpGet("mine/{id:int}/messages")]
+    [Authorize]
+    public async Task<IActionResult> GetTicketMessages(int id)
+    {
+        var result = await supportContactService.GetTicketMessagesAsync(User, id);
+
+        if (result.IsSuccess)
+            return Ok(result.Data);
+
+        return MapError(result);
+    }
+
+    /// <summary>
+    /// Adds a user reply to a ticket. POST /api/v1/support/mine/{id}/messages
+    /// </summary>
+    [HttpPost("mine/{id:int}/messages")]
+    [Authorize]
+    public async Task<IActionResult> AddTicketMessage(int id, [FromBody] SupportTicketMessageRequestDto request)
+    {
+        if (!ModelState.IsValid)
+            return ValidationProblem(ModelState);
+
+        var result = await supportContactService.AddTicketMessageAsync(User, id, request);
+
+        if (result.IsSuccess)
+            return StatusCode(StatusCodes.Status201Created, result.Data);
+
+        return MapError(result);
+    }
+
+    private IActionResult MapError<T>(Result<T> result) =>
+        result.ErrorType switch
         {
             ErrorType.Unauthorized => Unauthorized(new { result.Errors }),
             ErrorType.NotFound => NotFound(new { result.Errors }),
+            ErrorType.Invalid => BadRequest(new { result.Errors }),
             _ => BadRequest(new { result.Errors })
         };
-    }
 }

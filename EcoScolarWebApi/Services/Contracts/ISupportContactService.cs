@@ -10,5 +10,16 @@ public interface ISupportContactService
         SupportContactRequestDto request,
         ClaimsPrincipal? user);
 
-    Task<Result<IReadOnlyList<SupportTicketReadDto>>> GetMyTicketsAsync(ClaimsPrincipal user);
+    Task<Result<IReadOnlyList<SupportTicketSummaryDto>>> GetMyTicketsAsync(ClaimsPrincipal user);
+
+    Task<Result<SupportTicketDetailDto>> GetMyTicketAsync(ClaimsPrincipal user, int ticketId);
+
+    Task<Result<IReadOnlyList<SupportTicketMessageDto>>> GetTicketMessagesAsync(
+        ClaimsPrincipal user,
+        int ticketId);
+
+    Task<Result<SupportTicketMessageDto>> AddTicketMessageAsync(
+        ClaimsPrincipal user,
+        int ticketId,
+        SupportTicketMessageRequestDto request);
 }

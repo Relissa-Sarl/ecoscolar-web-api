@@ -22,9 +22,29 @@ public class SupportContactRequestDto
 
 public record SupportContactResponseDto(int Id);
 
-public record SupportTicketReadDto(
+public record SupportTicketSummaryDto(
+    int Id,
+    string Email,
+    string Subject,
+    DateTime CreatedAt);
+
+public record SupportTicketDetailDto(
     int Id,
     string Email,
     string Subject,
     string Message,
     DateTime CreatedAt);
+
+public record SupportTicketMessageDto(
+    int Id,
+    string Body,
+    bool IsFromSupport,
+    DateTime CreatedAt);
+
+public class SupportTicketMessageRequestDto
+{
+    [Required]
+    [MinLength(1, ErrorMessage = "Veuillez saisir un message.")]
+    [MaxLength(4000)]
+    public string Message { get; set; } = string.Empty;
+}

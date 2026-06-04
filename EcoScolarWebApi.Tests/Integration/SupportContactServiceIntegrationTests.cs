@@ -63,6 +63,11 @@ public class SupportContactServiceIntegrationTests : IDisposable
         stored.Subject.Should().Be(request.Subject);
         stored.Message.Should().Be(request.Message);
         stored.UserId.Should().BeNull();
+
+        var welcome = await _context.SupportTicketMessages
+            .Where(m => m.TicketId == stored.Id)
+            .ToListAsync();
+        welcome.Should().ContainSingle(m => m.IsFromSupport);
     }
 
     [Fact]
@@ -164,6 +169,30 @@ public class SupportContactServiceIntegrationTests : IDisposable
 
         result.IsSuccess.Should().BeTrue();
         result.Data.Should().ContainSingle(t => t.Subject == "Sans userId");
+    }
+
+    [Fact]
+    public async Task AddTicketMessageAsync_PersistsUserReply()
+    {
+        var user = await CreateUserAsync("chat.support@example.com");
+        var principal = CreatePrincipal(user.Id);
+        var submit = await _service.SubmitAsync(new SupportContactRequestDto
+        {
+            Email = user.Email!,
+            Subject = "Bug interface",
+            Message = "Le bouton de validation ne s'affiche pas correctement."
+        }, principal);
+
+        var reply = await _service.AddTicketMessageAsync(
+            principal,
+            submit.Data!.Id,
+            new SupportTicketMessageRequestDto { Message = "Voici une capture d'écran en pièce jointe." });
+
+        reply.IsSuccess.Should().BeTrue();
+        reply.Data!.IsFromSupport.Should().BeFalse();
+
+        var messages = await _service.GetTicketMessagesAsync(principal, submit.Data.Id);
+        messages.Data.Should().Contain(m => m.Body.Contains("capture"));
     }
 
     private async Task<User> CreateUserAsync(string email)

@@ -1,4 +1,4 @@
-﻿using EcoScolarWebApi.Models;
+using EcoScolarWebApi.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -36,6 +36,7 @@ public class EcoscolarDbContext(DbContextOptions<EcoscolarDbContext> options) : 
     public DbSet<Flag> Flags { get; set; }
     public DbSet<SearchAlert> SearchAlerts { get; set; }
     public DbSet<SupportTicket> SupportTickets { get; set; } = default!;
+    public DbSet<SupportTicketMessage> SupportTicketMessages { get; set; } = default!;
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -175,6 +176,14 @@ public class EcoscolarDbContext(DbContextOptions<EcoscolarDbContext> options) : 
                 .WithMany()
                 .HasForeignKey(t => t.UserId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        builder.Entity<SupportTicketMessage>(entity =>
+        {
+            entity.HasOne(m => m.Ticket)
+                .WithMany(t => t.Messages)
+                .HasForeignKey(m => m.TicketId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         ConfigureUserLanguageEntity(builder);

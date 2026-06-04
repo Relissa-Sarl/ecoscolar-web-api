@@ -30,4 +30,6 @@ public class SupportTicket
 
     [ForeignKey(nameof(UserId))]
     public virtual User? User { get; set; }
+
+    public virtual ICollection<SupportTicketMessage> Messages { get; set; } = new List<SupportTicketMessage>();
 }

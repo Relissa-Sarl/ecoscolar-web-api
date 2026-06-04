@@ -96,10 +96,47 @@ public class SupportContactHttpIntegrationTests : IClassFixture<AuthInMemoryWebA
         var listResponse = await client.GetAsync("/api/v1/support/mine");
         listResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var tickets = await listResponse.Content.ReadFromJsonAsync<List<SupportTicketReadDto>>();
+        var tickets = await listResponse.Content.ReadFromJsonAsync<List<SupportTicketSummaryDto>>();
         tickets.Should().HaveCount(1);
         tickets![0].Subject.Should().Be("Suivi de commande");
         tickets[0].Email.Should().Be(email);
+    }
+
+    [Fact]
+    public async Task GetMySupportTicket_WithMessages_AllowsConversation()
+    {
+        var client = CreateClient();
+        var email = UniqueEmail("support-chat");
+        const string password = "Password123!";
+
+        await RegisterAndLoginAsync(client, email, password);
+
+        var createResponse = await client.PostAsJsonAsync("/api/v1/support", new
+        {
+            email,
+            subject = "Question technique",
+            message = "Mon application plante au démarrage sur Windows."
+        });
+        createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+        var created = await createResponse.Content.ReadFromJsonAsync<SupportContactResponseDto>();
+
+        var detailResponse = await client.GetAsync($"/api/v1/support/mine/{created!.Id}");
+        detailResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var messagesResponse = await client.GetAsync($"/api/v1/support/mine/{created.Id}/messages");
+        messagesResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        var messages = await messagesResponse.Content.ReadFromJsonAsync<List<SupportTicketMessageDto>>();
+        messages.Should().NotBeNull();
+        messages!.Should().Contain(m => m.IsFromSupport);
+
+        var replyResponse = await client.PostAsJsonAsync(
+            $"/api/v1/support/mine/{created.Id}/messages",
+            new { message = "J'ai aussi essayé sur un autre navigateur." });
+        replyResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+
+        var messagesAfter = await client.GetAsync($"/api/v1/support/mine/{created.Id}/messages");
+        var allMessages = await messagesAfter.Content.ReadFromJsonAsync<List<SupportTicketMessageDto>>();
+        allMessages.Should().Contain(m => !m.IsFromSupport && m.Body.Contains("navigateur"));
     }
 
     private static async Task RegisterAndLoginAsync(HttpClient client, string email, string password)
