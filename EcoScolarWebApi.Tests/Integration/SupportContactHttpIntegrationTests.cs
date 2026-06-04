@@ -30,6 +30,42 @@ public class SupportContactHttpIntegrationTests : IClassFixture<AuthInMemoryWebA
         });
 
         response.StatusCode.Should().Be(HttpStatusCode.Created);
+
+        var body = await response.Content.ReadFromJsonAsync<SupportContactResponseDto>();
+        body.Should().NotBeNull();
+        body!.Id.Should().BeGreaterThan(0);
+    }
+
+    [Fact]
+    public async Task SubmitSupport_ReturnsBadRequest_WhenSubjectTooShort()
+    {
+        _factory.EnsureSeeded();
+        var client = _factory.CreateClient();
+
+        var response = await client.PostAsJsonAsync("/api/v1/support", new
+        {
+            email = "user@example.com",
+            subject = "Test",
+            message = "Message de test suffisamment long."
+        });
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task SubmitSupport_ReturnsBadRequest_WhenMessageTooShort()
+    {
+        _factory.EnsureSeeded();
+        var client = _factory.CreateClient();
+
+        var response = await client.PostAsJsonAsync("/api/v1/support", new
+        {
+            email = "user@example.com",
+            subject = "Objet valide",
+            message = "court"
+        });
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
     [Fact]
