@@ -53,6 +53,9 @@ public class SchoolGradesController : ControllerBase
 
         existingGrade.Name = dto.Name;
         existingGrade.Code = dto.SchoolGrade;
+        existingGrade.NameFr = dto.NameFr;
+        existingGrade.NameDe = dto.NameDe;
+        existingGrade.NameIt = dto.NameIt;
 
         try
         {
@@ -81,7 +84,10 @@ public class SchoolGradesController : ControllerBase
         var schoolgrade = new SchoolGrade
         {
             Name = dto.Name,
-            Code = dto.SchoolGrade
+            Code = dto.SchoolGrade,
+            NameIt = dto.NameIt,
+            NameDe = dto.NameDe,
+            NameFr = dto.NameFr
         };
 
         _context.SchoolGrades.Add(schoolgrade);

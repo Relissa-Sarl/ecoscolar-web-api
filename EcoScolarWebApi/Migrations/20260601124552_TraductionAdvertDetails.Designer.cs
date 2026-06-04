@@ -4,6 +4,7 @@ using EcoScolarWebApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EcoScolarWebApi.Migrations
 {
     [DbContext(typeof(EcoscolarDbContext))]
-    partial class EcoscolarDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260601124552_TraductionAdvertDetails")]
+    partial class TraductionAdvertDetails
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -604,13 +607,6 @@ namespace EcoScolarWebApi.Migrations
                     b.Property<int>("Rating")
                         .HasColumnType("int");
 
-                    b.Property<string>("ReviewedId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("ReviewedRole")
-                        .HasColumnType("int");
-
                     b.Property<string>("ReviewerId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
@@ -620,12 +616,9 @@ namespace EcoScolarWebApi.Migrations
 
                     b.HasKey("ReviewId");
 
-                    b.HasIndex("ReviewedId");
-
                     b.HasIndex("ReviewerId");
 
-                    b.HasIndex("TransactionId", "ReviewerId")
-                        .IsUnique();
+                    b.HasIndex("TransactionId");
 
                     b.ToTable("Reviews");
                 });
@@ -1409,14 +1402,8 @@ namespace EcoScolarWebApi.Migrations
 
             modelBuilder.Entity("EcoScolarWebApi.Models.Review", b =>
                 {
-                    b.HasOne("EcoScolarWebApi.Models.User", "Reviewed")
-                        .WithMany("ReviewsReceived")
-                        .HasForeignKey("ReviewedId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("EcoScolarWebApi.Models.User", "Reviewer")
-                        .WithMany("ReviewsGiven")
+                        .WithMany()
                         .HasForeignKey("ReviewerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -1426,8 +1413,6 @@ namespace EcoScolarWebApi.Migrations
                         .HasForeignKey("TransactionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Reviewed");
 
                     b.Navigation("Reviewer");
 
@@ -1649,10 +1634,6 @@ namespace EcoScolarWebApi.Migrations
                     b.Navigation("Favorites");
 
                     b.Navigation("Languages");
-
-                    b.Navigation("ReviewsGiven");
-
-                    b.Navigation("ReviewsReceived");
                 });
 
             modelBuilder.Entity("EcoScolarWebApi.Models.PhysicalItem", b =>
