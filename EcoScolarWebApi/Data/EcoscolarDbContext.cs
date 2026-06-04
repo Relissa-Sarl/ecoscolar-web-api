@@ -28,6 +28,7 @@ public class EcoscolarDbContext(DbContextOptions<EcoscolarDbContext> options) : 
 	public DbSet<UserLanguage> UserLanguages { get; set; } = default!;
 	public DbSet<Language> Languages { get; set; } = default!;
 	public DbSet<Location> Locations { get; set; } = default!;
+	public DbSet<CartItem> CartItems { get; set; } = default!;
 
 	protected override void OnModelCreating(ModelBuilder builder)
 	{
@@ -45,7 +46,19 @@ public class EcoscolarDbContext(DbContextOptions<EcoscolarDbContext> options) : 
 			.HasForeignKey(uf => uf.AdvertId)
 			.OnDelete(DeleteBehavior.Cascade);
 
-		ConfigureUserLanguageEntity(builder);
+		builder.Entity<CartItem>()
+			.HasOne(uf => uf.User)
+			.WithMany(u => u.CartItems)
+			.HasForeignKey(uf => uf.UserId)
+			.OnDelete(DeleteBehavior.NoAction);
+
+        builder.Entity<CartItem>()
+			.HasOne(uf => uf.Advert)
+			.WithMany()
+			.HasForeignKey(uf => uf.AdvertId)
+			.OnDelete(DeleteBehavior.Cascade);
+
+        ConfigureUserLanguageEntity(builder);
 		ConfigureLocationEntity(builder);
 		Seeding(builder);
 	}
