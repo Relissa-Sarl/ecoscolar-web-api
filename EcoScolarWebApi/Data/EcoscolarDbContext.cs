@@ -35,6 +35,7 @@ public class EcoscolarDbContext(DbContextOptions<EcoscolarDbContext> options) : 
     public DbSet<PriceOffer> PriceOffers { get; set; }
     public DbSet<Flag> Flags { get; set; }
     public DbSet<SearchAlert> SearchAlerts { get; set; }
+    public DbSet<SupportTicket> SupportTickets { get; set; } = default!;
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -164,6 +165,15 @@ public class EcoscolarDbContext(DbContextOptions<EcoscolarDbContext> options) : 
             entity.HasOne(sa => sa.BookCategory)
                 .WithMany()
                 .HasForeignKey(sa => sa.BookCategoryId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // SupportTicket
+        builder.Entity<SupportTicket>(entity =>
+        {
+            entity.HasOne(t => t.User)
+                .WithMany()
+                .HasForeignKey(t => t.UserId)
                 .OnDelete(DeleteBehavior.SetNull);
         });
 
