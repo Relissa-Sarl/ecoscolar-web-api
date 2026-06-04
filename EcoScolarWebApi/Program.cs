@@ -1,5 +1,7 @@
 using EcoScolarWebApi.Extensions;
 using EcoScolarWebApi.Models;
+using EcoScolarWebApi.Services;
+using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +11,7 @@ builder.Services.AddAuthAndIdentity();
 builder.Services.AddSwaggerAndVersioning();
 builder.Services.AddEcoScolarServices(builder.Configuration);
 builder.Services.AddMappersServices(builder.Configuration);
+builder.Services.AddTransient<IEmailSender<User>, DevEmailSenderService>();
 
 builder.Services.AddControllers().AddJsonOptions(options =>
 	options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
