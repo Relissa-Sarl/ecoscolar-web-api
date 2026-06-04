@@ -69,6 +69,19 @@ services:
       timeout: 5s
       retries: 5
 
+  # -----------------------------
+  # Mailpit - SMTP Server and Web UI for Testing Emails
+  # -----------------------------
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: ecoscolar-mailpit
+    restart: unless-stopped
+    ports:
+      - "1025:1025" # Standard SMTP port
+      - "8025:8025" # Web UI port
+    networks:
+      - ecoscolar
+
 networks:
   dmz:
     driver: bridge
