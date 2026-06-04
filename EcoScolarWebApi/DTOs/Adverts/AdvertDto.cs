@@ -19,7 +19,8 @@ namespace EcoScolarWebApi.DTOs.Adverts;
 /// <param name="UserId">The ID of the user who created the PhysicalItem</param>
 /// <param name="SellerPseudo">The pseudo (username) of the seller</param>
 /// <param name="PrimaryImage">The URL of the primary image of the PhysicalItem</param>
-public record AdvertReadDto(long Id, string Type, string Title, decimal Price, DateTime PublicationDate, DateTime NotificationDate, AdvertStatus Status, string UserId, string SellerPseudo, string? PrimaryImage)
+/// <param name="BuyerName">The name of the buyer if the advert is sold</param>
+public record AdvertReadDto(long Id, string Type, string Title, decimal Price, DateTime PublicationDate, DateTime NotificationDate, AdvertStatus Status, string UserId, string SellerPseudo, string? PrimaryImage, string? BuyerName)
 {
 	/// <summary>
 	/// Factory method to create an AdvertReadDto from an PhysicalItem entity.
@@ -39,6 +40,8 @@ public record AdvertReadDto(long Id, string Type, string Title, decimal Price, D
 		};
 
 		string? primaryImage = (entity as Models.PhysicalItem)?.Pictures?.FirstOrDefault()?.Label;
+        // TODO: Implement logic to get the buyer's name when the advert is sold.
+        string? buyerName = null;
 
 		return new AdvertReadDto(
 			Id: entity.AdvertId,
@@ -50,7 +53,8 @@ public record AdvertReadDto(long Id, string Type, string Title, decimal Price, D
 			Status: entity.Status,
 			UserId: entity.SellerId,
 			SellerPseudo: entity.Seller?.UserName ?? "Anonyme",
-			PrimaryImage: primaryImage
+			PrimaryImage: primaryImage,
+			BuyerName: buyerName
 		);
 	}
 }

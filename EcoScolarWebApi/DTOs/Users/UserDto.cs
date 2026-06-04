@@ -34,7 +34,7 @@ public record UserReadDto(
         Email: entity.Email ?? "",
         BirthdayDate: entity.DateOfBirth,
         IsOnboarded: entity.IsOnboarded,
-        Location: LocationReadDto.FromEntity(entity.Location) ?? null,
+        Location: entity.Location != null ? LocationReadDto.FromEntity(entity.Location) : null,
         SpokenLanguages: entity.Languages != null
             ? entity.Languages.Select(ul => new SpokenLanguageDto(Language: ul.Label, Level: ul.LanguageLevel))
             : Array.Empty<SpokenLanguageDto>()
@@ -82,6 +82,11 @@ string Region
 {
     public static LocationReadDto? FromEntity(Location location)
     {
+        if (location == null)
+        {
+            return null;
+        }
+
         return new LocationReadDto(
             PostalCode: location.PostalCode,
             City: location.City,
