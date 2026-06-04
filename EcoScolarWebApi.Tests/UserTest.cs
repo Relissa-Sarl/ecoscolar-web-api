@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NSubstitute;
 using System.Security.Claims;
+using EcoScolarWebApi.Mappers;
 using Xunit;
 
 namespace EcoScolarWebApi.Tests.Controllers;
@@ -23,6 +24,7 @@ public class UsersControllerTests
 	private readonly IUserService _userServiceMock;
 	private readonly EcoscolarDbContext _context;
 	private readonly UsersController _controller;
+	private readonly ReviewMapper _reviewMapper;
 
 	public UsersControllerTests()
 	{
@@ -36,9 +38,10 @@ public class UsersControllerTests
 		_context = new EcoscolarDbContext(options);
 
 		_userServiceMock = Substitute.For<IUserService>();
+        _reviewMapper = Substitute.For<ReviewMapper>();
 
-		// Simulate the dependency injection of UserManager and DbContext into the UsersController
-		_controller = new UsersController(_userServiceMock, _userManagerMock, _context);
+        // Simulate the dependency injection of UserManager and DbContext into the UsersController
+        _controller = new UsersController(_userServiceMock, _userManagerMock, _context, _reviewMapper);
 	}
 
 
