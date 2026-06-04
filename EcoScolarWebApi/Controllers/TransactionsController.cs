@@ -23,7 +23,7 @@ public class TransactionsController(EcoscolarDbContext context, UserManager<User
 	{
 		var transactionUserIds = await _context.Transactions
 			.Where(t => t.TransactionId == transactionId)
-			.Select(t => new TransactionUserIdsDTO(t.BuyerId, t.Advert.SellerId))
+			.Select(t => new TransactionUserIdsDto(t.BuyerId, t.Advert.SellerId))
 			.FirstOrDefaultAsync();
 
 		// If the transaction doesn't exist, return 404 Not Found
@@ -69,4 +69,4 @@ public class TransactionsController(EcoscolarDbContext context, UserManager<User
 	}
 }
 
-public record TransactionUserIdsDTO(string BuyerId, string SellerId);
+public record TransactionUserIdsDto(string BuyerId, string SellerId);
