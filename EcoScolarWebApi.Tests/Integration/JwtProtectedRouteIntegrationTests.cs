@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using EcoScolarWebApi.Commun;
 using EcoScolarWebApi.Data;
+using EcoScolarWebApi.Mappers;
 using EcoScolarWebApi.Models;
 using EcoScolarWebApi.Services;
 using FluentAssertions;
@@ -19,13 +20,15 @@ public class JwtProtectedRouteIntegrationTests : IDisposable
 	private readonly EcoscolarDbContext _context;
 	private readonly UserManager<User> _userManager;
 	private readonly UserService _userService;
+	private readonly UserMapper _userMapper;
 
-	public JwtProtectedRouteIntegrationTests()
+    public JwtProtectedRouteIntegrationTests()
 	{
 		_provider = IntegrationTestIdentityHelper.CreateIdentityProvider(out _context);
 		_userManager = _provider.GetRequiredService<UserManager<User>>();
 		var signInManager = _provider.GetRequiredService<SignInManager<User>>();
-		_userService = new UserService(_userManager, _context, signInManager);
+		_userMapper = new UserMapper();
+		_userService = new UserService(_userManager, _context, signInManager, _userMapper);
 	}
 
 	[Fact]
@@ -47,8 +50,8 @@ public class JwtProtectedRouteIntegrationTests : IDisposable
 			UserName = email,
 			Email = email,
 			FirstName = "Jwt",
-			LastName = "Test"
-		};
+			LastName = "Test",
+        };
 		(await _userManager.CreateAsync(user, "Password123!")).Succeeded.Should().BeTrue();
 
 		var claims = new ClaimsPrincipal(new ClaimsIdentity([
