@@ -89,6 +89,24 @@ public class SupportContactServiceIntegrationTests : IDisposable
     }
 
     [Fact]
+    public async Task SubmitAsync_ReturnsInvalid_WhenSubjectIsWhitespaceOnly()
+    {
+        var request = new SupportContactRequestDto
+        {
+            Email = "user@example.com",
+            Subject = "     ",
+            Message = "Message de test suffisamment long."
+        };
+
+        var result = await _service.SubmitAsync(request, user: null);
+
+        result.IsSuccess.Should().BeFalse();
+        result.ErrorType.Should().Be(ErrorType.Invalid);
+        result.Errors.Should().Contain("Veuillez saisir l'objet du message.");
+        (await _context.SupportTickets.CountAsync()).Should().Be(0);
+    }
+
+    [Fact]
     public async Task SubmitAsync_AssociatesUserId_WhenAuthenticated()
     {
         var user = await CreateUserAsync("auth.support@example.com");

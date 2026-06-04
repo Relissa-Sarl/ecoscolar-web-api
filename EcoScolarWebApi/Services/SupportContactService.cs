@@ -22,11 +22,21 @@ public class SupportContactService(
         SupportContactRequestDto request,
         ClaimsPrincipal? user)
     {
-        var email = request.Email.Trim();
-        var subject = request.Subject.Trim();
-        var message = request.Message.Trim();
+        var email = (request.Email ?? string.Empty).Trim();
+        var subject = (request.Subject ?? string.Empty).Trim();
+        var message = (request.Message ?? string.Empty).Trim();
 
-        if (string.IsNullOrWhiteSpace(message))
+        if (string.IsNullOrWhiteSpace(email))
+            return Result<SupportContactResponseDto>.Failure(
+                "Veuillez saisir une adresse e-mail valide.",
+                ErrorType.Invalid);
+
+        if (string.IsNullOrWhiteSpace(subject) || subject.Length < 5)
+            return Result<SupportContactResponseDto>.Failure(
+                "Veuillez saisir l'objet du message.",
+                ErrorType.Invalid);
+
+        if (string.IsNullOrWhiteSpace(message) || message.Length < 10)
             return Result<SupportContactResponseDto>.Failure(
                 "Veuillez saisir un message.",
                 ErrorType.Invalid);
@@ -38,25 +48,24 @@ public class SupportContactService(
             userId = currentUser?.Id;
         }
 
+        var createdAt = DateTime.UtcNow;
         var ticket = new SupportTicket
         {
             Email = email,
             Subject = subject,
             Message = message,
             UserId = userId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = createdAt
         };
 
-        context.SupportTickets.Add(ticket);
-        await context.SaveChangesAsync();
-
-        context.SupportTicketMessages.Add(new SupportTicketMessage
+        ticket.Messages.Add(new SupportTicketMessage
         {
-            TicketId = ticket.Id,
             Body = SupportWelcomeMessage,
             IsFromSupport = true,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = createdAt
         });
+
+        context.SupportTickets.Add(ticket);
         await context.SaveChangesAsync();
 
         var destination = configuration["Support:DestinationEmail"] ?? "support@ecoscolar.local";
