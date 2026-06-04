@@ -25,13 +25,13 @@ public class PublicComment
     public long AdvertId { get; set; }
 
     [Required]
-    public string AuthorId { get; set; }
+    public string AuthorId { get; set; } = default!;
 
-    // === Navigation Properties ===
+	// === Navigation Properties ===
 
-    [ForeignKey(nameof(AdvertId))]
-    public virtual Advert? Advert { get; set; }
+	[ForeignKey(nameof(AdvertId))]
+    public virtual Advert Advert { get; set; } = default!;
 
     [ForeignKey(nameof(AuthorId))]
-    public virtual User? Author { get; set; }
+    public virtual User Author { get; set; } = default!;
 }

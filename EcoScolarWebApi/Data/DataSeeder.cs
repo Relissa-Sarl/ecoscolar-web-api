@@ -1,4 +1,4 @@
-﻿using Bogus;
+using Bogus;
 using EcoScolarWebApi.Enums;
 using EcoScolarWebApi.Models;
 using Microsoft.AspNetCore.Identity;

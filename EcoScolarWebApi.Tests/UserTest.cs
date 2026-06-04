@@ -5,8 +5,10 @@ using EcoScolarWebApi.DTOs.Adverts;
 using EcoScolarWebApi.DTOs.Users;
 using EcoScolarWebApi.Enums;
 using EcoScolarWebApi.Models;
+using EcoScolarWebApi.Services;
 using EcoScolarWebApi.Services.Contracts;
 using FluentAssertions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -97,11 +99,158 @@ public class UsersControllerTests
 		result.Should().BeOfType<UnauthorizedObjectResult>();
 	}
 
-	#endregion
+    #endregion
 
-	#region Tests pour UpdateFullProfile
+    #region Tests pour AnonymizeProfileAsync (Service)
 
-	[Fact]
+    [Fact]
+    public async Task AnonymizeProfileAsync_ShouldReturnUnauthorized_WhenUserIdIsMissing()
+    {
+        // Arrange
+        var store = Substitute.For<IUserStore<User>>();
+        var userManagerMock = Substitute.For<UserManager<User>>(store, null!, null!, null!, null!, null!, null!, null!, null!);
+        var signInManagerMock = Substitute.For<SignInManager<User>>(userManagerMock, Substitute.For<IHttpContextAccessor>(), Substitute.For<IUserClaimsPrincipalFactory<User>>(), null!, null!, null!, null!);
+
+        var options = new DbContextOptionsBuilder<EcoscolarDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+        using var context = new EcoscolarDbContext(options);
+
+        var userService = new UserService(userManagerMock, context, signInManagerMock);
+
+        userManagerMock.GetUserId(Arg.Any<ClaimsPrincipal>()).Returns((string?)null);
+
+        // Act
+        var result = await userService.AnonymizeProfileAsync(new ClaimsPrincipal());
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.ErrorType.Should().Be(ErrorType.Unauthorized);
+    }
+
+    [Fact]
+    public async Task AnonymizeProfileAsync_ShouldAnonymizeDataAndSignOut_WhenUserExists()
+    {
+        // Arrange
+        var store = Substitute.For<IUserStore<User>>();
+        var userManagerMock = Substitute.For<UserManager<User>>(store, null!, null!, null!, null!, null!, null!, null!, null!);
+        var signInManagerMock = Substitute.For<SignInManager<User>>(userManagerMock, Substitute.For<IHttpContextAccessor>(), Substitute.For<IUserClaimsPrincipalFactory<User>>(), null!, null!, null!, null!);
+
+        var options = new DbContextOptionsBuilder<EcoscolarDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+
+        using var context = new EcoscolarDbContext(options);
+        var userService = new UserService(userManagerMock, context, signInManagerMock);
+
+        var existingUser = new User
+        {
+            Id = "guid-delete-me",
+            FirstName = "Damien",
+            LastName = "Loup",
+            Nickname = "Sikties",
+            DateOfBirth = "1995-05-21",
+            IsOnboarded = true
+        };
+
+        context.Users.Add(existingUser);
+        var favorite = new UserFavorite { UserId = existingUser.Id, AdvertId = 99 };
+        context.UserFavorites.Add(favorite);
+        await context.SaveChangesAsync();
+
+        userManagerMock.GetUserId(Arg.Any<ClaimsPrincipal>()).Returns(existingUser.Id);
+
+        userManagerMock.Users.Returns(context.Users);
+
+        userManagerMock.NormalizeEmail(Arg.Any<string>()).Returns("@DELETED.ECOSCOLAR.COM");
+        userManagerMock.NormalizeName(Arg.Any<string>()).Returns("@DELETED.ECOSCOLAR.COM");
+
+        userManagerMock.SetEmailAsync(Arg.Any<User>(), Arg.Any<string>())
+        .Returns(Task.FromResult(IdentityResult.Success));
+
+        userManagerMock.SetUserNameAsync(Arg.Any<User>(), Arg.Any<string>())
+            .Returns(Task.FromResult(IdentityResult.Success));
+
+        userManagerMock.UpdateAsync(Arg.Any<User>()).Returns(IdentityResult.Success);
+
+        signInManagerMock.SignOutAsync().Returns(Task.CompletedTask);
+
+        // Act
+        var result = await userService.AnonymizeProfileAsync(new ClaimsPrincipal());
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+
+        existingUser.FirstName.Should().NotBe("Damien");
+        existingUser.LastName.Should().NotBe("Loup");
+        existingUser.Nickname.Should().StartWith("DeletedUser_");
+        existingUser.DateOfBirth.Should().Be("1995-01-01");
+        existingUser.IsOnboarded.Should().BeFalse();
+
+        var favoriteInDb = await context.UserFavorites
+        .FirstOrDefaultAsync(f => f.UserId == existingUser.Id && f.AdvertId == 99);
+
+        favoriteInDb.Should().BeNull();
+
+        // Vérification Identity native
+        existingUser.NormalizedEmail.Should().Contain("@DELETED.ECOSCOLAR.COM");
+        existingUser.NormalizedUserName.Should().Contain("@DELETED.ECOSCOLAR.COM");
+
+        // Vérification de la déconnexion forcée
+        await signInManagerMock.Received(1).SignOutAsync();
+    }
+
+    #endregion
+
+    #region Tests pour DeleteMyProfile
+
+    [Fact]
+    public async Task DeleteMyProfile_ShouldReturnOk_WhenAnonymizationSucceeds()
+    {
+        // Arrange
+        _userServiceMock.AnonymizeProfileAsync(Arg.Any<ClaimsPrincipal>())
+            .Returns(Result<bool>.Success(true));
+
+        // Act
+        var result = await _controller.DeleteMyProfile();
+
+        // Assert
+        var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+        okResult.Value.Should().BeEquivalentTo(new { message = "The account has successfully got anonymized" });
+    }
+
+    [Fact]
+    public async Task DeleteMyProfile_ShouldReturnUnauthorized_WhenSessionIsInvalid()
+    {
+        // Arrange
+        _userServiceMock.AnonymizeProfileAsync(Arg.Any<ClaimsPrincipal>())
+            .Returns(Result<bool>.Failure("SESSION_INVALID", ErrorType.Unauthorized));
+
+        // Act
+        var result = await _controller.DeleteMyProfile();
+
+        // Assert
+        var unauthorizedResult = result.Should().BeOfType<UnauthorizedObjectResult>().Subject;
+        unauthorizedResult.Value.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task DeleteMyProfile_ShouldReturnNotFound_WhenUserSessionExpired()
+    {
+        // Arrange
+        _userServiceMock.AnonymizeProfileAsync(Arg.Any<ClaimsPrincipal>())
+            .Returns(Result<bool>.Failure("SESSION_EXPIRED", ErrorType.NotFound));
+
+        // Act
+        var resultDelete = await _controller.DeleteMyProfile();
+
+        // Assert
+        resultDelete.Should().BeOfType<NotFoundObjectResult>();
+    }
+
+    #endregion
+
+    #region Tests pour UpdateFullProfile
+
+    [Fact]
 	public async Task UpdateFullProfile_ShouldReturnOk_WhenUpdateSucceeds()
 	{
 		var updatedDto = new UserReadDto(
@@ -295,6 +444,45 @@ public class UsersControllerTests
 
 	#endregion
 
+	#region Tests for DeleteSearchAlert
+
+	[Fact]
+	public async Task DeleteSearchAlert_ShouldReturnNotFound_WhenAlertDoesNotExist()
+	{
+		var existingUser = new User { Id = "guid-alert-del-0", UserName = "alert@test.ch" };
+		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+
+		var result = await _controller.DeleteSearchAlert(999);
+
+		result.Should().BeOfType<NotFoundObjectResult>();
+	}
+
+	[Fact]
+	public async Task DeleteSearchAlert_ShouldReturnNoContent_WhenAlertOwnedByUser()
+	{
+		var existingUser = new User { Id = "guid-alert-del-1", UserName = "alert@test.ch" };
+		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+
+		_context.SearchAlerts.Add(new SearchAlert
+		{
+			UserId = existingUser.Id,
+			AdvertSearch = "Biologie",
+			AdvertType = CatalogAdvertTypeCodes.Books
+		});
+		await _context.SaveChangesAsync();
+
+		var alertId = _context.SearchAlerts.First().ResearchId;
+
+		var result = await _controller.DeleteSearchAlert(alertId);
+
+		result.Should().BeOfType<NoContentResult>();
+
+		var inDb = await _context.SearchAlerts.FindAsync(alertId);
+		inDb.Should().BeNull();
+	}
+
+	#endregion
+
 	#region Tests pour ToggleFavorite
 
 	[Fact]
@@ -391,6 +579,87 @@ public class UsersControllerTests
 
 		var favoriteInDb = await _context.UserFavorites.FirstOrDefaultAsync(u => u.UserId == existingUser.Id && u.AdvertId == 3);
 		favoriteInDb.Should().BeNull();
+	}
+
+	#endregion
+
+	#region Tests for CreateSearchAlert
+
+	[Fact]
+	public async Task CreateSearchAlert_ShouldReturnNotFound_WhenUserDoesNotExist()
+	{
+		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns((User?)null);
+
+		var result = await _controller.CreateSearchAlert(new CreateSearchAlertDto { Q = "Biologie" });
+
+		result.Should().BeOfType<NotFoundObjectResult>();
+	}
+
+	[Fact]
+	public async Task CreateSearchAlert_ShouldReturnBadRequest_WhenNoCriteria()
+	{
+		var existingUser = new User { Id = "guid-alert-0", UserName = "alert@test.ch" };
+		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+
+		var result = await _controller.CreateSearchAlert(new CreateSearchAlertDto());
+
+		result.Should().BeOfType<BadRequestObjectResult>();
+	}
+
+	[Fact]
+	public async Task CreateSearchAlert_ShouldReturnCreated_WhenCriteriaValid()
+	{
+		var existingUser = new User { Id = "guid-alert-1", UserName = "alert@test.ch" };
+		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+
+		var result = await _controller.CreateSearchAlert(new CreateSearchAlertDto { Q = "Calculatrice" });
+
+		var created = result.Should().BeOfType<ObjectResult>().Subject;
+		created.StatusCode.Should().Be(StatusCodes.Status201Created);
+		var alertDto = created.Value.Should().BeOfType<SearchAlertReadDto>().Subject;
+		alertDto.Q.Should().Be("Calculatrice");
+		alertDto.Id.Should().BeGreaterThan(0);
+
+		var inDb = await _context.SearchAlerts.FirstOrDefaultAsync(a => a.UserId == existingUser.Id);
+		inDb.Should().NotBeNull();
+		inDb!.AdvertSearch.Should().Be("Calculatrice");
+	}
+
+	#endregion
+
+	#region Tests for GetMySearchAlerts
+
+	[Fact]
+	public async Task GetMySearchAlerts_ShouldReturnNotFound_WhenUserDoesNotExist()
+	{
+		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns((User?)null);
+
+		var result = await _controller.GetMySearchAlerts();
+
+		result.Should().BeOfType<NotFoundObjectResult>();
+	}
+
+	[Fact]
+	public async Task GetMySearchAlerts_ShouldReturnOnlyCurrentUserAlerts_OrderedByResearchIdDesc()
+	{
+		var userA = new User { Id = "guid-alert-get-a", UserName = "a@test.ch" };
+		var userB = new User { Id = "guid-alert-get-b", UserName = "b@test.ch" };
+		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(userA);
+
+		_context.SearchAlerts.AddRange(
+			new SearchAlert { UserId = userA.Id, AdvertSearch = "Old", AdvertType = CatalogAdvertTypeCodes.Books },
+			new SearchAlert { UserId = userA.Id, AdvertSearch = "New", AdvertType = CatalogAdvertTypeCodes.Books },
+			new SearchAlert { UserId = userB.Id, AdvertSearch = "Other", AdvertType = CatalogAdvertTypeCodes.Books }
+		);
+		await _context.SaveChangesAsync();
+
+		var result = await _controller.GetMySearchAlerts();
+
+		var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+		var alerts = okResult.Value.Should().BeAssignableTo<IEnumerable<SearchAlertReadDto>>().Subject.ToList();
+		alerts.Should().HaveCount(2);
+		alerts[0].Q.Should().Be("New");
+		alerts[1].Q.Should().Be("Old");
 	}
 
 	#endregion

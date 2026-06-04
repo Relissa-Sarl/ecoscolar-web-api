@@ -1,4 +1,4 @@
-﻿using EcoScolarWebApi.Enums;
+using EcoScolarWebApi.Enums;
 using EcoScolarWebApi.Models;
 
 namespace EcoScolarWebApi.DTOs.Adverts;

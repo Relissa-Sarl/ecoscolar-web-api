@@ -53,6 +53,9 @@ public class ProductCategoriesController : ControllerBase
 
 		existingCategory.Name = dto.Name;
 		existingCategory.Description = dto.Description;
+		existingCategory.NameFr = dto.NameFr;
+		existingCategory.NameDe = dto.NameDe;
+		existingCategory.NameIt = dto.NameIt;
 
 		try
 		{
@@ -81,8 +84,11 @@ public class ProductCategoriesController : ControllerBase
 		var productcategory = new ProductCategory
 		{
 			Name = dto.Name,
-			Description = dto.Description
-		};
+			Description = dto.Description,
+			NameFr = dto.NameFr,
+            NameDe = dto.NameDe,
+            NameIt = dto.NameIt,
+        };
 
 		_context.ProductCategories.Add(productcategory);
 		await _context.SaveChangesAsync();
