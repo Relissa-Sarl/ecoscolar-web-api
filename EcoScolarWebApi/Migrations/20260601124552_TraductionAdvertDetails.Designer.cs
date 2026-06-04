@@ -4,6 +4,7 @@ using EcoScolarWebApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EcoScolarWebApi.Migrations
 {
     [DbContext(typeof(EcoscolarDbContext))]
-    partial class EcoscolarDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260601124552_TraductionAdvertDetails")]
+    partial class TraductionAdvertDetails
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1096,49 +1099,6 @@ namespace EcoScolarWebApi.Migrations
                     b.ToTable("UserLanguages");
                 });
 
-            modelBuilder.Entity("EcoScolarWebApi.Models.UserSearchAlert", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Category")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Grade")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Isbn")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal?>("MaxPrice")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal?>("MinPrice")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("Q")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Subjects")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("UserSearchAlerts");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
@@ -1547,17 +1507,6 @@ namespace EcoScolarWebApi.Migrations
                         .IsRequired();
 
                     b.Navigation("Language");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("EcoScolarWebApi.Models.UserSearchAlert", b =>
-                {
-                    b.HasOne("EcoScolarWebApi.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
 
                     b.Navigation("User");
                 });

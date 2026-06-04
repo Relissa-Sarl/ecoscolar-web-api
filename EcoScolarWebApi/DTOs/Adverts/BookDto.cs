@@ -49,13 +49,13 @@ public record BookReadDto(long id, string title, string description, decimal pri
 public record BookCreateDto(
 	string Title, string Description, decimal Price, string UserId, string[]? Images, PhysicalItemCondition Condition,
 	long CategoryId, string Isbn, string Author, string Publisher, string Edition, Enums.LanguageEnum WrittenLanguage
-) : ProductCreateDto(Title, Description, Price, UserId, Images, Condition, ProductCategoryId: null)
+) : ProductCreateDto(Title, Description, Price, UserId, Images, Condition, ProductCategoryId: null, Weight: null)
 {
 	/// <summary>
 	/// Converts the BookCreateDto to a Books entity.
 	/// </summary>
 	/// <returns>The Books entity</returns>
-	public Book ToEntity()
+	public new Book ToEntity()
 	{
 		var Books = new Book();
 		this.MapToEntity(Books);
