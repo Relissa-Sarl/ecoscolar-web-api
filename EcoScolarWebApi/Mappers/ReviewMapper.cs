@@ -14,5 +14,6 @@ public partial class ReviewMapper
 	public partial IEnumerable<ReviewResponseDTO> ToReviewsResponseDTO(IEnumerable<Review> reviews);
 	[MapProperty("Reviewed.Nickname", nameof(ReviewResponseDTO.ReviewedNickname))]
 	[MapProperty("Reviewer.Nickname", nameof(ReviewResponseDTO.ReviewerNickname))]
-	public partial IQueryable<ReviewResponseDTO> ProjectToReviewResponseDTOs(IQueryable<Review> reviews);
+    [MapProperty("ReviewedId == Transaction.BuyerId ? 'Acheteur' : 'Vendeur'", nameof(ReviewResponseDTO.ReviewedRole))]
+    public partial IQueryable<ReviewResponseDTO> ProjectToReviewResponseDTOs(IQueryable<Review> reviews);
 }

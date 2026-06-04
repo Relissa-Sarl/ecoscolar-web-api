@@ -1,7 +1,8 @@
-﻿using EcoScolarWebApi.Commun;
+using EcoScolarWebApi.Commun;
 using EcoScolarWebApi.Controllers;
 using EcoScolarWebApi.Data;
 using EcoScolarWebApi.DTOs.Adverts;
+using EcoScolarWebApi.DTOs.Reviews;
 using EcoScolarWebApi.DTOs.Users;
 using EcoScolarWebApi.Enums;
 using EcoScolarWebApi.Models;
@@ -16,7 +17,7 @@ using System.Security.Claims;
 using EcoScolarWebApi.Mappers;
 using Xunit;
 
-namespace EcoScolarWebApi.Tests.Controllers;
+namespace EcoScolarWebApi.Tests;
 
 public class UsersControllerTests
 {
@@ -38,7 +39,7 @@ public class UsersControllerTests
 		_context = new EcoscolarDbContext(options);
 
 		_userServiceMock = Substitute.For<IUserService>();
-        _reviewMapper = Substitute.For<ReviewMapper>();
+        _reviewMapper = new ReviewMapper();
 
         // Simulate the dependency injection of UserManager and DbContext into the UsersController
         _controller = new UsersController(_userServiceMock, _userManagerMock, _context, _reviewMapper);
@@ -600,5 +601,90 @@ public class UsersControllerTests
 		returnedAdverts.Should().NotBeNull();
 		returnedAdverts.Should().BeEmpty();
 	}
-    #endregion
-    }
+     #endregion
+
+	#region Tests for GetUserReviews
+
+	[Fact]
+	public async Task GetUserReviews_ShouldReturnNotFound_WhenUserDoesNotExist()
+	{
+		// Arrange
+		// Act
+		var result = await _controller.GetUserReviews("non-existent-user");
+
+		// Assert
+		result.Result.Should().BeOfType<NotFoundResult>();
+	}
+
+	[Fact]
+	public async Task GetUserReviews_ShouldReturnOkWithReviews_WhenUserExists()
+	{
+		// Arrange
+		var userId = "test-user-id";
+		var reviewerId = "reviewer-user-id";
+
+		var user = new User { Id = userId, Nickname = "test_user", FirstName = "Test", LastName = "User" };
+		var reviewer = new User { Id = reviewerId, Nickname = "reviewer", FirstName = "Review", LastName = "Er" };
+
+		var transaction = new Transaction
+		{
+			TransactionId = 10,
+			BuyerId = userId,
+			AdvertId = 101,
+			Advert = new Book
+			{
+				AdvertId = 101,
+				Title = "Book Title",
+				Description = "Book Desc",
+				SellerId = reviewerId,
+				Seller = reviewer,
+				ISBN = "12345",
+				Author = "John",
+				Publisher = "Pub",
+				Edition = "1st",
+				WrittenLanguage = Enums.LanguageEnum.FR
+			}
+		};
+
+		var review = new Review
+		{
+			ReviewId = 1,
+			Comment = "Great service!",
+			Rating = 5,
+			Date = DateTime.UtcNow,
+			ReviewerId = reviewerId,
+			Reviewer = reviewer,
+			ReviewedId = userId,
+			Reviewed = user,
+			TransactionId = 10,
+			Transaction = transaction,
+			ReviewedRole = ReviewedRole.BUYER
+		};
+
+		_context.Users.AddRange(user, reviewer);
+		_context.Transactions.Add(transaction);
+		_context.Reviews.Add(review);
+		await _context.SaveChangesAsync();
+
+		// Act
+		var result = await _controller.GetUserReviews(userId);
+
+		// Assert
+		var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+		var returnedReviews = okResult.Value.Should().BeAssignableTo<IEnumerable<ReviewResponseDTO>>().Subject.ToList();
+		returnedReviews.Should().HaveCount(1);
+		returnedReviews[0].ReviewId.Should().Be(1);
+		returnedReviews[0].Comment.Should().Be("Great service!");
+		returnedReviews[0].Rating.Should().Be(5);
+		returnedReviews[0].ReviewedId.Should().Be(userId);
+		returnedReviews[0].ReviewerId.Should().Be(reviewerId);
+
+		// Cleanup
+		_context.Reviews.Remove(review);
+		_context.Transactions.Remove(transaction);
+		_context.Users.RemoveRange(user, reviewer);
+		await _context.SaveChangesAsync();
+	}
+
+	#endregion
+}

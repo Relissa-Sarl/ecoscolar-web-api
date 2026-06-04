@@ -1,4 +1,4 @@
-﻿using Asp.Versioning;
+using Asp.Versioning;
 using EcoScolarWebApi.Data;
 using EcoScolarWebApi.DTOs.Reviews;
 using EcoScolarWebApi.Enums;
@@ -37,9 +37,6 @@ public class TransactionsController(EcoscolarDbContext context, UserManager<User
 
 		string? reviewedUserId = null;
 
-        var reviewedRole = (reviewedUserId == transactionUserIds.BuyerId)
-            ? ReviewedRole.BUYER
-            : ReviewedRole.SELLER;
         // Check if the current user is either the buyer or the seller in this transaction
         if (user.Id == transactionUserIds.BuyerId)
 			reviewedUserId = transactionUserIds.SellerId;
@@ -47,6 +44,10 @@ public class TransactionsController(EcoscolarDbContext context, UserManager<User
 			reviewedUserId = transactionUserIds.BuyerId;
 		else
 			return Forbid();
+
+		var reviewedRole = (reviewedUserId == transactionUserIds.BuyerId)
+			? ReviewedRole.BUYER
+			: ReviewedRole.SELLER;
 
 		var alreadyReviewed = await _context.Reviews.AnyAsync(r => r.TransactionId == transactionId && r.ReviewerId == user.Id);
 		if (alreadyReviewed)
