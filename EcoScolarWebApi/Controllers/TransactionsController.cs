@@ -1,6 +1,7 @@
 ﻿using Asp.Versioning;
 using EcoScolarWebApi.Data;
 using EcoScolarWebApi.DTOs.Reviews;
+using EcoScolarWebApi.Enums;
 using EcoScolarWebApi.Mappers;
 using EcoScolarWebApi.Models;
 using Microsoft.AspNetCore.Identity;
@@ -19,7 +20,7 @@ public class TransactionsController(EcoscolarDbContext context, UserManager<User
 	private readonly ReviewMapper _reviewMapper = reviewMapper;
 
 	[HttpPost("{transactionId}/reviews")]
-	public async Task<ActionResult<ReviewResponseDTO>> CreateReview(long transactionId, [FromBody] ReviewRequestDTO review)
+	public async Task<ActionResult<IEnumerable<ReviewResponseDTO>>> CreateReview(long transactionId, [FromBody] ReviewRequestDTO review)
 	{
 		var transactionUserIds = await _context.Transactions
 			.Where(t => t.TransactionId == transactionId)
@@ -36,8 +37,11 @@ public class TransactionsController(EcoscolarDbContext context, UserManager<User
 
 		string? reviewedUserId = null;
 
-		// Check if the current user is either the buyer or the seller in this transaction
-		if (user.Id == transactionUserIds.BuyerId)
+        var reviewedRole = (reviewedUserId == transactionUserIds.BuyerId)
+            ? ReviewedRole.BUYER
+            : ReviewedRole.SELLER;
+        // Check if the current user is either the buyer or the seller in this transaction
+        if (user.Id == transactionUserIds.BuyerId)
 			reviewedUserId = transactionUserIds.SellerId;
 		else if (user.Id == transactionUserIds.SellerId)
 			reviewedUserId = transactionUserIds.BuyerId;
@@ -55,12 +59,13 @@ public class TransactionsController(EcoscolarDbContext context, UserManager<User
 			ReviewerId = user.Id,
 			ReviewedId = reviewedUserId,
 			TransactionId = transactionId,
+			ReviewedRole = reviewedRole
 		};
 
 		_context.Reviews.Add(newReview);
 		await _context.SaveChangesAsync();
 
-		// Reload the review with related data for the response
+		// Reload the review of the transaction (bidirectional reviews)
 		var reviews = await _reviewMapper.ProjectToReviewResponseDTOs(
 							_context.Reviews.Where(r => r.TransactionId == transactionId))
 							.ToListAsync();

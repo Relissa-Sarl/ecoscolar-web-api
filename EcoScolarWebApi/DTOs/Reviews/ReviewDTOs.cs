@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using EcoScolarWebApi.Enums;
 
 namespace EcoScolarWebApi.DTOs.Reviews;
 
@@ -15,5 +16,6 @@ public record ReviewResponseDTO(
 	string ReviewerNickname,
 	string ReviewedId,
 	string ReviewedNickname,
-	long TransactionId
+	long TransactionId,
+	ReviewedRole ReviewedRole
 	);

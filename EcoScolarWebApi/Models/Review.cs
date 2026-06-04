@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using EcoScolarWebApi.Enums;
 
 namespace EcoScolarWebApi.Models;
 
@@ -21,6 +22,8 @@ public class Review
     // === Foreign Keys ===
 
     [Required]
+    public ReviewedRole ReviewedRole { get; set; }
+
     public string ReviewerId { get; set; } = default!;
 
     [Required]
