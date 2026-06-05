@@ -13,16 +13,16 @@ public class DataSeeder
 		if (await context.Users.AnyAsync())
 			return;
 
-		// 1. Génération des données de test spécifiques
+		// 1. Generate test data for manual testing
 		await SeedTestDataAsync(context, userManager);
 
-		// 2. Génération des données aléatoires pour populer la DB
+		// 2. Generate random data for more extensive testing and development
 		await SeedRandomDataAsync(context, userManager);
 	}
 
 	private static async Task SeedTestDataAsync(EcoscolarDbContext context, UserManager<User> userManager)
 	{
-		// --- UTILISATEURS DE TEST ---
+		// Test users with known credentials for manual testing
 		var albert = new User
 		{
 			Id = Guid.NewGuid().ToString(),
@@ -48,13 +48,13 @@ public class DataSeeder
 		await userManager.CreateAsync(albert, "P@ssw0rd!");
 		await userManager.CreateAsync(marie, "P@ssw0rd!");
 
-		// --- CATÉGORIES ---
+		// Get category IDs for test products
 		var productCategoryId = await context.Set<ProductCategory>().Select(p => p.ProductCategoryId).FirstOrDefaultAsync();
 		var bookCategoryId = await context.Set<BookCategory>().Select(b => b.BookCategoryId).FirstOrDefaultAsync();
 
-		// --- ARTICLES DE TEST ---
+		// Test articles for manual testing of sales and purchases
 
-		// 1. Article physique VENDU par Albert (Test vente)
+		// 1. Sold article by Albert (Test sale for Marie)
 		var albertItemSold = new PhysicalItem
 		{
 			Title = "Microscope d'Albert",
@@ -67,7 +67,7 @@ public class DataSeeder
 			ProductCategoryId = productCategoryId
 		};
 
-		// 2. Article physique ACTIF par Albert (Test annonce en cours)
+		// 2. Sold article by Marie (Test sale for Albert)
 		var albertItemActive = new PhysicalItem
 		{
 			Title = "Sac à dos d'Albert",
@@ -80,7 +80,7 @@ public class DataSeeder
 			ProductCategoryId = productCategoryId
 		};
 
-		// 3. Livre VENDU par Albert (Test vente catégorie livre)
+		// 3. Book sold by Albert (Test sale for Marie)
 		var albertBookSold = new Book
 		{
 			Title = "Physique Quantique pour les nuls",
@@ -98,7 +98,7 @@ public class DataSeeder
 			WrittenLanguage = LanguageEnum.FR
 		};
 
-		// 4. Article physique VENDU par Marie (Test achat pour Albert)
+		// 4. Sold article by Marie (Test sale for Albert)
 		var marieItemSold = new PhysicalItem
 		{
 			Title = "Bécher de Marie",
@@ -115,10 +115,10 @@ public class DataSeeder
 		context.Books.Add(albertBookSold);
 		await context.SaveChangesAsync();
 
-		// --- TRANSACTIONS DE TEST (Historique des ventes et achats) ---
+		// Transactions for the test sales between Albert and Marie
 		var transactions = new List<Transaction>
 		{
-            // Marie achète le Microscope d'Albert
+            // Marie buying Albert's Microscope
             new()
 			{
 				AdvertId = albertItemSold.AdvertId,
@@ -129,7 +129,7 @@ public class DataSeeder
 				BuyerConsent = true,
 				SellerConsent = true
 			},
-            // Marie achète le Livre d'Albert
+            // Marie buying Albert's Book
             new()
 			{
 				AdvertId = albertBookSold.AdvertId,
@@ -140,7 +140,7 @@ public class DataSeeder
 				BuyerConsent = true,
 				SellerConsent = true
 			},
-            // Albert achète le Bécher de Marie
+            // Albert buying Marie's Bécher
             new()
 			{
 				AdvertId = marieItemSold.AdvertId,
@@ -163,7 +163,7 @@ public class DataSeeder
 		var faker = new Faker("fr_CH");
 		var randomUsers = new List<User>();
 
-		// --- UTILISATEURS ALÉATOIRES ---
+		// Random users
 		for (var i = 1; i <= 20; i++)
 		{
 			var firstName = faker.Name.FirstName();
@@ -190,7 +190,7 @@ public class DataSeeder
 
 		var usersInDb = await context.Users.ToListAsync();
 
-		// --- RÉCUPÉRATION DES CATÉGORIES ---
+		// Get category IDs for random products
 		var bookCategoryIds = await context.Set<BookCategory>().AsNoTracking().Select(c => c.BookCategoryId).ToListAsync();
 		var subjectList = await context.Set<Subject>().AsNoTracking().ToListAsync();
 		var schoolGradeList = await context.Set<SchoolGrade>().AsNoTracking().ToListAsync();
@@ -199,7 +199,7 @@ public class DataSeeder
 		if (!bookCategoryIds.Any() || !subjectList.Any() || !schoolGradeList.Any() || !productCategoryIds.Any())
 			return;
 
-		// --- GÉNÉRATION BOGUS ---
+		// Generate random adverts (physical items, books, services)
 		var physicalItemsFaker = new Faker<PhysicalItem>("fr_CH")
 			.RuleFor(p => p.Title, f => f.Commerce.ProductName())
 			.RuleFor(p => p.Description, f => f.Lorem.Paragraphs(2))
@@ -254,7 +254,7 @@ public class DataSeeder
 		context.Services.AddRange(services);
 		await context.SaveChangesAsync();
 
-		// --- IMAGES ET COMMENTAIRES ---
+		// Generate pictures for physical items and books
 		var pictures = new List<Picture>();
 		foreach (var item in physicalItems.Cast<PhysicalItem>().Concat(books))
 		{
