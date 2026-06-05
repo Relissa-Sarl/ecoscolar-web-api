@@ -66,7 +66,7 @@ public class PaymentsController : ControllerBase
 				TransferGroup = "COMMANDE_ID_789",
 			},
 
-			SuccessUrl = "http://localhost:3001/success",
+			SuccessUrl = "http://localhost:3000/success?total={totalAmount}&orderId={CHECKOUT_SESSION_ID}",
 			CancelUrl = "http://localhost:3001/denied",
 		};
 
