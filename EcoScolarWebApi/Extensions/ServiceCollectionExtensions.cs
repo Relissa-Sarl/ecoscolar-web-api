@@ -118,6 +118,6 @@ public static class ServiceCollectionExtensions
 		services.AddScoped<IUserService, UserService>();
 		services.AddTransient<IEmailSender<User>, DevEmailSenderService>();
 
-		return services;
+        return services;
 	}
 }

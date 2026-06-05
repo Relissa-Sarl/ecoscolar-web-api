@@ -1,6 +1,7 @@
 using EcoScolarWebApi.Extensions;
 using EcoScolarWebApi.Models;
 using EcoScolarWebApi.Services;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,7 +12,6 @@ builder.Services.AddAuthAndIdentity();
 builder.Services.AddSwaggerAndVersioning();
 builder.Services.AddEcoScolarServices(builder.Configuration);
 builder.Services.AddMappersServices(builder.Configuration);
-builder.Services.AddTransient<IEmailSender<User>, DevEmailSenderService>();
 
 builder.Services.AddControllers().AddJsonOptions(options =>
 	options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
@@ -22,6 +22,11 @@ builder.Services.AddCors(options => options.AddPolicy("AllowFrontend", policy =>
 
 // App creation
 var app = builder.Build();
+
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
 
 // Migrations and seeding
 app.ApplyDatabaseMigrations(app.Configuration);
