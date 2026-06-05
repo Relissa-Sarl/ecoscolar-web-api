@@ -346,43 +346,6 @@ public class DataSeeder
             }
         }
         context.Pictures.AddRange(pictures);
-
-        // 2. Give Albert some purchases (Transactions)
-        var otherUsersAdverts = context.Adverts
-            .Where(a => a.SellerId != testUser.Id)
-            .Take(2)
-            .ToList();
-
-        var transactions = new List<Transaction>();
-        foreach (var advert in otherUsersAdverts)
-        {
-            transactions.Add(new Transaction
-            {
-                AdvertId = advert.AdvertId,
-                BuyerId = testUser.Id,
-                Date = DateTime.UtcNow.AddDays(-faker.Random.Int(1, 10)),
-                Status = "Completed",
-                PlatformFee = 1.50m,
-                BuyerConsent = true,
-                SellerConsent = true
-            });
-            advert.Status = AdvertStatus.SOLD; // Update advert status
-        }
-
-        // Add a sale for Albert with a transaction to see the buyer
-        var albertSoldAdvert = physicalItems[0];
-        transactions.Add(new Transaction
-        {
-                AdvertId = albertSoldAdvert.AdvertId,
-                BuyerId = users.First(u => u.Id != testUser.Id).Id,
-                Date = DateTime.UtcNow.AddDays(-faker.Random.Int(1, 10)),
-                Status = "Completed",
-                PlatformFee = 1.50m,
-                BuyerConsent = true,
-                SellerConsent = true
-        });
-
-        context.Transactions.AddRange(transactions);
-        context.SaveChanges();
+        await context.SaveChangesAsync();
     }
 }
