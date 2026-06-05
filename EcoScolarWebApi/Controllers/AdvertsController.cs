@@ -16,13 +16,13 @@ public class AdvertsController : ControllerBase
 {
 	private readonly IAdvertSearchService _advertSearchService;
 	private readonly EcoscolarDbContext _context;                                           // Database context for accessing the database
-	private bool AdvertExists(long id) => _context.Adverts.Any(e => e.AdvertId == id);      // Helper method to check if an Adverts with the specified ID exists in the database
+	private bool AdvertExists(long id) => _context.Adverts.Any(e => e.AdvertId == id);      // Helper method to check if an PhysicalItem with the specified ID exists in the database
 
 	/// <summary>
 	/// AdvertsController constructor
 	/// </summary>
 	/// <param name="context">The database context</param>
-	/// <param name="advertSearchService">The Adverts search service</param>
+	/// <param name="advertSearchService">The PhysicalItem search service</param>
 	public AdvertsController(EcoscolarDbContext context, IAdvertSearchService advertSearchService)
 	{
 		_context = context;
@@ -45,7 +45,7 @@ public class AdvertsController : ControllerBase
 		try
 		{
 			adverts = await _context.Adverts
-				.Include(a => a.User)
+				.Include(a => a.Seller)
 				.ToListAsync();
 			List<long> physicalItemIds = adverts.OfType<PhysicalItem>()
 				.Select(item => item.AdvertId)
@@ -53,7 +53,7 @@ public class AdvertsController : ControllerBase
 			if (physicalItemIds.Any())
 			{
 				await _context.Pictures
-					.Where(Pictures => physicalItemIds.Contains(Pictures.AdvertId))
+					.Where(Pictures => physicalItemIds.Contains(Pictures.PhysicalItemId))
 					.LoadAsync();
 			}
 
@@ -79,7 +79,7 @@ public class AdvertsController : ControllerBase
 		try
 		{
 			books = await _context.Books
-				.Include(p => p.User)
+				.Include(p => p.Seller)
 				.Include(p => p.Pictures)
 				.ToListAsync();
 
@@ -109,7 +109,7 @@ public class AdvertsController : ControllerBase
 		try
 		{
 			var query = _context.Products
-				.Include(p => p.User)
+				.Include(p => p.Seller)
 				.Include(p => p.Pictures)
 				.Where(p => !_context.Set<Book>().Any(b => b.AdvertId == p.AdvertId));
 			if (categoryId.HasValue)
@@ -145,7 +145,7 @@ public class AdvertsController : ControllerBase
 		try
 		{
 			var query = _context.Services
-				.Include(s => s.User)
+				.Include(s => s.Seller)
 				.AsQueryable();
 
 			if (!string.IsNullOrWhiteSpace(q))
@@ -167,14 +167,14 @@ public class AdvertsController : ControllerBase
 	}
 
 	/// <summary>
-	/// Get the details of a specific Adverts by its ID, 
+	/// Get the details of a specific PhysicalItem by its ID, 
 	/// regardless of its type (Books, product or service).
 	/// 
 	/// GET: AdvertsController/Details/5
 	/// Url: /api/v1/adverts/5
 	/// </summary>
-	/// <param name="id">The ID of the Adverts to retrieve</param>
-	/// <returns>The formatted Adverts details</returns>
+	/// <param name="id">The ID of the PhysicalItem to retrieve</param>
+	/// <returns>The formatted PhysicalItem details</returns>
 	[HttpGet("{id}")]
 	public async Task<ActionResult<AdvertReadDto>> Details(long id)
 	{
@@ -182,7 +182,7 @@ public class AdvertsController : ControllerBase
 		try
 		{
 			adverts = await _context.Adverts
-				.Include(a => a.User)
+				.Include(a => a.Seller)
 				.FirstOrDefaultAsync(a => a.AdvertId == id);
 			if (adverts is PhysicalItem physicalItems)
 			{
@@ -215,7 +215,7 @@ public class AdvertsController : ControllerBase
 		try
 		{
 			books = await _context.Books
-				.Include(b => b.User)
+				.Include(b => b.Seller)
 				.Include(b => b.Pictures)
 				.Include(b => b.BookCategory)
 				.FirstOrDefaultAsync(b => b.AdvertId == id);
@@ -243,7 +243,7 @@ public class AdvertsController : ControllerBase
 		try
 		{
 			product = await _context.Products
-				.Include(p => p.User)
+				.Include(p => p.Seller)
 				.Include(p => p.Pictures)
 				.Where(p => !_context.Set<Book>().Any(b => b.AdvertId == p.AdvertId))
 				.FirstOrDefaultAsync(p => p.AdvertId == id);
@@ -271,7 +271,7 @@ public class AdvertsController : ControllerBase
 		try
 		{
 			service = await _context.Services
-				.Include(s => s.User)
+				.Include(s => s.Seller)
 				.Include(s => s.Subject)
 				.Include(s => s.SchoolGrade)
 				.FirstOrDefaultAsync(s => s.AdvertId == id);
@@ -315,14 +315,14 @@ public class AdvertsController : ControllerBase
 	#region POST METHODS
 
 	/// <summary>
-	/// Create a new Books Adverts with the provided details in the request body.
-	/// The Adverts will be added to the database and the created Adverts details will be returned in the response.
+	/// Create a new Books PhysicalItem with the provided details in the request body.
+	/// The PhysicalItem will be added to the database and the created PhysicalItem details will be returned in the response.
 	/// 
 	/// POST: AdvertsController/CreateBook
 	/// Url: /api/v1/adverts/books
 	/// </summary>
-	/// <param name="bookDto">The DTO containing the Books Adverts details</param>
-	/// <returns>The created Adverts details</returns>
+	/// <param name="bookDto">The DTO containing the Books PhysicalItem details</param>
+	/// <returns>The created PhysicalItem details</returns>
 	[HttpPost("books")]
 	public async Task<ActionResult<AdvertReadDto>> CreateBook([FromBody] BookCreateDto bookDto)
 	{
@@ -343,13 +343,13 @@ public class AdvertsController : ControllerBase
 	}
 
 	/// <summary>
-	/// Create a new product Adverts with the provided details in the request body.
+	/// Create a new product PhysicalItem with the provided details in the request body.
 	/// 
 	/// POST: AdvertsController/CreateProduct
 	/// Url: /api/v1/adverts/products
 	/// </summary>
-	/// <param name="productDto">The DTO containing the product Adverts details</param>
-	/// <returns>The created Adverts details</returns>
+	/// <param name="productDto">The DTO containing the product PhysicalItem details</param>
+	/// <returns>The created PhysicalItem details</returns>
 	[HttpPost("products")]
 	public async Task<ActionResult<AdvertReadDto>> CreateProduct([FromBody] ProductCreateDto productDto)
 	{
@@ -370,13 +370,13 @@ public class AdvertsController : ControllerBase
 	}
 
 	/// <summary>
-	/// Create a new service Adverts with the provided details in the request body.
+	/// Create a new service PhysicalItem with the provided details in the request body.
 	/// 
 	/// POST: AdvertsController/CreateService
 	/// Url: /api/v1/adverts/services
 	/// </summary>
-	/// <param name="serviceDto">The DTO containing the service Adverts details</param>
-	/// <returns>The created Adverts details</returns>
+	/// <param name="serviceDto">The DTO containing the service PhysicalItem details</param>
+	/// <returns>The created PhysicalItem details</returns>
 	[HttpPost("services")]
 	public async Task<ActionResult<AdvertReadDto>> CreateService([FromBody] ServiceCreateDto serviceDto)
 	{
@@ -400,14 +400,14 @@ public class AdvertsController : ControllerBase
 	#region PUT METHODS
 
 	/// <summary>
-	/// Edit an existing Books Adverts with the provided details in the request body.
+	/// Edit an existing Books PhysicalItem with the provided details in the request body.
 	/// 
 	/// PUT: AdvertsController/EditBook/5
 	/// Url: /api/v1/adverts/books/{id}
 	/// </summary>
-	/// <param name="id">The ID of the Books Adverts to edit</param>
-	/// <param name="bookDto">The DTO containing the updated Books Adverts details</param>
-	/// <returns>The updated Adverts details</returns>
+	/// <param name="id">The ID of the Books PhysicalItem to edit</param>
+	/// <param name="bookDto">The DTO containing the updated Books PhysicalItem details</param>
+	/// <returns>The updated PhysicalItem details</returns>
 	[HttpPut("books/{id}")]
 	public async Task<IActionResult> EditBook(long id, [FromBody] BookCreateDto bookDto)
 	{
@@ -438,14 +438,14 @@ public class AdvertsController : ControllerBase
 	}
 
 	/// <summary>
-	/// Edit an existing product Adverts with the provided details in the request body.
+	/// Edit an existing product PhysicalItem with the provided details in the request body.
 	/// 
 	/// PUT: AdvertsController/EditProduct/5
 	/// Url: /api/v1/adverts/products/{id}
 	/// </summary>
-	/// <param name="id">The ID of the product Adverts to edit</param>
-	/// <param name="productDto">The DTO containing the updated product Adverts details</param>
-	/// <returns>The updated Adverts details</returns>
+	/// <param name="id">The ID of the product PhysicalItem to edit</param>
+	/// <param name="productDto">The DTO containing the updated product PhysicalItem details</param>
+	/// <returns>The updated PhysicalItem details</returns>
 	[HttpPut("products/{id}")]
 	public async Task<IActionResult> EditProduct(long id, [FromBody] ProductCreateDto productDto)
 	{
@@ -476,14 +476,14 @@ public class AdvertsController : ControllerBase
 	}
 
 	/// <summary>
-	/// Edit an existing service Adverts with the provided details in the request body.
+	/// Edit an existing service PhysicalItem with the provided details in the request body.
 	/// 
 	/// PUT: AdvertsController/EditService/5
 	/// Url: /api/v1/adverts/services/{id}
 	/// </summary>
-	/// <param name="id">The ID of the service Adverts to edit</param>
-	/// <param name="serviceDto">The DTO containing the updated service Adverts details</param>
-	/// <returns>The updated Adverts details</returns>
+	/// <param name="id">The ID of the service PhysicalItem to edit</param>
+	/// <param name="serviceDto">The DTO containing the updated service PhysicalItem details</param>
+	/// <returns>The updated PhysicalItem details</returns>
 	[HttpPut("services/{id}")]
 	public async Task<IActionResult> EditService(long id, [FromBody] ServiceCreateDto serviceDto)
 	{
@@ -516,14 +516,14 @@ public class AdvertsController : ControllerBase
 	#region PATCH METHODS
 
 	/// <summary>
-	/// Update the status of an existing Adverts.
+	/// Update the status of an existing PhysicalItem.
 	/// 
 	/// PATCH: AdvertsController/UpdateAdvertStatus/5
 	/// Url: /api/v1/adverts/{id}/status
 	/// </summary>
-	/// <param name="id">The ID of the Adverts to update</param>
-	/// <param name="status">The new status for the Adverts</param>
-	/// <returns>The updated Adverts details</returns>
+	/// <param name="id">The ID of the PhysicalItem to update</param>
+	/// <param name="status">The new status for the PhysicalItem</param>
+	/// <returns>The updated PhysicalItem details</returns>
 	[HttpPatch("{id}/status")]
 	public async Task<IActionResult> UpdateAdvertStatus(long id, [FromBody] AdvertStatus status)
 	{
@@ -548,13 +548,13 @@ public class AdvertsController : ControllerBase
 	#region DELETE METHODS
 
 	/// <summary>
-	/// Delete an existing Adverts.
+	/// Delete an existing PhysicalItem.
 	/// 
 	/// DELETE: AdvertsController/Delete/5
 	/// Url: /api/v1/adverts/{id}
 	/// </summary>
-	/// <param name="id">The ID of the Adverts to delete</param>
-	/// <returns>The deleted Adverts details</returns>
+	/// <param name="id">The ID of the PhysicalItem to delete</param>
+	/// <returns>The deleted PhysicalItem details</returns>
 	[HttpDelete("{id}")]
 	public async Task<IActionResult> DeleteAdvert(long id)
 	{
@@ -575,14 +575,14 @@ public class AdvertsController : ControllerBase
 	}
 
 	/// <summary>
-	/// Remove images from an existing Adverts.
+	/// Remove images from an existing PhysicalItem.
 	/// 
 	/// DELETE: AdvertsController/RemoveImages
 	/// Url: /api/v1/adverts/{id}/images
 	/// </summary>
-	/// <param name="id">The ID of the Adverts from which to remove images</param>
+	/// <param name="id">The ID of the PhysicalItem from which to remove images</param>
 	/// <param name="imageUrls">The list of image URLs to remove</param>
-	/// <returns>The updated Adverts details</returns>
+	/// <returns>The updated PhysicalItem details</returns>
 	[HttpDelete("{id}/images")]
 	public async Task<IActionResult> RemoveAdvertImages(long id, [FromBody] List<string> imageUrls)
 	{

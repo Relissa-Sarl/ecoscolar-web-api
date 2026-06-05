@@ -11,7 +11,16 @@ public class Language
     public string Label { get; set; }
 
     [Required]
-    public string Name { get; set; }
+    public string Name { get; set; } // TODO - Rename in MCD Language -> Name
+
+    [Required]
+    public string NameFr { get; set; }
+
+    [Required]
+    public string NameDe { get; set; }
+
+    [Required]
+    public string NameIt { get; set; }
 
     // === Many-to-many relationships ===
 

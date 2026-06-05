@@ -43,7 +43,10 @@ public class BookCreateIntegrationTests : IDisposable
 		{
 			BookCategoryId = 1,
 			Name = "Sciences",
-			Description = "Manuels scientifiques"
+            NameFr = "Sciences",
+            NameDe = "Wissenschaften",
+            NameIt = "Scienze",
+            Description = "Manuels scientifiques"
 		});
 		await _context.SaveChangesAsync();
 
@@ -78,7 +81,10 @@ public class BookCreateIntegrationTests : IDisposable
 		{
 			BookCategoryId = 1,
 			Name = "Sciences",
-			Description = "Manuels scientifiques"
+			NameDe = "Wissenschaften",
+            NameFr = "Sciences",
+            NameIt = "Scienze",
+            Description = "Manuels scientifiques"
 		});
 		await _context.SaveChangesAsync();
 

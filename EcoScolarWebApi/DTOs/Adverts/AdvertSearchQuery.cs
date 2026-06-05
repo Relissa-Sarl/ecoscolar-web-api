@@ -1,7 +1,7 @@
 namespace EcoScolarWebApi.DTOs.Adverts;
 
 /// <summary>
-/// Query parameters for Adverts search (summary list).
+/// Query parameters for PhysicalItem search (summary list).
 /// </summary>
 /// <remarks>
 /// For <c>GET api/v1/adverts/summary</c>, only <see cref="Q"/> and <see cref="Isbn"/> are honored by

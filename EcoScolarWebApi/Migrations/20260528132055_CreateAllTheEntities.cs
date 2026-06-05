@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace EcoScolarWebApi.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialMigration : Migration
+    public partial class CreateAllTheEntities : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -89,7 +89,7 @@ namespace EcoScolarWebApi.Migrations
                     SchoolGradeId = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    SchoolGrade = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false)
+                    Code = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -103,7 +103,7 @@ namespace EcoScolarWebApi.Migrations
                     SubjectId = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    Subject = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false)
+                    Code = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -139,7 +139,7 @@ namespace EcoScolarWebApi.Migrations
                     FirstName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     LastName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Nickname = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    BirthdayDate = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    DateOfBirth = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     IsOnboarded = table.Column<bool>(type: "bit", nullable: false),
                     LocationId = table.Column<int>(type: "int", nullable: true),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -180,14 +180,14 @@ namespace EcoScolarWebApi.Migrations
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     NotificationDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Status = table.Column<int>(type: "int", nullable: false),
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                    SellerId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Adverts", x => x.AdvertId);
                     table.ForeignKey(
-                        name: "FK_Adverts_AspNetUsers_UserId",
-                        column: x => x.UserId,
+                        name: "FK_Adverts_AspNetUsers_SellerId",
+                        column: x => x.SellerId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -279,6 +279,71 @@ namespace EcoScolarWebApi.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Flags",
+                columns: table => new
+                {
+                    FlagId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Reason = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
+                    ReporterId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    FlaggedId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Flags", x => x.FlagId);
+                    table.ForeignKey(
+                        name: "FK_Flags_AspNetUsers_FlaggedId",
+                        column: x => x.FlaggedId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Flags_AspNetUsers_ReporterId",
+                        column: x => x.ReporterId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SearchAlerts",
+                columns: table => new
+                {
+                    ResearchId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    AdvertSearch = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    AdvertType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    MaxPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    ISBN = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SubjectId = table.Column<long>(type: "bigint", nullable: true),
+                    BookCategoryId = table.Column<long>(type: "bigint", nullable: true),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SearchAlerts", x => x.ResearchId);
+                    table.ForeignKey(
+                        name: "FK_SearchAlerts_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_SearchAlerts_BookCategories_BookCategoryId",
+                        column: x => x.BookCategoryId,
+                        principalTable: "BookCategories",
+                        principalColumn: "BookCategoryId",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_SearchAlerts_Subjects_SubjectId",
+                        column: x => x.SubjectId,
+                        principalTable: "Subjects",
+                        principalColumn: "SubjectId",
+                        onDelete: ReferentialAction.SetNull);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "UserLanguages",
                 columns: table => new
                 {
@@ -329,7 +394,98 @@ namespace EcoScolarWebApi.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Services",
+                name: "PriceOffers",
+                columns: table => new
+                {
+                    AdvertId = table.Column<long>(type: "bigint", nullable: false),
+                    BuyerId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PriceOffers", x => new { x.AdvertId, x.BuyerId });
+                    table.ForeignKey(
+                        name: "FK_PriceOffers_Adverts_AdvertId",
+                        column: x => x.AdvertId,
+                        principalTable: "Adverts",
+                        principalColumn: "AdvertId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_PriceOffers_AspNetUsers_BuyerId",
+                        column: x => x.BuyerId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PublicComments",
+                columns: table => new
+                {
+                    CommentId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Content = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Answer = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
+                    AnsweredAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    AdvertId = table.Column<long>(type: "bigint", nullable: false),
+                    AuthorId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PublicComments", x => x.CommentId);
+                    table.ForeignKey(
+                        name: "FK_PublicComments_Adverts_AdvertId",
+                        column: x => x.AdvertId,
+                        principalTable: "Adverts",
+                        principalColumn: "AdvertId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_PublicComments_AspNetUsers_AuthorId",
+                        column: x => x.AuthorId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Transactions",
+                columns: table => new
+                {
+                    TransactionId = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    AdvertId = table.Column<long>(type: "bigint", nullable: false),
+                    Date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ExpirationReservationTime = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    PlatformFee = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    BuyerConsent = table.Column<bool>(type: "bit", nullable: false),
+                    SellerConsent = table.Column<bool>(type: "bit", nullable: false),
+                    ReminderDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    StripeSessionId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    BuyerId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Transactions", x => x.TransactionId);
+                    table.ForeignKey(
+                        name: "FK_Transactions_Adverts_AdvertId",
+                        column: x => x.AdvertId,
+                        principalTable: "Adverts",
+                        principalColumn: "AdvertId",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Transactions_AspNetUsers_BuyerId",
+                        column: x => x.BuyerId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "TutoringAdverts",
                 columns: table => new
                 {
                     AdvertId = table.Column<long>(type: "bigint", nullable: false),
@@ -340,21 +496,21 @@ namespace EcoScolarWebApi.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Services", x => x.AdvertId);
+                    table.PrimaryKey("PK_TutoringAdverts", x => x.AdvertId);
                     table.ForeignKey(
-                        name: "FK_Services_Adverts_AdvertId",
+                        name: "FK_TutoringAdverts_Adverts_AdvertId",
                         column: x => x.AdvertId,
                         principalTable: "Adverts",
                         principalColumn: "AdvertId",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Services_SchoolGrades_SchoolGradeId",
+                        name: "FK_TutoringAdverts_SchoolGrades_SchoolGradeId",
                         column: x => x.SchoolGradeId,
                         principalTable: "SchoolGrades",
                         principalColumn: "SchoolGradeId",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Services_Subjects_SubjectId",
+                        name: "FK_TutoringAdverts_Subjects_SubjectId",
                         column: x => x.SubjectId,
                         principalTable: "Subjects",
                         principalColumn: "SubjectId",
@@ -368,7 +524,8 @@ namespace EcoScolarWebApi.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    AdvertId = table.Column<long>(type: "bigint", nullable: false)
+                    AdvertId = table.Column<long>(type: "bigint", nullable: false),
+                    SellerId = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -422,16 +579,69 @@ namespace EcoScolarWebApi.Migrations
                     PictureId = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Label = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
-                    AdvertId = table.Column<long>(type: "bigint", nullable: false)
+                    PhysicalItemId = table.Column<long>(type: "bigint", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Pictures", x => x.PictureId);
                     table.ForeignKey(
-                        name: "FK_Pictures_PhysicalItems_AdvertId",
-                        column: x => x.AdvertId,
+                        name: "FK_Pictures_PhysicalItems_PhysicalItemId",
+                        column: x => x.PhysicalItemId,
                         principalTable: "PhysicalItems",
                         principalColumn: "AdvertId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Disputes",
+                columns: table => new
+                {
+                    DisputeId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TransactionId = table.Column<long>(type: "bigint", nullable: false),
+                    Reason = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Resolution = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Disputes", x => x.DisputeId);
+                    table.ForeignKey(
+                        name: "FK_Disputes_Transactions_TransactionId",
+                        column: x => x.TransactionId,
+                        principalTable: "Transactions",
+                        principalColumn: "TransactionId",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Reviews",
+                columns: table => new
+                {
+                    ReviewId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Rating = table.Column<int>(type: "int", nullable: false),
+                    Comment = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
+                    ReviewerId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    TransactionId = table.Column<long>(type: "bigint", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Reviews", x => x.ReviewId);
+                    table.ForeignKey(
+                        name: "FK_Reviews_AspNetUsers_ReviewerId",
+                        column: x => x.ReviewerId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Reviews_Transactions_TransactionId",
+                        column: x => x.TransactionId,
+                        principalTable: "Transactions",
+                        principalColumn: "TransactionId",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -491,41 +701,41 @@ namespace EcoScolarWebApi.Migrations
 
             migrationBuilder.InsertData(
                 table: "SchoolGrades",
-                columns: new[] { "SchoolGradeId", "Name", "SchoolGrade" },
+                columns: new[] { "SchoolGradeId", "Code", "Name" },
                 values: new object[,]
                 {
-                    { 1L, "Cycle 1 (1H-4H)", "C1" },
-                    { 2L, "Cycle 2 (5H-8H)", "C2" },
-                    { 3L, "Cycle 3 (9H-11H)", "C3" },
-                    { 4L, "Secondaire II - Gymnase", "S2-GYM" },
-                    { 5L, "Secondaire II - Maturité professionnelle", "S2-MP" },
-                    { 6L, "Secondaire II - CFC", "S2-CFC" },
-                    { 7L, "Secondaire II - ECG", "S2-ECG" }
+                    { 1L, "C1", "Cycle 1 (1H-4H)" },
+                    { 2L, "C2", "Cycle 2 (5H-8H)" },
+                    { 3L, "C3", "Cycle 3 (9H-11H)" },
+                    { 4L, "S2-GYM", "Secondaire II - Gymnase" },
+                    { 5L, "S2-MP", "Secondaire II - Maturité professionnelle" },
+                    { 6L, "S2-CFC", "Secondaire II - CFC" },
+                    { 7L, "S2-ECG", "Secondaire II - ECG" }
                 });
 
             migrationBuilder.InsertData(
                 table: "Subjects",
-                columns: new[] { "SubjectId", "Name", "Subject" },
+                columns: new[] { "SubjectId", "Code", "Name" },
                 values: new object[,]
                 {
-                    { 1L, "Français", "FR" },
-                    { 2L, "Allemand", "DE" },
-                    { 3L, "Anglais", "EN" },
-                    { 4L, "Mathématiques", "MATH" },
-                    { 5L, "Sciences naturelles", "SCI" },
-                    { 6L, "Histoire", "HIST" },
-                    { 7L, "Géographie", "GEO" },
-                    { 8L, "Éducation physique", "EPS" },
-                    { 9L, "Arts visuels", "ARTS" },
-                    { 10L, "Musique", "MUS" },
-                    { 11L, "Économie et droit", "ECO" },
-                    { 12L, "Informatique", "INFO" }
+                    { 1L, "FR", "Français" },
+                    { 2L, "DE", "Allemand" },
+                    { 3L, "EN", "Anglais" },
+                    { 4L, "MATH", "Mathématiques" },
+                    { 5L, "SCI", "Sciences naturelles" },
+                    { 6L, "HIST", "Histoire" },
+                    { 7L, "GEO", "Géographie" },
+                    { 8L, "EPS", "Éducation physique" },
+                    { 9L, "ARTS", "Arts visuels" },
+                    { 10L, "MUS", "Musique" },
+                    { 11L, "ECO", "Économie et droit" },
+                    { 12L, "INFO", "Informatique" }
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Adverts_UserId",
+                name: "IX_Adverts_SellerId",
                 table: "Adverts",
-                column: "UserId");
+                column: "SellerId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
@@ -577,23 +787,88 @@ namespace EcoScolarWebApi.Migrations
                 column: "BookCategoryId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Disputes_TransactionId",
+                table: "Disputes",
+                column: "TransactionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Flags_FlaggedId",
+                table: "Flags",
+                column: "FlaggedId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Flags_ReporterId",
+                table: "Flags",
+                column: "ReporterId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_PhysicalItems_ProductCategoryId",
                 table: "PhysicalItems",
                 column: "ProductCategoryId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Pictures_AdvertId",
+                name: "IX_Pictures_PhysicalItemId",
                 table: "Pictures",
+                column: "PhysicalItemId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PriceOffers_BuyerId",
+                table: "PriceOffers",
+                column: "BuyerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PublicComments_AdvertId",
+                table: "PublicComments",
                 column: "AdvertId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Services_SchoolGradeId",
-                table: "Services",
+                name: "IX_PublicComments_AuthorId",
+                table: "PublicComments",
+                column: "AuthorId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Reviews_ReviewerId",
+                table: "Reviews",
+                column: "ReviewerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Reviews_TransactionId",
+                table: "Reviews",
+                column: "TransactionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SearchAlerts_BookCategoryId",
+                table: "SearchAlerts",
+                column: "BookCategoryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SearchAlerts_SubjectId",
+                table: "SearchAlerts",
+                column: "SubjectId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SearchAlerts_UserId",
+                table: "SearchAlerts",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Transactions_AdvertId",
+                table: "Transactions",
+                column: "AdvertId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Transactions_BuyerId",
+                table: "Transactions",
+                column: "BuyerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TutoringAdverts_SchoolGradeId",
+                table: "TutoringAdverts",
                 column: "SchoolGradeId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Services_SubjectId",
-                table: "Services",
+                name: "IX_TutoringAdverts_SubjectId",
+                table: "TutoringAdverts",
                 column: "SubjectId");
 
             migrationBuilder.CreateIndex(
@@ -634,10 +909,28 @@ namespace EcoScolarWebApi.Migrations
                 name: "Books");
 
             migrationBuilder.DropTable(
+                name: "Disputes");
+
+            migrationBuilder.DropTable(
+                name: "Flags");
+
+            migrationBuilder.DropTable(
                 name: "Pictures");
 
             migrationBuilder.DropTable(
-                name: "Services");
+                name: "PriceOffers");
+
+            migrationBuilder.DropTable(
+                name: "PublicComments");
+
+            migrationBuilder.DropTable(
+                name: "Reviews");
+
+            migrationBuilder.DropTable(
+                name: "SearchAlerts");
+
+            migrationBuilder.DropTable(
+                name: "TutoringAdverts");
 
             migrationBuilder.DropTable(
                 name: "UserFavorites");
@@ -649,10 +942,13 @@ namespace EcoScolarWebApi.Migrations
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
-                name: "BookCategories");
+                name: "PhysicalItems");
 
             migrationBuilder.DropTable(
-                name: "PhysicalItems");
+                name: "Transactions");
+
+            migrationBuilder.DropTable(
+                name: "BookCategories");
 
             migrationBuilder.DropTable(
                 name: "SchoolGrades");
@@ -664,10 +960,10 @@ namespace EcoScolarWebApi.Migrations
                 name: "Languages");
 
             migrationBuilder.DropTable(
-                name: "Adverts");
+                name: "ProductCategories");
 
             migrationBuilder.DropTable(
-                name: "ProductCategories");
+                name: "Adverts");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");

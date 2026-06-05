@@ -14,6 +14,18 @@ public class BookCategory
     public string Name { get; set; }
 
     [Required]
+    [StringLength(100)]
+    public string NameFr { get; set; }
+
+    [Required]
+    [StringLength(100)]
+    public string NameDe { get; set; }
+
+    [Required]
+    [StringLength(100)]
+    public string NameIt { get; set; }
+
+    [Required]
     [StringLength(1000)]
     public string Description { get; set; }
 }

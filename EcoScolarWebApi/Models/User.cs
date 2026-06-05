@@ -7,7 +7,7 @@ namespace EcoScolarWebApi.Models;
 
 public class User : IdentityUser
 {
-	// === User properties ===
+	// === Seller properties ===
 
 	public string? FirstName { get; set; }
 
@@ -15,7 +15,7 @@ public class User : IdentityUser
 
 	public string? Nickname { get; set; }
 
-	public string? BirthdayDate { get; set; }
+	public string? DateOfBirth { get; set; }
 
 	[Required]
 	public bool IsOnboarded { get; set; } = false;
@@ -27,6 +27,8 @@ public class User : IdentityUser
 
 	// === Navigation properties ===
 	public Location? Location { get; set; }
+	public virtual ICollection<Review> ReviewsGiven { get; set; } = [];
+	public virtual ICollection<Review> ReviewsReceived { get; set; } = [];
 
 	public virtual ICollection<UserLanguage> Languages { get; set; } = new List<UserLanguage>();
 	public virtual ICollection<UserFavorite> Favorites { get; set; } = [];

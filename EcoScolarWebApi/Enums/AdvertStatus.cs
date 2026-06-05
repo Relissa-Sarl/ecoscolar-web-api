@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 namespace EcoScolarWebApi.Enums;
 
 /// <summary>
-/// Enumeration that represents the status of an Adverts.
+/// Enumeration that represents the status of an PhysicalItem.
 /// It can be ACTIVE, EXPIRED, SOLD or PAUSED.
 /// </summary>
 public enum AdvertStatus

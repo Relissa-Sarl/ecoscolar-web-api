@@ -6,7 +6,7 @@ namespace EcoScolarWebApi.Services;
 /// <summary>
 /// Mock catalogue search aligned with <see cref="AdvertSearchService"/>:
 /// <c>isbn</c> keeps Books rows whose normalized ISBN matches;
-/// <c>q</c> keeps rows whose title contains the keyword (any Adverts type)
+/// <c>q</c> keeps rows whose title contains the keyword (any PhysicalItem type)
 /// or whose Books ISBN matches the normalized keyword.
 /// </summary>
 public class FakeAdvertSearchService : IAdvertSearchService

@@ -5,7 +5,7 @@ using System.Security.Claims;
 namespace EcoScolarWebApi.Services.Contracts;
 
 /// <summary>
-/// User service interface.
+/// Seller service interface.
 /// </summary>
 public interface IUserService
 {
@@ -17,4 +17,5 @@ public interface IUserService
 	Task<Result<UserReadDto>> GetCurrentUserProfileAsync(ClaimsPrincipal user);
 	Task<Result<UserReadDto>> UpdateProfileAsync(ClaimsPrincipal user, UserUpdateDto dto);
 	Task<Result<UserPublicReadDto>> GetPublicProfileAsync(string userId);
+	Task<Result<bool>> AnonymizeProfileAsync(ClaimsPrincipal userPrincipal);
 }

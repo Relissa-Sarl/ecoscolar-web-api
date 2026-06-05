@@ -44,6 +44,10 @@ namespace EcoScolarWebApi.Migrations
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<string>("SellerId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
@@ -52,13 +56,9 @@ namespace EcoScolarWebApi.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.HasKey("AdvertId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("SellerId");
 
                     b.ToTable("Adverts");
 
@@ -83,6 +83,21 @@ namespace EcoScolarWebApi.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<string>("NameDe")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("NameFr")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("NameIt")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.HasKey("BookCategoryId");
 
                     b.ToTable("BookCategories");
@@ -92,61 +107,91 @@ namespace EcoScolarWebApi.Migrations
                         {
                             BookCategoryId = 1L,
                             Description = "Manuels par niveau et programme cantonal.",
-                            Name = "Manuels scolaires"
+                            Name = "Textbooks",
+                            NameDe = "Schulbücher",
+                            NameFr = "Manuels scolaires",
+                            NameIt = "Libri di scuola"
                         },
                         new
                         {
                             BookCategoryId = 2L,
-                            Description = "Dictionnaires, encyclopédies et atlas scolaires.",
-                            Name = "Ouvrages de référence"
+                            Description = "Ouvrages de référence pour les étudiants.",
+                            Name = "Reference works",
+                            NameDe = "Referenzwerke",
+                            NameFr = "Ouvrages de référence",
+                            NameIt = "Opere di riferimento"
                         },
                         new
                         {
                             BookCategoryId = 3L,
-                            Description = "Français, allemand, italien, anglais et langues locales.",
-                            Name = "Langues"
+                            Description = "Cours et ressources pour l'apprentissage des langues.",
+                            Name = "Languages",
+                            NameDe = "Sprachen",
+                            NameFr = "Langues",
+                            NameIt = "Lingue"
                         },
                         new
                         {
                             BookCategoryId = 4L,
-                            Description = "Supports de mathématiques pour cycles 1 à secondaire II.",
-                            Name = "Mathématiques"
+                            Description = "Manuels et ressources pour l'enseignement des mathématiques.",
+                            Name = "Mathematics",
+                            NameDe = "Mathematik",
+                            NameFr = "Mathématiques",
+                            NameIt = "Matematica"
                         },
                         new
                         {
                             BookCategoryId = 5L,
-                            Description = "Biologie, chimie, physique et sciences de la nature.",
-                            Name = "Sciences naturelles"
+                            Description = "Cours et ressources pour les sciences naturelles.",
+                            Name = "Natural Sciences",
+                            NameDe = "Naturwissenschaften",
+                            NameFr = "Sciences naturelles",
+                            NameIt = "Scienze della natura"
                         },
                         new
                         {
                             BookCategoryId = 6L,
-                            Description = "Histoire suisse, géographie et éducation citoyenne.",
-                            Name = "Histoire et géographie"
+                            Description = "Cours et ressources pour l'histoire et la géographie.",
+                            Name = "History and Geography",
+                            NameDe = "Geschichte und Geographie",
+                            NameFr = "Histoire et géographie",
+                            NameIt = "Storia e geografia"
                         },
                         new
                         {
                             BookCategoryId = 7L,
-                            Description = "Introduction à l'économie, droit et gestion.",
-                            Name = "Économie et droit"
+                            Description = "Cours et ressources pour l'économie et le droit.",
+                            Name = "Economics and Law",
+                            NameDe = "Wirtschaft und Recht",
+                            NameFr = "Économie et droit",
+                            NameIt = "Economia e diritto"
                         },
                         new
                         {
                             BookCategoryId = 8L,
-                            Description = "Supports pour arts visuels, musique et activités créatives.",
-                            Name = "Arts et musique"
+                            Description = "Cours et ressources pour les arts et la musique.",
+                            Name = "Arts and Music",
+                            NameDe = "Kunst und Musik",
+                            NameFr = "Arts et musique",
+                            NameIt = "Arte e musica"
                         },
                         new
                         {
                             BookCategoryId = 9L,
-                            Description = "Initiation au numérique, algorithmique et outils informatiques.",
-                            Name = "Informatique"
+                            Description = "Cours et ressources pour l'informatique.",
+                            Name = "Computer Science",
+                            NameDe = "Informatik",
+                            NameFr = "Informatique",
+                            NameIt = "Informatica"
                         },
                         new
                         {
                             BookCategoryId = 10L,
-                            Description = "Manuels liés aux filières CFC et maturité professionnelle.",
-                            Name = "Formation professionnelle"
+                            Description = "Cours et ressources pour la formation professionnelle.",
+                            Name = "Vocational training",
+                            NameDe = "Berufliche Bildung",
+                            NameFr = "Formation professionnelle",
+                            NameIt = "Formazione professionale"
                         });
                 });
 
@@ -172,6 +217,75 @@ namespace EcoScolarWebApi.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("CartItems");
+            modelBuilder.Entity("EcoScolarWebApi.Models.Dispute", b =>
+                {
+                    b.Property<int>("DisputeId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("DisputeId"));
+
+                    b.Property<DateTime>("Date")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Resolution")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("TransactionId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("DisputeId");
+
+                    b.HasIndex("TransactionId");
+
+                    b.ToTable("Disputes");
+                });
+
+            modelBuilder.Entity("EcoScolarWebApi.Models.Flag", b =>
+                {
+                    b.Property<int>("FlagId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("FlagId"));
+
+                    b.Property<DateTime>("Date")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("FlaggedId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ReporterId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("FlagId");
+
+                    b.HasIndex("FlaggedId");
+
+                    b.HasIndex("ReporterId");
+
+                    b.ToTable("Flags");
                 });
 
             modelBuilder.Entity("EcoScolarWebApi.Models.Language", b =>
@@ -183,6 +297,18 @@ namespace EcoScolarWebApi.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("NameDe")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NameFr")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NameIt")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("Label");
 
                     b.ToTable("Languages");
@@ -191,17 +317,26 @@ namespace EcoScolarWebApi.Migrations
                         new
                         {
                             Label = "FR",
-                            Name = "Français"
+                            Name = "French",
+                            NameDe = "Französisch",
+                            NameFr = "Français",
+                            NameIt = "Francese"
                         },
                         new
                         {
                             Label = "DE",
-                            Name = "Deutsch"
+                            Name = "German",
+                            NameDe = "Deutsch",
+                            NameFr = "Allemand",
+                            NameIt = "Tedesco"
                         },
                         new
                         {
                             Label = "IT",
-                            Name = "Italian"
+                            Name = "Italian",
+                            NameDe = "Italien",
+                            NameFr = "Italien",
+                            NameIt = "Italiano"
                         });
                 });
 
@@ -261,19 +396,46 @@ namespace EcoScolarWebApi.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("PictureId"));
 
-                    b.Property<long>("AdvertId")
-                        .HasColumnType("bigint");
-
                     b.Property<string>("Label")
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<long>("PhysicalItemId")
+                        .HasColumnType("bigint");
+
                     b.HasKey("PictureId");
 
-                    b.HasIndex("AdvertId");
+                    b.HasIndex("PhysicalItemId");
 
                     b.ToTable("Pictures");
+                });
+
+            modelBuilder.Entity("EcoScolarWebApi.Models.PriceOffer", b =>
+                {
+                    b.Property<long>("AdvertId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("BuyerId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("AdvertId", "BuyerId");
+
+                    b.HasIndex("BuyerId");
+
+                    b.ToTable("PriceOffers");
                 });
 
             modelBuilder.Entity("EcoScolarWebApi.Models.ProductCategory", b =>
@@ -294,6 +456,21 @@ namespace EcoScolarWebApi.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<string>("NameDe")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("NameFr")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("NameIt")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.HasKey("ProductCategoryId");
 
                     b.ToTable("ProductCategories");
@@ -303,62 +480,176 @@ namespace EcoScolarWebApi.Migrations
                         {
                             ProductCategoryId = 1L,
                             Description = "Papiers, enveloppes, étiquettes et consommables.",
-                            Name = "Papeterie"
+                            Name = "Stationery",
+                            NameDe = "Papierware",
+                            NameFr = "Papeterie",
+                            NameIt = "Cartoleria"
                         },
                         new
                         {
                             ProductCategoryId = 2L,
                             Description = "Stylos, crayons, feutres et surligneurs.",
-                            Name = "Matériel d'écriture"
+                            Name = "Writing supplies",
+                            NameDe = "Schreibmaterial",
+                            NameFr = "Matériel d'écriture",
+                            NameIt = "Materiale da scrittura"
                         },
                         new
                         {
                             ProductCategoryId = 3L,
                             Description = "Cahiers, classeurs, intercalaires et chemises.",
-                            Name = "Cahiers et classeurs"
+                            Name = "Notebooks and binders",
+                            NameDe = "Hefte und Mappe",
+                            NameFr = "Cahiers et classeurs",
+                            NameIt = "Quaderni e cartelle"
                         },
                         new
                         {
                             ProductCategoryId = 4L,
                             Description = "Peinture, pinceaux, papiers dessin et outils créatifs.",
-                            Name = "Matériel artistique"
+                            Name = "Art supplies",
+                            NameDe = "Künstlerisches Material",
+                            NameFr = "Matériel artistique",
+                            NameIt = "Materiale artistico"
                         },
                         new
                         {
                             ProductCategoryId = 5L,
                             Description = "Kits pédagogiques, microscopes et accessoires.",
-                            Name = "Matériel scientifique"
+                            Name = "Scientific equipment",
+                            NameDe = "Wissenschaftliches Material",
+                            NameFr = "Matériel scientifique",
+                            NameIt = "Materiale scientifico"
                         },
                         new
                         {
                             ProductCategoryId = 6L,
                             Description = "Ballons, cordes, protections et matériel EPS.",
-                            Name = "Équipement sportif"
+                            Name = "Sports equipment",
+                            NameDe = "Sportausrüstung",
+                            NameFr = "Équipement sportif",
+                            NameIt = "Equipaggiamento sportivo"
                         },
                         new
                         {
                             ProductCategoryId = 7L,
                             Description = "Claviers, souris, périphériques et accessoires.",
-                            Name = "Matériel informatique"
+                            Name = "Computer equipment",
+                            NameDe = "Informatikmaterial",
+                            NameFr = "Matériel informatique",
+                            NameIt = "Materiale informatico"
                         },
                         new
                         {
                             ProductCategoryId = 8L,
                             Description = "Sacs d'école, cartables et trousses.",
-                            Name = "Sacs et cartables"
+                            Name = "School bags and cases",
+                            NameDe = "Schulrucksäcke und Bücherfächer",
+                            NameFr = "Sacs et cartables",
+                            NameIt = "Ziole e borse scolastiche"
                         },
                         new
                         {
                             ProductCategoryId = 9L,
                             Description = "Calculatrices scientifiques et financières.",
-                            Name = "Calculatrices"
+                            Name = "Calculators",
+                            NameDe = "Taschenrechner",
+                            NameFr = "Calculatrices",
+                            NameIt = "Calcolatrici"
                         },
                         new
                         {
                             ProductCategoryId = 10L,
                             Description = "Blouses, lunettes de protection et consommables.",
-                            Name = "Accessoires de laboratoire"
+                            Name = "Laboratory supplies",
+                            NameDe = "Laboratoriumsausrüstung",
+                            NameFr = "Accessoires de laboratoire",
+                            NameIt = "Accessori del laboratorio"
                         });
+                });
+
+            modelBuilder.Entity("EcoScolarWebApi.Models.PublicComment", b =>
+                {
+                    b.Property<int>("CommentId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CommentId"));
+
+                    b.Property<long>("AdvertId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Answer")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("AnsweredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("AuthorId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.HasKey("CommentId");
+
+                    b.HasIndex("AdvertId");
+
+                    b.HasIndex("AuthorId");
+
+                    b.ToTable("PublicComments");
+                });
+
+            modelBuilder.Entity("EcoScolarWebApi.Models.Review", b =>
+                {
+                    b.Property<int>("ReviewId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ReviewId"));
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("Date")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ReviewedId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("ReviewedRole")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ReviewerId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<long>("TransactionId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("ReviewId");
+
+                    b.HasIndex("ReviewedId");
+
+                    b.HasIndex("ReviewerId");
+
+                    b.HasIndex("TransactionId", "ReviewerId")
+                        .IsUnique();
+
+                    b.ToTable("Reviews");
                 });
 
             modelBuilder.Entity("EcoScolarWebApi.Models.SchoolGrade", b =>
@@ -379,6 +670,21 @@ namespace EcoScolarWebApi.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<string>("NameDe")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("NameFr")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("NameIt")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.HasKey("SchoolGradeId");
 
                     b.ToTable("SchoolGrades");
@@ -388,44 +694,108 @@ namespace EcoScolarWebApi.Migrations
                         {
                             SchoolGradeId = 1L,
                             Code = "C1",
-                            Name = "Cycle 1 (1H-4H)"
+                            Name = "Cycle 1 (Grades 1–4)",
+                            NameDe = "Stufe 1 (1H-4H)",
+                            NameFr = "Cycle 1 (1H-4H)",
+                            NameIt = "Livello 1 (1H-4H)"
                         },
                         new
                         {
                             SchoolGradeId = 2L,
                             Code = "C2",
-                            Name = "Cycle 2 (5H-8H)"
+                            Name = "Cycle 2 (Grades 5–8)",
+                            NameDe = "Stufe 2 (5H-8H)",
+                            NameFr = "Cycle 2 (5H-8H)",
+                            NameIt = "Livello 2 (5H-8H)"
                         },
                         new
                         {
                             SchoolGradeId = 3L,
                             Code = "C3",
-                            Name = "Cycle 3 (9H-11H)"
+                            Name = "Cycle 3 (Grades 9–11)",
+                            NameDe = "Stufe 3 (9H-11H)",
+                            NameFr = "Cycle 3 (9H-11H)",
+                            NameIt = "Livello 3 (9H-11H)"
                         },
                         new
                         {
                             SchoolGradeId = 4L,
                             Code = "S2-GYM",
-                            Name = "Secondaire II - Gymnase"
+                            Name = "Upper Secondary School - High School",
+                            NameDe = "Sekundarstufe II - Gymnasium",
+                            NameFr = "Secondaire II - Gymnase",
+                            NameIt = "Secondaria II - Ginnasio"
                         },
                         new
                         {
                             SchoolGradeId = 5L,
                             Code = "S2-MP",
-                            Name = "Secondaire II - Maturité professionnelle"
+                            Name = "Upper Secondary Level – Vocational Maturity",
+                            NameDe = "Sekundarstufe II - Berufsmaturität",
+                            NameFr = "Secondaire II - Maturité professionnelle",
+                            NameIt = "Secondaria II - Maturità professionale"
                         },
                         new
                         {
                             SchoolGradeId = 6L,
                             Code = "S2-CFC",
-                            Name = "Secondaire II - CFC"
+                            Name = "Upper Secondary School – CFC",
+                            NameDe = "Sekundarstufe II - CFC",
+                            NameFr = "Secondaire II - CFC",
+                            NameIt = "Secondaria II - CFC"
                         },
                         new
                         {
                             SchoolGradeId = 7L,
                             Code = "S2-ECG",
-                            Name = "Secondaire II - ECG"
+                            Name = "Upper Secondary Level - ECG",
+                            NameDe = "Sekundarstufe II - ECG",
+                            NameFr = "Secondaire II - ECG",
+                            NameIt = "Secondaria II - ECG"
                         });
+                });
+
+            modelBuilder.Entity("EcoScolarWebApi.Models.SearchAlert", b =>
+                {
+                    b.Property<int>("ResearchId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ResearchId"));
+
+                    b.Property<string>("AdvertSearch")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AdvertType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long?>("BookCategoryId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ISBN")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("MaxPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<long?>("SubjectId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("ResearchId");
+
+                    b.HasIndex("BookCategoryId");
+
+                    b.HasIndex("SubjectId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("SearchAlerts");
                 });
 
             modelBuilder.Entity("EcoScolarWebApi.Models.Subject", b =>
@@ -446,6 +816,21 @@ namespace EcoScolarWebApi.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<string>("NameDe")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("NameFr")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("NameIt")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.HasKey("SubjectId");
 
                     b.ToTable("Subjects");
@@ -455,74 +840,161 @@ namespace EcoScolarWebApi.Migrations
                         {
                             SubjectId = 1L,
                             Code = "FR",
-                            Name = "Français"
+                            Name = "French",
+                            NameDe = "Französisch",
+                            NameFr = "Français",
+                            NameIt = "Francese"
                         },
                         new
                         {
                             SubjectId = 2L,
                             Code = "DE",
-                            Name = "Allemand"
+                            Name = "German",
+                            NameDe = "Deutsch",
+                            NameFr = "Allemand",
+                            NameIt = "Tedesco"
                         },
                         new
                         {
                             SubjectId = 3L,
                             Code = "EN",
-                            Name = "Anglais"
+                            Name = "English",
+                            NameDe = "Englisch",
+                            NameFr = "Anglais",
+                            NameIt = "Inglese"
                         },
                         new
                         {
                             SubjectId = 4L,
                             Code = "MATH",
-                            Name = "Mathématiques"
+                            Name = "Mathematics",
+                            NameDe = "Mathematik",
+                            NameFr = "Mathématiques",
+                            NameIt = "Matematica"
                         },
                         new
                         {
                             SubjectId = 5L,
                             Code = "SCI",
-                            Name = "Sciences naturelles"
+                            Name = "Natural Sciences",
+                            NameDe = "Naturwissenschaften",
+                            NameFr = "Sciences naturelles",
+                            NameIt = "Scienze della natura"
                         },
                         new
                         {
                             SubjectId = 6L,
                             Code = "HIST",
-                            Name = "Histoire"
+                            Name = "History",
+                            NameDe = "Geschichte",
+                            NameFr = "Histoire",
+                            NameIt = "Storia"
                         },
                         new
                         {
                             SubjectId = 7L,
                             Code = "GEO",
-                            Name = "Géographie"
+                            Name = "Geography",
+                            NameDe = "Geographie",
+                            NameFr = "Géographie",
+                            NameIt = "Geografia"
                         },
                         new
                         {
                             SubjectId = 8L,
                             Code = "EPS",
-                            Name = "Éducation physique"
+                            Name = "Physical Education",
+                            NameDe = "Physikalische Bildung",
+                            NameFr = "Éducation physique",
+                            NameIt = "Educazione fisica"
                         },
                         new
                         {
                             SubjectId = 9L,
                             Code = "ARTS",
-                            Name = "Arts visuels"
+                            Name = "Visual Arts",
+                            NameDe = "Visuelle Künste",
+                            NameFr = "Arts visuels",
+                            NameIt = "Arti visive"
                         },
                         new
                         {
                             SubjectId = 10L,
                             Code = "MUS",
-                            Name = "Musique"
+                            Name = "Music",
+                            NameDe = "Musik",
+                            NameFr = "Musique",
+                            NameIt = "Musica"
                         },
                         new
                         {
                             SubjectId = 11L,
                             Code = "ECO",
-                            Name = "Économie et droit"
+                            Name = "Economics and Law",
+                            NameDe = "Wirtschaft und Recht",
+                            NameFr = "Économie et droit",
+                            NameIt = "Economia e diritto"
                         },
                         new
                         {
                             SubjectId = 12L,
                             Code = "INFO",
-                            Name = "Informatique"
+                            Name = "Computer Science",
+                            NameDe = "Informatik",
+                            NameFr = "Informatique",
+                            NameIt = "Informatica"
                         });
+                });
+
+            modelBuilder.Entity("EcoScolarWebApi.Models.Transaction", b =>
+                {
+                    b.Property<long>("TransactionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("TransactionId"));
+
+                    b.Property<long>("AdvertId")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("BuyerConsent")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("BuyerId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("Date")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<DateTime?>("ExpirationReservationTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("PlatformFee")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("ReminderDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("SellerConsent")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("StripeSessionId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("TransactionId");
+
+                    b.HasIndex("AdvertId");
+
+                    b.HasIndex("BuyerId");
+
+                    b.ToTable("Transactions");
                 });
 
             modelBuilder.Entity("EcoScolarWebApi.Models.User", b =>
@@ -533,11 +1005,11 @@ namespace EcoScolarWebApi.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
-                    b.Property<string>("BirthdayDate")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DateOfBirth")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Email")
@@ -620,6 +1092,9 @@ namespace EcoScolarWebApi.Migrations
 
                     b.Property<long>("AdvertId")
                         .HasColumnType("bigint");
+
+                    b.Property<string>("SellerId")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("UserId")
                         .IsRequired()
@@ -826,7 +1301,7 @@ namespace EcoScolarWebApi.Migrations
 
                     b.HasIndex("SubjectId");
 
-                    b.ToTable("Services");
+                    b.ToTable("TutoringAdverts");
                 });
 
             modelBuilder.Entity("EcoScolarWebApi.Models.Book", b =>
@@ -866,13 +1341,43 @@ namespace EcoScolarWebApi.Migrations
 
             modelBuilder.Entity("EcoScolarWebApi.Models.Advert", b =>
                 {
-                    b.HasOne("EcoScolarWebApi.Models.User", "User")
+                    b.HasOne("EcoScolarWebApi.Models.User", "Seller")
                         .WithMany()
-                        .HasForeignKey("UserId")
+                        .HasForeignKey("SellerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("User");
+                    b.Navigation("Seller");
+                });
+
+            modelBuilder.Entity("EcoScolarWebApi.Models.Dispute", b =>
+                {
+                    b.HasOne("EcoScolarWebApi.Models.Transaction", "Transaction")
+                        .WithMany()
+                        .HasForeignKey("TransactionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Transaction");
+                });
+
+            modelBuilder.Entity("EcoScolarWebApi.Models.Flag", b =>
+                {
+                    b.HasOne("EcoScolarWebApi.Models.User", "Flagged")
+                        .WithMany()
+                        .HasForeignKey("FlaggedId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EcoScolarWebApi.Models.User", "Reporter")
+                        .WithMany()
+                        .HasForeignKey("ReporterId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Flagged");
+
+                    b.Navigation("Reporter");
                 });
 
             modelBuilder.Entity("EcoScolarWebApi.Models.CartItem", b =>
@@ -896,13 +1401,122 @@ namespace EcoScolarWebApi.Migrations
 
             modelBuilder.Entity("EcoScolarWebApi.Models.Picture", b =>
                 {
-                    b.HasOne("EcoScolarWebApi.Models.PhysicalItem", "Adverts")
+                    b.HasOne("EcoScolarWebApi.Models.PhysicalItem", "PhysicalItem")
                         .WithMany("Pictures")
+                        .HasForeignKey("PhysicalItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PhysicalItem");
+                });
+
+            modelBuilder.Entity("EcoScolarWebApi.Models.PriceOffer", b =>
+                {
+                    b.HasOne("EcoScolarWebApi.Models.Advert", "Advert")
+                        .WithMany()
                         .HasForeignKey("AdvertId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Adverts");
+                    b.HasOne("EcoScolarWebApi.Models.User", "Buyer")
+                        .WithMany()
+                        .HasForeignKey("BuyerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Advert");
+
+                    b.Navigation("Buyer");
+                });
+
+            modelBuilder.Entity("EcoScolarWebApi.Models.PublicComment", b =>
+                {
+                    b.HasOne("EcoScolarWebApi.Models.Advert", "Advert")
+                        .WithMany()
+                        .HasForeignKey("AdvertId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EcoScolarWebApi.Models.User", "Author")
+                        .WithMany()
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Advert");
+
+                    b.Navigation("Author");
+                });
+
+            modelBuilder.Entity("EcoScolarWebApi.Models.Review", b =>
+                {
+                    b.HasOne("EcoScolarWebApi.Models.User", "Reviewed")
+                        .WithMany("ReviewsReceived")
+                        .HasForeignKey("ReviewedId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("EcoScolarWebApi.Models.User", "Reviewer")
+                        .WithMany("ReviewsGiven")
+                        .HasForeignKey("ReviewerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("EcoScolarWebApi.Models.Transaction", "Transaction")
+                        .WithMany()
+                        .HasForeignKey("TransactionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Reviewed");
+
+                    b.Navigation("Reviewer");
+
+                    b.Navigation("Transaction");
+                });
+
+            modelBuilder.Entity("EcoScolarWebApi.Models.SearchAlert", b =>
+                {
+                    b.HasOne("EcoScolarWebApi.Models.BookCategory", "BookCategory")
+                        .WithMany()
+                        .HasForeignKey("BookCategoryId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("EcoScolarWebApi.Models.Subject", "Subject")
+                        .WithMany()
+                        .HasForeignKey("SubjectId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("EcoScolarWebApi.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BookCategory");
+
+                    b.Navigation("Subject");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("EcoScolarWebApi.Models.Transaction", b =>
+                {
+                    b.HasOne("EcoScolarWebApi.Models.Advert", "Advert")
+                        .WithMany()
+                        .HasForeignKey("AdvertId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("EcoScolarWebApi.Models.User", "Buyer")
+                        .WithMany()
+                        .HasForeignKey("BuyerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Advert");
+
+                    b.Navigation("Buyer");
                 });
 
             modelBuilder.Entity("EcoScolarWebApi.Models.User", b =>
@@ -917,7 +1531,7 @@ namespace EcoScolarWebApi.Migrations
 
             modelBuilder.Entity("EcoScolarWebApi.Models.UserFavorite", b =>
                 {
-                    b.HasOne("EcoScolarWebApi.Models.Advert", "Adverts")
+                    b.HasOne("EcoScolarWebApi.Models.Advert", "Advert")
                         .WithMany()
                         .HasForeignKey("AdvertId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -929,7 +1543,7 @@ namespace EcoScolarWebApi.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.Navigation("Adverts");
+                    b.Navigation("Advert");
 
                     b.Navigation("User");
                 });
@@ -1078,6 +1692,10 @@ namespace EcoScolarWebApi.Migrations
                     b.Navigation("Favorites");
 
                     b.Navigation("Languages");
+
+                    b.Navigation("ReviewsGiven");
+
+                    b.Navigation("ReviewsReceived");
                 });
 
             modelBuilder.Entity("EcoScolarWebApi.Models.PhysicalItem", b =>

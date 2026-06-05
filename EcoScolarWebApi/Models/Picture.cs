@@ -14,8 +14,8 @@ public class Picture
     public string Label { get; set; }
 
     [Required]
-    public long AdvertId { get; set; }
+    public long PhysicalItemId { get; set; }
 
-    [ForeignKey("AdvertId")]
-    public virtual PhysicalItem Adverts { get; set; } = null!;
+    [ForeignKey("PhysicalItemId")]
+    public virtual PhysicalItem PhysicalItem { get; set; } = null!;
 }
