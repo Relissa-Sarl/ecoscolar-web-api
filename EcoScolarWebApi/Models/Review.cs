@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using EcoScolarWebApi.Enums;
 
 namespace EcoScolarWebApi.Models;
 
@@ -21,7 +22,12 @@ public class Review
     // === Foreign Keys ===
 
     [Required]
-    public string ReviewerId { get; set; }
+    public ReviewedRole ReviewedRole { get; set; }
+
+    public string ReviewerId { get; set; } = default!;
+
+    [Required]
+    public string ReviewedId { get; set; } = default!;
 
     [Required]
     public long TransactionId { get; set; }
@@ -30,6 +36,9 @@ public class Review
 
     [ForeignKey(nameof(ReviewerId))]
     public virtual User? Reviewer { get; set; }
+
+    [ForeignKey(nameof(ReviewedId))]
+    public virtual User? Reviewed { get; set; }
 
     [ForeignKey(nameof(TransactionId))]
     public virtual Transaction? Transaction { get; set; }
