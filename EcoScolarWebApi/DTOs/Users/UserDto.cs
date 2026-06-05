@@ -1,4 +1,4 @@
-﻿using EcoScolarWebApi.Models;
+using EcoScolarWebApi.Models;
 using System.ComponentModel.DataAnnotations;
 
 namespace EcoScolarWebApi.DTOs.Users;

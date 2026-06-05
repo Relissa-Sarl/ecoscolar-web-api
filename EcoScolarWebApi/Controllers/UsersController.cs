@@ -2,7 +2,9 @@
 using EcoScolarWebApi.Commun;
 using EcoScolarWebApi.Data;
 using EcoScolarWebApi.DTOs.Adverts;
+using EcoScolarWebApi.DTOs.Reviews;
 using EcoScolarWebApi.DTOs.Users;
+using EcoScolarWebApi.Mappers;
 using EcoScolarWebApi.Models;
 using EcoScolarWebApi.Services.Contracts;
 using Microsoft.AspNetCore.Authorization;
@@ -12,26 +14,20 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EcoScolarWebApi.Controllers;
 
+/// <summary>
+/// UsersController constructor
+/// </summary>
+/// <param name="userService">The user service for handling user-related operations</param>
 [ApiVersion("1.0")]
 [ApiController]
 [Route("api/v{version:apiVersion}/[controller]")]
 [Authorize]
-public class UsersController : ControllerBase
+public class UsersController(IUserService userService, UserManager<User> userManager, EcoscolarDbContext context, ReviewMapper reviewMapper) : ControllerBase
 {
-	private readonly UserManager<User> _userManager;
-	private readonly IUserService _userService;            // Seller service for handling user-related operations
-	private readonly EcoscolarDbContext _context;
-
-	/// <summary>
-	/// UsersController constructor
-	/// </summary>
-	/// <param name="userService">The user service for handling user-related operations</param>
-	public UsersController(IUserService userService, UserManager<User> userManager, EcoscolarDbContext context)
-	{
-		_userService = userService;
-		_userManager = userManager;
-		_context = context;
-	}
+	private readonly UserManager<User> _userManager = userManager;
+	private readonly IUserService _userService = userService;            // Seller service for handling user-related operations
+	private readonly EcoscolarDbContext _context = context;
+	private readonly ReviewMapper _reviewMapper = reviewMapper;
 
 	#region Current user
 
@@ -85,7 +81,103 @@ public class UsersController : ControllerBase
 	[HttpDelete("me")]
 	public async Task<IActionResult> DeleteMyProfile()
 	{
-		return null;
+        var result = await _userService.AnonymizeProfileAsync(User);
+
+        if (result.IsSuccess)
+            return Ok(new { message = "The account has successfully got anonymized" });
+
+        return result.ErrorType switch
+        {
+            ErrorType.NotFound => NotFound(new { result.Errors }),
+            ErrorType.Unauthorized => Unauthorized(new { result.Errors }),
+
+            _ => BadRequest(new { result.Errors })
+        };
+    }
+
+	/// <summary>
+	/// Creates a search alert for the authenticated user.
+	/// POST /api/v1/users/me/search-alerts
+	/// </summary>
+	[HttpPost("me/search-alerts")]
+	public async Task<IActionResult> CreateSearchAlert([FromBody] CreateSearchAlertDto dto)
+	{
+		var currentUser = await _userManager.GetUserAsync(User);
+		if (currentUser == null)
+			return NotFound(new { message = "Seller not found." });
+
+		if (!dto.HasAnyCriterion())
+			return BadRequest(new { message = "At least one search criterion is required." });
+
+		long? subjectId = null;
+		if (!string.IsNullOrWhiteSpace(dto.Subjects))
+		{
+			var subject = await _context.Subjects
+				.FirstOrDefaultAsync(s => s.Name == dto.Subjects.Trim());
+			subjectId = subject?.SubjectId;
+		}
+		long? bookCategoryId = null;
+		if (!string.IsNullOrWhiteSpace(dto.Category))
+		{
+			var category = await _context.BookCategories
+				.FirstOrDefaultAsync(c => c.Name == dto.Category.Trim());
+			bookCategoryId = category?.BookCategoryId;
+		}
+	
+		var alert = new SearchAlert
+		{
+			UserId = currentUser.Id,
+			AdvertSearch = dto.Q?.Trim() ?? string.Empty,
+			AdvertType = ResolveAdvertType(dto),
+			ISBN = dto.Isbn?.Trim(),
+			MaxPrice = dto.MaxPrice,
+			SubjectId = subjectId,
+			BookCategoryId = bookCategoryId
+		};
+		_context.SearchAlerts.Add(alert);
+		await _context.SaveChangesAsync();
+
+		return StatusCode(StatusCodes.Status201Created, SearchAlertReadDto.FromEntity(alert));
+	}
+	
+	/// <summary>
+	/// Retrieves the list of search alerts for the authenticated user.
+	/// GET /api/v1/users/me/search-alerts
+	/// </summary>
+	[HttpGet("me/search-alerts")]
+	public async Task<IActionResult> GetMySearchAlerts()
+	{
+		var currentUser = await _userManager.GetUserAsync(User);
+		if (currentUser == null)
+			return NotFound(new { message = "Seller not found." });
+		var alerts = await _context.SearchAlerts
+			.Where(a => a.UserId == currentUser.Id)
+			.OrderByDescending(a => a.ResearchId)
+			.ToListAsync();
+		return Ok(alerts.Select(SearchAlertReadDto.FromEntity));
+	}
+
+	/// <summary>
+	/// Deletes a search alert owned by the authenticated user.
+	/// DELETE /api/v1/users/me/search-alerts/{id}
+	/// </summary>
+	[HttpDelete("me/search-alerts/{id:int}")]
+	public async Task<IActionResult> DeleteSearchAlert(int id)
+	{
+		var currentUser = await _userManager.GetUserAsync(User);
+		if (currentUser == null)
+			return NotFound(new { message = "Seller not found." });
+
+		var alert = await _context.SearchAlerts
+			.FirstOrDefaultAsync(a => a.ResearchId == id && a.UserId == currentUser.Id);
+
+		if (alert == null)
+			return NotFound(new { message = "Search alert not found." });
+
+		_context.SearchAlerts.Remove(alert);
+		await _context.SaveChangesAsync();
+
+		return NoContent();
 	}
 
 	#endregion ===
@@ -206,6 +298,36 @@ public class UsersController : ControllerBase
 		await _context.SaveChangesAsync();
 
 		return Ok(new { AdvertId = advertId.ToString(), IsFavorite = isFavorite });
+	}
+
+	private static string ResolveAdvertType(CreateSearchAlertDto dto)
+	{
+		if (!string.IsNullOrWhiteSpace(dto.Isbn))
+			return CatalogAdvertTypeCodes.Books;
+
+		if (!string.IsNullOrWhiteSpace(dto.Subjects) || !string.IsNullOrWhiteSpace(dto.Grade))
+			return CatalogAdvertTypeCodes.Service;
+
+		if (!string.IsNullOrWhiteSpace(dto.Category))
+			return CatalogAdvertTypeCodes.Product;
+
+		return CatalogAdvertTypeCodes.Books;
+	}
+	#endregion
+
+	#region Reviews
+	[HttpGet("{userId}/reviews")]
+	public async Task<ActionResult<IEnumerable<ReviewResponseDTO>>> GetUserReviews(string userId)
+	{
+		var userExists = await _context.Users.AnyAsync(u => u.Id == userId);
+		if (!userExists)
+			return NotFound();
+
+		var reviews = await _reviewMapper.ProjectToReviewResponseDTOs(
+			_context.Reviews.Where(r => r.ReviewedId == userId))
+			.ToListAsync();
+
+		return Ok(reviews);
 	}
 	#endregion
 }
