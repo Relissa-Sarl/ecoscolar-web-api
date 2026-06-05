@@ -28,6 +28,7 @@ public class EcoscolarDbContext(DbContextOptions<EcoscolarDbContext> options) : 
     public DbSet<UserLanguage> UserLanguages { get; set; } = default!;
     public DbSet<Language> Languages { get; set; } = default!;
     public DbSet<Location> Locations { get; set; } = default!;
+    public DbSet<CartItem> CartItems { get; set; } = default!;
     public DbSet<Dispute> Disputes { get; set; }
     public DbSet<Review> Reviews { get; set; }
     public DbSet<Transaction> Transactions { get; set; }
@@ -54,6 +55,18 @@ public class EcoscolarDbContext(DbContextOptions<EcoscolarDbContext> options) : 
             .WithMany()
             .HasForeignKey(uf => uf.AdvertId)
             .OnDelete(DeleteBehavior.Cascade);
+      
+        builder.Entity<CartItem>()
+          .HasOne(ci => ci.User)
+          .WithMany(u => u.CartItems)
+          .HasForeignKey(ci => ci.UserId)
+          .OnDelete(DeleteBehavior.NoAction);
+
+        builder.Entity<CartItem>()
+          .HasOne(ci => ci.Advert)
+          .WithMany()
+          .HasForeignKey(ci => ci.AdvertId)
+          .OnDelete(DeleteBehavior.Cascade);
 
         // Dispute
         builder.Entity<Dispute>(entity =>
