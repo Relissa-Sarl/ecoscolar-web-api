@@ -20,13 +20,13 @@ namespace EcoScolarWebApi.Services
         {
             var cartItems = await _context.CartItems
                 .Include(c => c.Advert)
-                    .ThenInclude(a => a.User)
+                    .ThenInclude(a => a.Seller)
                 .Where(c => c.UserId == userId)
                 .ToListAsync();
 
             var dtos = cartItems.Select(c =>
             {
-                var primaryImage = _context.Pictures.FirstOrDefault(p => p.AdvertId == c.AdvertId)?.Label;
+                var primaryImage = _context.Pictures.FirstOrDefault(p => p.PhysicalItemId == c.AdvertId)?.Label;
                 
                 string type = c.Advert switch
                 {
@@ -40,7 +40,7 @@ namespace EcoScolarWebApi.Services
                     AdvertId = c.AdvertId,
                     Title = c.Advert?.Title ?? string.Empty,
                     Price = c.Advert?.Price ?? 0,
-                    SellerPseudo = c.Advert?.User?.Nickname ?? c.Advert?.User?.UserName ?? string.Empty,
+                    SellerPseudo = c.Advert?.Seller?.Nickname ?? c.Advert?.Seller?.UserName ?? string.Empty,
                     Type = type,
                     PrimaryImage = primaryImage
                 };
@@ -53,7 +53,7 @@ namespace EcoScolarWebApi.Services
         {
             // Verify if advert exist
             var advert = await _context.Adverts
-                .Include(a => a.User)
+                .Include(a => a.Seller)
                 .FirstOrDefaultAsync(a => a.AdvertId == dto.AdvertId);
 
             if (advert == null)
@@ -62,7 +62,7 @@ namespace EcoScolarWebApi.Services
             }
 
             // Veryfa if user try to add it own advert
-            if (advert.UserId == userId)
+            if (advert.SellerId == userId)
             {
                 return Result<CartItemDto>.Failure("Vous ne pouvez pas ajouter votre propre annonce à votre panier.", ErrorType.Invalid);
             }
@@ -88,7 +88,7 @@ namespace EcoScolarWebApi.Services
 
             // Get main picture of the advert
             var primaryImage = await _context.Pictures
-                .Where(p => p.AdvertId == dto.AdvertId)
+                .Where(p => p.PhysicalItemId == dto.AdvertId)
                 .Select(p => p.Label)
                 .FirstOrDefaultAsync();
 
@@ -104,7 +104,7 @@ namespace EcoScolarWebApi.Services
                 AdvertId = cartItem.AdvertId,
                 Title = advert.Title,
                 Price = advert.Price,
-                SellerPseudo = advert.User?.Nickname ?? advert.User?.UserName ?? string.Empty,
+                SellerPseudo = advert.Seller?.Nickname ?? advert.Seller?.UserName ?? string.Empty,
                 Type = type,
                 PrimaryImage = primaryImage
             };

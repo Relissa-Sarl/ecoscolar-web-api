@@ -65,7 +65,7 @@ public class CartIntegrationTest : IClassFixture<AuthInMemoryWebApplicationFacto
             Title = title,
             Description = "Description of " + title,
             Price = price,
-            UserId = seller.Id,
+            SellerId = seller.Id,
             Status = AdvertStatus.ACTIVE,
             NotificationDate = DateTime.UtcNow,
             Condition = PhysicalItemCondition.NEW,
