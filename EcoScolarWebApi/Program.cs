@@ -7,11 +7,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Dependency injection configuration
 builder.Services.AddInfrastructure(builder.Configuration);
-builder.Services.AddAuthentication();
+builder.Services.AddAuthAndIdentity();
 builder.Services.AddSwaggerAndVersioning();
-builder.Services.AddIdentity<User, IdentityRole>()
-	.AddEntityFrameworkStores<EcoscolarDbContext>()
-	.AddDefaultTokenProviders();
 builder.Services.AddEcoScolarServices(builder.Configuration);
 builder.Services.AddMappersServices(builder.Configuration);
 

@@ -9,14 +9,20 @@ namespace EcoScolarWebApi.Data;
 
 public class DataSeeder
 {
-	public static async Task Seed(EcoscolarDbContext context, UserManager<User> userManager)
+	public static async Task Seed(EcoscolarDbContext context, UserManager<User> userManager, RoleManager<IdentityRole> roleManager)
 	{
 		if (context.Users.Any())
 		{
 			return; // DB has already been seeded
 		}
 
-		Randomizer.Seed = new Random(2025);
+        if (!await roleManager.RoleExistsAsync("User"))
+            await roleManager.CreateAsync(new IdentityRole("User"));
+
+        if (!await roleManager.RoleExistsAsync("Admin"))
+            await roleManager.CreateAsync(new IdentityRole("Admin"));
+
+        Randomizer.Seed = new Random(2025);
 		var faker = new Faker("fr_CH");
 		var users = new List<User>();
 

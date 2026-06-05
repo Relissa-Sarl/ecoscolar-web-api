@@ -45,6 +45,7 @@ public static class ServiceCollectionExtensions
 	public static IServiceCollection AddAuthAndIdentity(this IServiceCollection services)
 	{
 		services.AddIdentityApiEndpoints<User>()
+				.AddRoles<IdentityRole>()
 				.AddEntityFrameworkStores<EcoscolarDbContext>();
 
 		services.ConfigureApplicationCookie(options =>
