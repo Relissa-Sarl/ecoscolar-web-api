@@ -11,12 +11,12 @@ namespace EcoScolarWebApi.Controllers;
 /// Contact support / send feedback.
 /// </summary>
 [ApiVersion("1.0")]
-[Route("api/v{version:apiVersion}/[controller]")]
+[Route("api/v{version:apiVersion}/tickets")]
 [ApiController]
-public class SupportController(ISupportContactService supportContactService) : ControllerBase
+public class TicketsController(ISupportContactService supportContactService) : ControllerBase
 {
     /// <summary>
-    /// Creates a support ticket. POST /api/v1/support
+    /// Creates a support ticket. POST /api/v1/tickets
     /// </summary>
     [HttpPost]
     [AllowAnonymous]
@@ -34,9 +34,9 @@ public class SupportController(ISupportContactService supportContactService) : C
     }
 
     /// <summary>
-    /// Lists support tickets for the authenticated user. GET /api/v1/support/mine
+    /// Lists support tickets for the authenticated user. GET /api/v1/tickets
     /// </summary>
-    [HttpGet("mine")]
+    [HttpGet]
     [Authorize]
     public async Task<IActionResult> GetMyTickets()
     {
@@ -49,9 +49,9 @@ public class SupportController(ISupportContactService supportContactService) : C
     }
 
     /// <summary>
-    /// Gets one support ticket. GET /api/v1/support/mine/{id}
+    /// Gets one support ticket. GET /api/v1/tickets/{id}
     /// </summary>
-    [HttpGet("mine/{id:int}")]
+    [HttpGet("{id:int}")]
     [Authorize]
     public async Task<IActionResult> GetMyTicket(int id)
     {
@@ -64,9 +64,9 @@ public class SupportController(ISupportContactService supportContactService) : C
     }
 
     /// <summary>
-    /// Lists conversation messages. GET /api/v1/support/mine/{id}/messages
+    /// Lists conversation messages. GET /api/v1/tickets/{id}/messages
     /// </summary>
-    [HttpGet("mine/{id:int}/messages")]
+    [HttpGet("{id:int}/messages")]
     [Authorize]
     public async Task<IActionResult> GetTicketMessages(int id)
     {
@@ -79,9 +79,9 @@ public class SupportController(ISupportContactService supportContactService) : C
     }
 
     /// <summary>
-    /// Adds a user reply to a ticket. POST /api/v1/support/mine/{id}/messages
+    /// Adds a user reply to a ticket. POST /api/v1/tickets/{id}/messages
     /// </summary>
-    [HttpPost("mine/{id:int}/messages")]
+    [HttpPost("{id:int}/messages")]
     [Authorize]
     public async Task<IActionResult> AddTicketMessage(int id, [FromBody] SupportTicketMessageRequestDto request)
     {

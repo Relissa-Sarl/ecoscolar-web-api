@@ -22,7 +22,7 @@ public class SupportContactHttpIntegrationTests : IClassFixture<AuthInMemoryWebA
         _factory.EnsureSeeded();
         var client = _factory.CreateClient();
 
-        var response = await client.PostAsJsonAsync("/api/v1/support", new
+        var response = await client.PostAsJsonAsync("/api/v1/tickets", new
         {
             email = "user@example.com",
             subject = "Signaler un bug",
@@ -42,7 +42,7 @@ public class SupportContactHttpIntegrationTests : IClassFixture<AuthInMemoryWebA
         _factory.EnsureSeeded();
         var client = _factory.CreateClient();
 
-        var response = await client.PostAsJsonAsync("/api/v1/support", new
+        var response = await client.PostAsJsonAsync("/api/v1/tickets", new
         {
             email = "user@example.com",
             subject = "Test",
@@ -58,7 +58,7 @@ public class SupportContactHttpIntegrationTests : IClassFixture<AuthInMemoryWebA
         _factory.EnsureSeeded();
         var client = _factory.CreateClient();
 
-        var response = await client.PostAsJsonAsync("/api/v1/support", new
+        var response = await client.PostAsJsonAsync("/api/v1/tickets", new
         {
             email = "user@example.com",
             subject = "Objet valide",
@@ -72,7 +72,7 @@ public class SupportContactHttpIntegrationTests : IClassFixture<AuthInMemoryWebA
     public async Task GetMySupportTickets_WithoutAuth_ReturnsUnauthorized()
     {
         var client = _factory.CreateClient();
-        var response = await client.GetAsync("/api/v1/support/mine");
+        var response = await client.GetAsync("/api/v1/tickets");
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
@@ -85,7 +85,7 @@ public class SupportContactHttpIntegrationTests : IClassFixture<AuthInMemoryWebA
 
         await RegisterAndLoginAsync(client, email, password);
 
-        var createResponse = await client.PostAsJsonAsync("/api/v1/support", new
+        var createResponse = await client.PostAsJsonAsync("/api/v1/tickets", new
         {
             email,
             subject = "Suivi de commande",
@@ -93,7 +93,7 @@ public class SupportContactHttpIntegrationTests : IClassFixture<AuthInMemoryWebA
         });
         createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
 
-        var listResponse = await client.GetAsync("/api/v1/support/mine");
+        var listResponse = await client.GetAsync("/api/v1/tickets");
         listResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var tickets = await listResponse.Content.ReadFromJsonAsync<List<SupportTicketSummaryDto>>();
@@ -111,7 +111,7 @@ public class SupportContactHttpIntegrationTests : IClassFixture<AuthInMemoryWebA
 
         await RegisterAndLoginAsync(client, email, password);
 
-        var createResponse = await client.PostAsJsonAsync("/api/v1/support", new
+        var createResponse = await client.PostAsJsonAsync("/api/v1/tickets", new
         {
             email,
             subject = "Question technique",
@@ -120,21 +120,21 @@ public class SupportContactHttpIntegrationTests : IClassFixture<AuthInMemoryWebA
         createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
         var created = await createResponse.Content.ReadFromJsonAsync<SupportContactResponseDto>();
 
-        var detailResponse = await client.GetAsync($"/api/v1/support/mine/{created!.Id}");
+        var detailResponse = await client.GetAsync($"/api/v1/tickets/{created!.Id}");
         detailResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var messagesResponse = await client.GetAsync($"/api/v1/support/mine/{created.Id}/messages");
+        var messagesResponse = await client.GetAsync($"/api/v1/tickets/{created.Id}/messages");
         messagesResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         var messages = await messagesResponse.Content.ReadFromJsonAsync<List<SupportTicketMessageDto>>();
         messages.Should().NotBeNull();
         messages!.Should().Contain(m => m.IsFromSupport);
 
         var replyResponse = await client.PostAsJsonAsync(
-            $"/api/v1/support/mine/{created.Id}/messages",
+            $"/api/v1/tickets/{created.Id}/messages",
             new { message = "J'ai aussi essayé sur un autre navigateur." });
         replyResponse.StatusCode.Should().Be(HttpStatusCode.Created);
 
-        var messagesAfter = await client.GetAsync($"/api/v1/support/mine/{created.Id}/messages");
+        var messagesAfter = await client.GetAsync($"/api/v1/tickets/{created.Id}/messages");
         var allMessages = await messagesAfter.Content.ReadFromJsonAsync<List<SupportTicketMessageDto>>();
         allMessages.Should().Contain(m => !m.IsFromSupport && m.Body.Contains("navigateur"));
     }
