@@ -37,19 +37,22 @@ public class MeController : ControllerBase
             .Where(t => t.BuyerId == userId)
             .Include(t => t.Advert)
                 .ThenInclude(a => a.Seller)
-            .Select(t => new PurchaseReadDto(
-                t.TransactionId.ToString(),
-                t.AdvertId.ToString(),
-                t.Advert!.Title,
-                t.Advert.Price,
-                t.Date,
-                t.Status,
-                GetPrimaryImage(t.Advert), // Helper method to extract the image
-                t.Advert.Seller.UserName ?? "Anonyme"
-            ))
+            .Include(t => t.Advert)
+                .ThenInclude(a => (a as PhysicalItem)!.Pictures)
             .ToListAsync();
 
-        return Ok(purchases);
+        var purchaseDtos = purchases.Select(t => new PurchaseReadDto(
+            t.TransactionId.ToString(),
+            t.AdvertId.ToString(),
+            t.Advert!.Title,
+            t.Advert.Price,
+            t.Date,
+            t.Status,
+            GetPrimaryImage(t.Advert),
+            t.Advert.Seller?.Nickname ?? t.Advert.Seller?.UserName ?? "Anonyme"
+        )).ToList();
+
+        return Ok(purchaseDtos);
     }
 
     [HttpGet("sales")]
@@ -85,9 +88,10 @@ public class MeController : ControllerBase
         {
             var dto = AdvertReadDto.FromEntity(s.Advert);
             // If we have a transaction, we update the buyer name in the record
-            if (s.Transaction != null && s.Transaction.Buyer != null)
+            if (s.Transaction?.Buyer != null)
             {
-               dto = dto with { BuyerName = s.Transaction.Buyer.FirstName + " " + s.Transaction.Buyer.LastName };
+                // Use the buyer's Nickname for anonymisation; fall back to UserName if Nickname is not yet set.
+                dto = dto with { BuyerName = s.Transaction.Buyer.Nickname ?? s.Transaction.Buyer.UserName ?? "Anonyme" };
             }
             return dto;
         });
