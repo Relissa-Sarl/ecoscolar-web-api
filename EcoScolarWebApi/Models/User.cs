@@ -30,4 +30,5 @@ public class User : IdentityUser
 
 	public virtual ICollection<UserLanguage> Languages { get; set; } = new List<UserLanguage>();
 	public virtual ICollection<UserFavorite> Favorites { get; set; } = [];
+	public virtual ICollection<CartItem> CartItems { get; set; } = [];
 }

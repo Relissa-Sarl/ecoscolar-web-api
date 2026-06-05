@@ -1,4 +1,4 @@
-﻿using Asp.Versioning;
+using Asp.Versioning;
 using EcoScolarWebApi.Data;
 using EcoScolarWebApi.Models;
 using EcoScolarWebApi.Services;
@@ -106,6 +106,7 @@ public static class ServiceCollectionExtensions
 			services.AddScoped<IAdvertSearchService, AdvertSearchService>();
 
 		services.AddScoped<IUserService, UserService>();
+		services.AddScoped<ICartService, CartService>();
 		services.AddTransient<IEmailSender<User>, DevEmailSenderService>();
 
 		return services;
