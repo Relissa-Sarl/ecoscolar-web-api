@@ -18,6 +18,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<SubjectMapper>();
         services.AddSingleton<LanguageMapper>();
         services.AddSingleton<PublicCommentMapper>();
+        services.AddSingleton<ReviewMapper>();
         return services;
     }
 

@@ -1,5 +1,8 @@
 using EcoScolarWebApi.Controllers;
 using EcoScolarWebApi.Data;
+using EcoScolarWebApi.DTOs.Adverts;
+using EcoScolarWebApi.Enums;
+using EcoScolarWebApi.Mappers;
 using EcoScolarWebApi.Models;
 using EcoScolarWebApi.Services.Contracts;
 using FluentAssertions;
@@ -10,8 +13,6 @@ using NSubstitute;
 using System.Security.Claims;
 using Xunit;
 using LanguageEnum = EcoScolarWebApi.Enums.LanguageEnum;
-using EcoScolarWebApi.Enums;
-using EcoScolarWebApi.DTOs.Adverts;
 
 namespace EcoScolarWebApi.Tests.Controllers;
 
@@ -23,8 +24,10 @@ public class AdvertsControllerTests : IDisposable
     private readonly UserManager<User> _userManagerMock;
     private readonly UsersController _usersController;
     private readonly IUserService _userServiceMock;
+    private readonly ReviewMapper _reviewMapper;
 
-	public AdvertsControllerTests()
+
+    public AdvertsControllerTests()
     {
         _searchService = Substitute.For<IAdvertSearchService>();
 
@@ -37,9 +40,10 @@ public class AdvertsControllerTests : IDisposable
             .Options;
         _context = new EcoscolarDbContext(options);
 		_userServiceMock = Substitute.For<IUserService>();
+        _reviewMapper = Substitute.For<ReviewMapper>();
 
-		// Simulate the dependency injection of context and store into the AdvertsController
-		_usersController = new UsersController(_userServiceMock, _userManagerMock, _context);
+        // Simulate the dependency injection of context and store into the AdvertsController
+        _usersController = new UsersController(_userServiceMock, _userManagerMock, _context, _reviewMapper);
 		_controller = new AdvertsController(_context, _searchService);
     }
 
