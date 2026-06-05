@@ -1,4 +1,4 @@
-﻿using Bogus;
+using Bogus;
 using EcoScolarWebApi.Enums;
 using EcoScolarWebApi.Models;
 using Microsoft.AspNetCore.Identity;
@@ -8,10 +8,136 @@ namespace EcoScolarWebApi.Data;
 
 public class DataSeeder
 {
-    public static async Task Seed(EcoscolarDbContext context, UserManager<User> userManager)
-    {
-        if (await context.Users.AnyAsync())
-            return; // DB has already been seeded
+	public static async Task Seed(EcoscolarDbContext context, UserManager<User> userManager)
+	{
+		if (context.Users.Any())
+		{
+			return; // DB has already been seeded
+		}
+
+		Randomizer.Seed = new Random(2025);
+		var faker = new Faker("fr_CH");
+		var users = new List<User>();
+
+		// Create Seller to test
+		var testUser = new User
+		{
+			Id = Guid.NewGuid().ToString(),
+			UserName = "albert@einstein.ch",
+			Email = "albert@einstein.ch",
+			EmailConfirmed = true,
+			FirstName = "Albert",
+			LastName = "Epstein"
+		};
+		users.Add(testUser);
+
+		for (var i = 1; i <= 20; i++)
+		{
+			var firstName = faker.Name.FirstName();
+			var lastName = faker.Name.LastName();
+			var userName = $"{firstName}.{lastName}".ToLowerInvariant().Replace(" ", string.Empty) + $"{i}@example.ch";
+			var email = userName;
+			var user = new User
+			{
+				Id = Guid.NewGuid().ToString(),
+				UserName = userName,
+				Email = email,
+				EmailConfirmed = true,
+				FirstName = firstName,
+				LastName = lastName
+			};
+			users.Add(user);
+		}
+
+		foreach (var user in users)
+		{
+			await userManager.CreateAsync(user, "P@ssw0rd!");
+		}
+
+		// Refresh the users list from the database to ensure all identities are persisted
+		var userIds = users.Select(u => u.Id).ToList();
+		users = context.Users.Where(u => userIds.Contains(u.Id)).ToList();
+
+        // Re-assign testUser with the one saved in db to have its proper relations
+        testUser = users.First(u => u.Email == "albert@einstein.ch");
+
+		var bookCategories = context.Set<BookCategory>().AsNoTracking().ToList();
+		var subjects = context.Set<Subject>().AsNoTracking().ToList();
+		var schoolGrades = context.Set<SchoolGrade>().AsNoTracking().ToList();
+		var productCategories = context.Set<ProductCategory>().AsNoTracking().ToList();
+
+		if (!bookCategories.Any() || !subjects.Any() || !schoolGrades.Any() || !productCategories.Any())
+		{
+			return;
+		}
+
+		var bookCategoryIds = bookCategories.Select(category => category.BookCategoryId).ToList();
+		var subjectList = subjects.ToList();
+		var schoolGradeList = schoolGrades.ToList();
+		var productCategoryIds = productCategories.Select(category => category.ProductCategoryId).ToList();
+
+		var physicalItemsFaker = new Faker<PhysicalItem>("fr_CH")
+			.RuleFor(p => p.Title, f => f.Commerce.ProductName())
+			.RuleFor(p => p.Description, f => f.Lorem.Paragraphs(2))
+			.RuleFor(p => p.Price, f => decimal.Round(f.Random.Decimal(5m, 250m), 2))
+			.RuleFor(p => p.CreatedAt, f => f.Date.Recent(90, DateTime.UtcNow))
+			.RuleFor(p => p.NotificationDate, (f, p) => p.CreatedAt.AddDays(f.Random.Int(1, 30)))
+			.RuleFor(p => p.Status, f => f.PickRandom<AdvertStatus>())
+			.RuleFor(p => p.SellerId, f => f.PickRandom(users).Id)
+			.RuleFor(p => p.Condition, f => f.PickRandom<PhysicalItemCondition>())
+			.RuleFor(p => p.Weight, f => f.Random.Bool(0.7f) ? decimal.Round(f.Random.Decimal(0.2m, 5m), 2) : null)
+			.RuleFor(p => p.ProductCategoryId, f => f.Random.Bool(0.8f) ? f.Random.ListItem(productCategoryIds) : null);
+
+		var physicalItems = physicalItemsFaker.Generate(25);
+
+		var booksFaker = new Faker<Book>("fr_CH")
+			.RuleFor(b => b.Title, f => $"Manuel de {f.Commerce.Department()}")
+			.RuleFor(b => b.Description, f => f.Lorem.Paragraphs(2))
+			.RuleFor(b => b.Price, f => decimal.Round(f.Random.Decimal(8m, 120m), 2))
+			.RuleFor(b => b.CreatedAt, f => f.Date.Recent(180, DateTime.UtcNow))
+			.RuleFor(b => b.NotificationDate, (f, b) => b.CreatedAt.AddDays(f.Random.Int(5, 45)))
+			.RuleFor(b => b.Status, f => f.PickRandom<AdvertStatus>())
+			.RuleFor(b => b.SellerId, f => f.PickRandom(users).Id)
+			.RuleFor(b => b.Condition, f => f.PickRandom<PhysicalItemCondition>())
+			.RuleFor(b => b.Weight, f => decimal.Round(f.Random.Decimal(0.3m, 2.5m), 2))
+			.RuleFor(b => b.ISBN, f => $"978{f.Random.Long(1000000000L, 9999999999L)}")
+			.RuleFor(b => b.Author, f => f.Name.FullName())
+			.RuleFor(b => b.Publisher, f => f.Company.CompanyName())
+			.RuleFor(b => b.Edition, f => $"{f.Random.Int(2019, 2025)}")
+			.RuleFor(b => b.WrittenLanguage, f => f.PickRandom<Enums.LanguageEnum>())
+			.RuleFor(b => b.BookCategoryId, f => f.Random.ListItem(bookCategoryIds))
+			.RuleFor(b => b.ProductCategoryId, f => f.Random.Bool(0.3f) ? f.Random.ListItem(productCategoryIds) : null);
+
+		var books = booksFaker.Generate(15);
+
+		var servicesFaker = new Faker<TutoringAdvert>("fr_CH")
+			.RuleFor(s => s.Title, f => $"Cours de {f.Random.ListItem(subjectList).Name}")
+			.RuleFor(s => s.Description, f => f.Lorem.Paragraphs(2))
+			.RuleFor(s => s.Price, f => decimal.Round(f.Random.Decimal(20m, 90m), 2))
+			.RuleFor(s => s.CreatedAt, f => f.Date.Recent(60, DateTime.UtcNow))
+			.RuleFor(s => s.NotificationDate, (f, s) => s.CreatedAt.AddDays(f.Random.Int(3, 20)))
+			.RuleFor(s => s.Status, f => f.PickRandom<AdvertStatus>())
+			.RuleFor(s => s.SellerId, f => f.PickRandom(users).Id)
+			.RuleFor(s => s.TeachingLanguage, f => f.PickRandom<Enums.LanguageEnum>())
+			.RuleFor(s => s.StudyLevel, f => f.Random.ListItem(schoolGradeList).Name)
+			.RuleFor(s => s.SubjectId, f => f.Random.ListItem(subjectList).SubjectId)
+			.RuleFor(s => s.SchoolGradeId, f => f.Random.ListItem(schoolGradeList).SchoolGradeId);
+
+		var services = servicesFaker.Generate(18);
+
+        // Force some adverts to be sold/owned by albert for testing purposes
+        // 1. Give Albert some sales
+        physicalItems[0].SellerId = testUser.Id;
+        physicalItems[0].Status = AdvertStatus.SOLD;
+        physicalItems[1].SellerId = testUser.Id;
+        physicalItems[1].Status = AdvertStatus.ACTIVE;
+        books[0].SellerId = testUser.Id;
+        books[0].Status = AdvertStatus.SOLD;
+
+		context.Products.AddRange(physicalItems);
+		context.Books.AddRange(books);
+		context.Services.AddRange(services);
+		context.SaveChanges();
 
         // Génération des données de test spécifiques (pour tes tests manuels)
         await SeedTestDataAsync(context, userManager);
@@ -220,14 +346,6 @@ public class DataSeeder
             }
         }
         context.Pictures.AddRange(pictures);
-
-        var publicComments = new List<PublicComment>
-        {
-            new() { AdvertId = physicalItems[1].AdvertId, AuthorId = randomUsers[1].Id, Content = "Peut-on récupérer l'objet rapidement ?", CreatedAt = DateTime.UtcNow.AddDays(-1) },
-            new() { AdvertId = books.First().AdvertId, AuthorId = randomUsers[2].Id, Content = "Le manuel est-il encore en bon état ?", CreatedAt = DateTime.UtcNow.AddDays(-2) }
-        };
-        context.PublicComments.AddRange(publicComments);
-
         await context.SaveChangesAsync();
     }
 }
