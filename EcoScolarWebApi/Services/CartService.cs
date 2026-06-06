@@ -64,7 +64,7 @@ namespace EcoScolarWebApi.Services
             // Veryfa if user try to add it own advert
             if (advert.SellerId == userId)
             {
-                return Result<CartItemDto>.Failure("Vous ne pouvez pas ajouter votre propre annonce à votre panier.", ErrorType.Invalid);
+                return Result<CartItemDto>.Failure("Vous ne pouvez pas ajouter votre propre annonce à votre panier.", ErrorType.Conflict);
             }
 
             // Verify if advert is already in the cart
@@ -73,7 +73,7 @@ namespace EcoScolarWebApi.Services
 
             if (alreadyInCart)
             {
-                return Result<CartItemDto>.Failure("Cet article est déjà dans votre panier.", ErrorType.Invalid);
+                return Result<CartItemDto>.Failure("Cet article est déjà dans votre panier.", ErrorType.Conflict);
             }
 
             // Create and save element

@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace EcoScolarWebApi.Migrations
 {
     /// <inheritdoc />
-    public partial class createallentity : Migration
+    public partial class fixMergeConflict : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -156,6 +156,7 @@ namespace EcoScolarWebApi.Migrations
                     Nickname = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     DateOfBirth = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     IsOnboarded = table.Column<bool>(type: "bit", nullable: false),
+                    IsBanned = table.Column<bool>(type: "bit", nullable: false),
                     LocationId = table.Column<int>(type: "int", nullable: true),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -359,6 +360,29 @@ namespace EcoScolarWebApi.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "SupportTickets",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
+                    Subject = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Message = table.Column<string>(type: "nvarchar(4000)", maxLength: 4000, nullable: false),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SupportTickets", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_SupportTickets_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "UserLanguages",
                 columns: table => new
                 {
@@ -381,6 +405,31 @@ namespace EcoScolarWebApi.Migrations
                         principalTable: "Languages",
                         principalColumn: "Label",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CartItems",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    AdvertId = table.Column<long>(type: "bigint", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CartItems", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CartItems_Adverts_AdvertId",
+                        column: x => x.AdvertId,
+                        principalTable: "Adverts",
+                        principalColumn: "AdvertId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_CartItems_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -559,6 +608,28 @@ namespace EcoScolarWebApi.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "SupportTicketMessages",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TicketId = table.Column<int>(type: "int", nullable: false),
+                    Body = table.Column<string>(type: "nvarchar(4000)", maxLength: 4000, nullable: false),
+                    IsFromSupport = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SupportTicketMessages", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_SupportTicketMessages_SupportTickets_TicketId",
+                        column: x => x.TicketId,
+                        principalTable: "SupportTickets",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Books",
                 columns: table => new
                 {
@@ -640,12 +711,20 @@ namespace EcoScolarWebApi.Migrations
                     Rating = table.Column<int>(type: "int", nullable: false),
                     Comment = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
+                    ReviewedRole = table.Column<int>(type: "int", nullable: false),
                     ReviewerId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    ReviewedId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     TransactionId = table.Column<long>(type: "bigint", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Reviews", x => x.ReviewId);
+                    table.ForeignKey(
+                        name: "FK_Reviews_AspNetUsers_ReviewedId",
+                        column: x => x.ReviewedId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Reviews_AspNetUsers_ReviewerId",
                         column: x => x.ReviewerId,
@@ -802,6 +881,16 @@ namespace EcoScolarWebApi.Migrations
                 column: "BookCategoryId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_CartItems_AdvertId",
+                table: "CartItems",
+                column: "AdvertId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CartItems_UserId",
+                table: "CartItems",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Disputes_TransactionId",
                 table: "Disputes",
                 column: "TransactionId");
@@ -842,14 +931,20 @@ namespace EcoScolarWebApi.Migrations
                 column: "AuthorId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Reviews_ReviewedId",
+                table: "Reviews",
+                column: "ReviewedId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Reviews_ReviewerId",
                 table: "Reviews",
                 column: "ReviewerId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Reviews_TransactionId",
+                name: "IX_Reviews_TransactionId_ReviewerId",
                 table: "Reviews",
-                column: "TransactionId");
+                columns: new[] { "TransactionId", "ReviewerId" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_SearchAlerts_BookCategoryId",
@@ -864,6 +959,16 @@ namespace EcoScolarWebApi.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_SearchAlerts_UserId",
                 table: "SearchAlerts",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SupportTicketMessages_TicketId",
+                table: "SupportTicketMessages",
+                column: "TicketId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SupportTickets_UserId",
+                table: "SupportTickets",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
@@ -924,6 +1029,9 @@ namespace EcoScolarWebApi.Migrations
                 name: "Books");
 
             migrationBuilder.DropTable(
+                name: "CartItems");
+
+            migrationBuilder.DropTable(
                 name: "Disputes");
 
             migrationBuilder.DropTable(
@@ -945,6 +1053,9 @@ namespace EcoScolarWebApi.Migrations
                 name: "SearchAlerts");
 
             migrationBuilder.DropTable(
+                name: "SupportTicketMessages");
+
+            migrationBuilder.DropTable(
                 name: "TutoringAdverts");
 
             migrationBuilder.DropTable(
@@ -964,6 +1075,9 @@ namespace EcoScolarWebApi.Migrations
 
             migrationBuilder.DropTable(
                 name: "BookCategories");
+
+            migrationBuilder.DropTable(
+                name: "SupportTickets");
 
             migrationBuilder.DropTable(
                 name: "SchoolGrades");

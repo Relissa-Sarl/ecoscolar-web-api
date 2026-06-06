@@ -55,11 +55,13 @@ public class DataSeeder
 			LastName = "Curie"
 		};
 
-		await userManager.CreateAsync(albert, "P@ssw0rd!");
+        await userManager.CreateAsync(albert, "P@ssw0rd!");
 		await userManager.CreateAsync(marie, "P@ssw0rd!");
 
-		// Get category IDs for test products
-		var productCategoryId = await context.Set<ProductCategory>().Select(p => p.ProductCategoryId).FirstOrDefaultAsync();
+        await userManager.AddToRoleAsync(albert, "Admin");
+
+        // Get category IDs for test products
+        var productCategoryId = await context.Set<ProductCategory>().Select(p => p.ProductCategoryId).FirstOrDefaultAsync();
 		var bookCategoryId = await context.Set<BookCategory>().Select(b => b.BookCategoryId).FirstOrDefaultAsync();
 
 		// Test articles for manual testing of sales and purchases
@@ -198,10 +200,10 @@ public class DataSeeder
 			await userManager.CreateAsync(user, "P@ssw0rd!");
         }
 
-    // Refresh the users list from the database to ensure all identities are persisted
-    var userIds = users.Select(u => u.Id).ToList();
-		users = context.Users.Where(u => userIds.Contains(u.Id)).ToList();
+		// Refresh the users list from the database to ensure all identities are persisted
 		var usersInDb = await context.Users.ToListAsync();
+		var userIds = usersInDb.Select(u => u.Id).ToList();
+        usersInDb = context.Users.Where(u => userIds.Contains(u.Id)).ToList();
 
 		// Get category IDs for random products
 		var bookCategoryIds = await context.Set<BookCategory>().AsNoTracking().Select(c => c.BookCategoryId).ToListAsync();
@@ -289,21 +291,21 @@ public class DataSeeder
             new()
             {
                 AdvertId = physicalItems[0].AdvertId,
-                AuthorId = users[1].Id,
+                AuthorId = usersInDb[1].Id,
                 Content = "Peut-on récupérer l'objet rapidement ?",
                 CreatedAt = DateTime.UtcNow.AddDays(-1)
             },
             new()
             {
                 AdvertId = books.First().AdvertId,
-                AuthorId = users[2].Id,
+                AuthorId = usersInDb[2].Id,
                 Content = "Le manuel est-il encore en bon état ?",
                 CreatedAt = DateTime.UtcNow.AddDays(-2)
             },
             new()
             {
                 AdvertId = physicalItems[0].AdvertId,
-                AuthorId = testUser.Id,
+                AuthorId = usersInDb[3].Id,
                 Content = "J'ai une question sur cet article de test.",
                 CreatedAt = DateTime.UtcNow.AddDays(-3)
             }
@@ -312,10 +314,8 @@ public class DataSeeder
         context.PublicComments.AddRange(publicComments);
         await context.SaveChangesAsync();
 
-        foreach (var user in users)
+        foreach (var user in usersInDb)
             await userManager.AddToRoleAsync(user, "User");
-
-        await userManager.AddToRoleAsync(testUser, "Admin");
 
         await context.SaveChangesAsync();
     }

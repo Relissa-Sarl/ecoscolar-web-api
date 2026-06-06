@@ -27,6 +27,7 @@ public class UsersControllerTests
 	private readonly EcoscolarDbContext _context;
 	private readonly UsersController _controller;
 	private readonly ReviewMapper _reviewMapper;
+	private readonly UserMapper _userMapper;
 
 	public UsersControllerTests()
 	{
@@ -41,6 +42,8 @@ public class UsersControllerTests
 
 		_userServiceMock = Substitute.For<IUserService>();
         _reviewMapper = new ReviewMapper();
+
+		_userMapper = new UserMapper();
 
         // Simulate the dependency injection of UserManager and DbContext into the UsersController
         _controller = new UsersController(_userServiceMock, _userManagerMock, _context, _reviewMapper);
@@ -73,10 +76,11 @@ public class UsersControllerTests
 			"Alexis",
 			"Rojas",
 			"alexis@etml.ch",
+			true,
+			false,
+			new List<SpokenLanguageDto>(),
 			null,
 			"2000-01-01",
-			true,
-			new List<SpokenLanguageDto>(),
 			["User"]
 		);
 
@@ -120,7 +124,7 @@ public class UsersControllerTests
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
         using var context = new EcoscolarDbContext(options);
 
-        var userService = new UserService(userManagerMock, context, signInManagerMock);
+        var userService = new UserService(userManagerMock, context, signInManagerMock, _userMapper);
 
         userManagerMock.GetUserId(Arg.Any<ClaimsPrincipal>()).Returns((string?)null);
 
@@ -144,7 +148,7 @@ public class UsersControllerTests
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
 
         using var context = new EcoscolarDbContext(options);
-        var userService = new UserService(userManagerMock, context, signInManagerMock);
+        var userService = new UserService(userManagerMock, context, signInManagerMock, _userMapper);
 
         var existingUser = new User
         {
@@ -264,10 +268,11 @@ public class UsersControllerTests
 			"First",
 			"Last",
 			"update@example.com",
+			true,
+			false,
+			[new SpokenLanguageDto("FR", "Native")],
 			new LocationReadDto("1000", "Lausanne", "Vaud"),
 			"2000-01-01",
-			true,
-			[new SpokenLanguageDto("FR", "Native")],
 			["User"]
 		);
 
