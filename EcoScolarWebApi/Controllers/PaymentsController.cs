@@ -38,8 +38,9 @@ public class PaymentsController : ControllerBase
 	public async Task<IActionResult> Checkout([FromBody] CheckoutRequestDto request)
 	{
 		double price = request.ProductPrice * 100;
+        string baseUrl = $"{Request.Scheme}://{Request.Host}";
 
-		var options = new SessionCreateOptions
+        var options = new SessionCreateOptions
 		{
 			PaymentMethodTypes = new List<string> { "card" },
 			LineItems = new List<SessionLineItemOptions>
@@ -66,8 +67,8 @@ public class PaymentsController : ControllerBase
 				TransferGroup = "COMMANDE_ID_789",
 			},
 
-			SuccessUrl = "http://localhost:3001/success",
-			CancelUrl = "http://localhost:3001/denied",
+            SuccessUrl = $"{baseUrl}/success?total={price}",
+            CancelUrl = $"{baseUrl}/denied",
 		};
 
 		var service = new SessionService();
