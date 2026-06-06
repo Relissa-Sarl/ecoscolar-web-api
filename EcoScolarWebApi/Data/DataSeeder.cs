@@ -1,4 +1,8 @@
+using System.Globalization;
 using Bogus;
+using CsvHelper;
+using CsvHelper.Configuration;
+using CsvHelper.Configuration.Attributes;
 using EcoScolarWebApi.Enums;
 using EcoScolarWebApi.Models;
 using Microsoft.AspNetCore.Identity;
@@ -10,19 +14,76 @@ public class DataSeeder
 {
 	public static async Task Seed(EcoscolarDbContext context, UserManager<User> userManager)
 	{
+		// 1. Import Swiss localities from CSV (postal code + city + region)
+		await SeedLocationsAsync(context);
+
 		if (await context.Users.AnyAsync())
 			return;
 
-		// 1. Generate test data for manual testing
+		// 2. Generate data to test (Albert / Marie)
 		await SeedTestDataAsync(context, userManager);
 
-		// 2. Generate random data for more extensive testing and development
+		// 3. Generate random data for more realistic testing
 		await SeedRandomDataAsync(context, userManager);
+	}
+
+	private static async Task SeedLocationsAsync(EcoscolarDbContext context)
+	{
+		if (await context.Locations.AnyAsync())
+			return;
+
+		var filePath = Path.Combine(AppContext.BaseDirectory, "Resources", "switzerland_localities.csv");
+
+		if (!File.Exists(filePath))
+		{
+			Console.WriteLine($"[Seeder] Fichier CSV introuvable au chemin : {filePath}");
+			return;
+		}
+
+		var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+		{
+			Delimiter = ";",
+			HasHeaderRecord = true,
+			MissingFieldFound = null,
+			BadDataFound = null
+		};
+
+		using var reader = new StreamReader(filePath);
+		using var csv = new CsvReader(reader, config);
+
+		var records = csv.GetRecords<SwissCsvModel>().ToList();
+
+		// GroupBy to merge duplicates (same postal code + city) and take the first region found for that group
+		var locationsToInsert = records
+			.GroupBy(r => new { r.PostalCode, r.City })
+			.Select(g => new Location
+			{
+				PostalCode = g.Key.PostalCode.ToString(),
+				City = g.Key.City,
+				Region = g.First().Region
+			})
+			.ToList();
+
+		await context.Locations.AddRangeAsync(locationsToInsert);
+		await context.SaveChangesAsync();
+
+		Console.WriteLine($"[Seeder] Importation réussie : {locationsToInsert.Count} localités suisses ajoutées.");
+	}
+
+	private class SwissCsvModel
+	{
+		[Name("PostalCode")]
+		public int PostalCode { get; set; }
+
+		[Name("City")]
+		public string City { get; set; }
+
+		[Name("Region")]
+		public string Region { get; set; }
 	}
 
 	private static async Task SeedTestDataAsync(EcoscolarDbContext context, UserManager<User> userManager)
 	{
-		// Test users with known credentials for manual testing
 		var albert = new User
 		{
 			Id = Guid.NewGuid().ToString(),
@@ -48,13 +109,9 @@ public class DataSeeder
 		await userManager.CreateAsync(albert, "P@ssw0rd!");
 		await userManager.CreateAsync(marie, "P@ssw0rd!");
 
-		// Get category IDs for test products
 		var productCategoryId = await context.Set<ProductCategory>().Select(p => p.ProductCategoryId).FirstOrDefaultAsync();
 		var bookCategoryId = await context.Set<BookCategory>().Select(b => b.BookCategoryId).FirstOrDefaultAsync();
 
-		// Test articles for manual testing of sales and purchases
-
-		// 1. Sold article by Albert (Test sale for Marie)
 		var albertItemSold = new PhysicalItem
 		{
 			Title = "Microscope d'Albert",
@@ -67,7 +124,6 @@ public class DataSeeder
 			ProductCategoryId = productCategoryId
 		};
 
-		// 2. Sold article by Marie (Test sale for Albert)
 		var albertItemActive = new PhysicalItem
 		{
 			Title = "Sac à dos d'Albert",
@@ -80,7 +136,6 @@ public class DataSeeder
 			ProductCategoryId = productCategoryId
 		};
 
-		// 3. Book sold by Albert (Test sale for Marie)
 		var albertBookSold = new Book
 		{
 			Title = "Physique Quantique pour les nuls",
@@ -98,7 +153,6 @@ public class DataSeeder
 			WrittenLanguage = LanguageEnum.FR
 		};
 
-		// 4. Sold article by Marie (Test sale for Albert)
 		var marieItemSold = new PhysicalItem
 		{
 			Title = "Bécher de Marie",
@@ -115,11 +169,9 @@ public class DataSeeder
 		context.Books.Add(albertBookSold);
 		await context.SaveChangesAsync();
 
-		// Transactions for the test sales between Albert and Marie
 		var transactions = new List<Transaction>
 		{
-            // Marie buying Albert's Microscope
-            new()
+			new()
 			{
 				AdvertId = albertItemSold.AdvertId,
 				BuyerId = marie.Id,
@@ -129,8 +181,7 @@ public class DataSeeder
 				BuyerConsent = true,
 				SellerConsent = true
 			},
-            // Marie buying Albert's Book
-            new()
+			new()
 			{
 				AdvertId = albertBookSold.AdvertId,
 				BuyerId = marie.Id,
@@ -140,8 +191,7 @@ public class DataSeeder
 				BuyerConsent = true,
 				SellerConsent = true
 			},
-            // Albert buying Marie's Bécher
-            new()
+			new()
 			{
 				AdvertId = marieItemSold.AdvertId,
 				BuyerId = albert.Id,
@@ -163,7 +213,6 @@ public class DataSeeder
 		var faker = new Faker("fr_CH");
 		var randomUsers = new List<User>();
 
-		// Random users
 		for (var i = 1; i <= 20; i++)
 		{
 			var firstName = faker.Name.FirstName();
@@ -190,7 +239,6 @@ public class DataSeeder
 
 		var usersInDb = await context.Users.ToListAsync();
 
-		// Get category IDs for random products
 		var bookCategoryIds = await context.Set<BookCategory>().AsNoTracking().Select(c => c.BookCategoryId).ToListAsync();
 		var subjectList = await context.Set<Subject>().AsNoTracking().ToListAsync();
 		var schoolGradeList = await context.Set<SchoolGrade>().AsNoTracking().ToListAsync();
@@ -199,7 +247,6 @@ public class DataSeeder
 		if (!bookCategoryIds.Any() || !subjectList.Any() || !schoolGradeList.Any() || !productCategoryIds.Any())
 			return;
 
-		// Generate random adverts (physical items, books, services)
 		var physicalItemsFaker = new Faker<PhysicalItem>("fr_CH")
 			.RuleFor(p => p.Title, f => f.Commerce.ProductName())
 			.RuleFor(p => p.Description, f => f.Lorem.Paragraphs(2))
@@ -254,7 +301,6 @@ public class DataSeeder
 		context.Services.AddRange(services);
 		await context.SaveChangesAsync();
 
-		// Generate pictures for physical items and books
 		var pictures = new List<Picture>();
 		foreach (var item in physicalItems.Cast<PhysicalItem>().Concat(books))
 		{
