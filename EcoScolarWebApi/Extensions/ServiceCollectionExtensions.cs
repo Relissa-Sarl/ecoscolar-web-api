@@ -20,6 +20,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<PublicCommentMapper>();
 		    services.AddSingleton<UserMapper>();
         services.AddSingleton<ReviewMapper>();
+        services.AddSingleton<LocationMapper>();
         return services;
     }
 
