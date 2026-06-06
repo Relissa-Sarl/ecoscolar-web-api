@@ -1,10 +1,15 @@
+using EcoScolarWebApi.Data;
+using EcoScolarWebApi.DTOs.Users;
+using EcoScolarWebApi.Models;
+using FluentAssertions;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
-using EcoScolarWebApi.DTOs.Users;
-using FluentAssertions;
-using Microsoft.AspNetCore.Mvc.Testing;
 using Xunit;
 
 namespace EcoScolarWebApi.Tests.Integration;
@@ -15,9 +20,21 @@ namespace EcoScolarWebApi.Tests.Integration;
 public class AuthHttpIntegrationTests : IClassFixture<AuthInMemoryWebApplicationFactory>
 {
 	private readonly AuthInMemoryWebApplicationFactory _factory;
-	private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
+    private readonly EcoscolarDbContext _context;
+    private readonly ServiceProvider _provider;
+    private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
 
-	public AuthHttpIntegrationTests(AuthInMemoryWebApplicationFactory factory) => _factory = factory;
+    public AuthHttpIntegrationTests(AuthInMemoryWebApplicationFactory factory)
+    {
+        _provider = IntegrationTestIdentityHelper.CreateIdentityProvider(out _context);
+        _factory = factory;
+
+        var roleManager = _provider.GetRequiredService<RoleManager<IdentityRole>>();
+        if (!roleManager.RoleExistsAsync("User").Result)
+        {
+            roleManager.CreateAsync(new IdentityRole("User")).Wait();
+        }
+    }
 
 	private static string UniqueEmail(string prefix) => $"{prefix}.{Guid.NewGuid():N}@example.com";
 
@@ -29,74 +46,74 @@ public class AuthHttpIntegrationTests : IClassFixture<AuthInMemoryWebApplication
 		response.StatusCode.Should().Be(HttpStatusCode.OK);
 	}
 
-	[Fact]
-	public async Task Register_WithValidCredentials_CreatesUser()
-	{
-		var client = CreateClient();
-		var email = UniqueEmail("register");
+    [Fact]
+    public async Task Register_WithValidCredentials_CreatesUser()
+    {
+        var client = CreateClient();
+        var email = UniqueEmail("register");
 
-		await RegisterAsync(client, email);
+        await RegisterAsync(client, email);
 
-		await LoginWithCookiesAsync(client, email);
-		var profile = await GetProfileAsync(client);
-		profile.Email.Should().Be(email);
-	}
+        await LoginWithCookiesAsync(client, email);
+        var profile = await GetProfileAsync(client);
+        profile.Email.Should().Be(email);
+    }
 
-	[Fact]
-	public async Task Register_WithDuplicateEmail_ReturnsBadRequest()
-	{
-		var client = CreateClient();
-		var email = UniqueEmail("duplicate");
+    [Fact]
+    public async Task Register_WithDuplicateEmail_ReturnsBadRequest()
+    {
+        var client = CreateClient();
+        var email = UniqueEmail("duplicate");
 
-		await RegisterAsync(client, email);
+        await RegisterAsync(client, email);
 
-		var response = await client.PostAsJsonAsync("/api/v1/auth/register", new { email, password = "Password123!" });
-		response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-	}
+        var response = await client.PostAsJsonAsync("/api/v1/auth/register", new { email, password = "Password123!" });
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
 
-	[Fact]
-	public async Task Register_WithWeakPassword_ReturnsBadRequest()
-	{
-		var client = CreateClient();
-		var email = UniqueEmail("weak");
+    [Fact]
+    public async Task Register_WithWeakPassword_ReturnsBadRequest()
+    {
+        var client = CreateClient();
+        var email = UniqueEmail("weak");
 
-		var response = await client.PostAsJsonAsync("/api/v1/auth/register", new { email, password = "123" });
-		response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-	}
+        var response = await client.PostAsJsonAsync("/api/v1/auth/register", new { email, password = "123" });
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
 
-	[Fact]
-	public async Task Login_WithValidCredentials_SetsHttpOnlyAuthCookie()
-	{
-		var client = CreateClient();
-		var email = UniqueEmail("cookie");
+    [Fact]
+    public async Task Login_WithValidCredentials_SetsHttpOnlyAuthCookie()
+    {
+        var client = CreateClient();
+        var email = UniqueEmail("cookie");
 
-		await RegisterAsync(client, email);
+        await RegisterAsync(client, email);
 
-		using var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/auth/login?useCookies=true")
-		{
-			Content = JsonContent.Create(new { email, password = "Password123!" })
-		};
-		var response = await client.SendAsync(request);
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/auth/login?useCookies=true")
+        {
+            Content = JsonContent.Create(new { email, password = "Password123!" })
+        };
+        var response = await client.SendAsync(request);
 
-		response.StatusCode.Should().Be(HttpStatusCode.OK);
-		response.Headers.TryGetValues("Set-Cookie", out var cookies).Should().BeTrue();
-		cookies!.Should().Contain(c => c.Contains("Ecoscolar.Auth.Session", StringComparison.OrdinalIgnoreCase));
-		cookies.Should().Contain(c => c.Contains("httponly", StringComparison.OrdinalIgnoreCase));
-	}
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.Headers.TryGetValues("Set-Cookie", out var cookies).Should().BeTrue();
+        cookies!.Should().Contain(c => c.Contains("Ecoscolar.Auth.Session", StringComparison.OrdinalIgnoreCase));
+        cookies.Should().Contain(c => c.Contains("httponly", StringComparison.OrdinalIgnoreCase));
+    }
 
-	[Fact]
-	public async Task Login_WithInvalidPassword_ReturnsUnauthorized()
-	{
-		var client = CreateClient();
-		var email = UniqueEmail("badpass");
+    [Fact]
+    public async Task Login_WithInvalidPassword_ReturnsUnauthorized()
+    {
+        var client = CreateClient();
+        var email = UniqueEmail("badpass");
 
-		await RegisterAsync(client, email);
+        await RegisterAsync(client, email);
 
-		var response = await client.PostAsJsonAsync("/api/v1/auth/login?useCookies=true", new { email, password = "WrongPassword!" });
-		response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
-	}
+        var response = await client.PostAsJsonAsync("/api/v1/auth/login?useCookies=true", new { email, password = "WrongPassword!" });
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
 
-	[Fact]
+    [Fact]
 	public async Task Login_WithUnknownEmail_ReturnsUnauthorized()
 	{
 		var client = CreateClient();
@@ -121,147 +138,155 @@ public class AuthHttpIntegrationTests : IClassFixture<AuthInMemoryWebApplication
 		response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
 	}
 
-	[Fact]
-	public async Task GetMyProfile_WithCookieAuth_ReturnsUserEmail()
-	{
-		var client = CreateClient();
-		var email = UniqueEmail("profile");
+    [Fact]
+    public async Task GetMyProfile_WithCookieAuth_ReturnsUserEmail()
+    {
+        var client = CreateClient();
+        var email = UniqueEmail("profile");
 
-		await RegisterAsync(client, email);
-		await LoginWithCookiesAsync(client, email);
+        await RegisterAsync(client, email);
+        await LoginWithCookiesAsync(client, email);
 
-		var profile = await GetProfileAsync(client);
+        var profile = await GetProfileAsync(client);
 
-		profile.Email.Should().Be(email);
-		profile.IsOnboarded.Should().BeFalse();
-	}
+        profile.Email.Should().Be(email);
+        profile.IsOnboarded.Should().BeFalse();
+    }
 
-	[Fact]
-	public async Task Login_WithBearerToken_AllowsAccessToProfile()
-	{
-		var client = CreateClient();
-		var email = UniqueEmail("bearer");
+    [Fact]
+    public async Task Login_WithBearerToken_AllowsAccessToProfile()
+    {
+        var client = CreateClient();
+        var email = UniqueEmail("bearer");
 
-		await RegisterAsync(client, email);
+        await RegisterAsync(client, email);
 
-		var tokenResponse = await client.PostAsJsonAsync("/api/v1/auth/login?useCookies=false", new { email, password = "Password123!" });
-		tokenResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        var tokenResponse = await client.PostAsJsonAsync("/api/v1/auth/login?useCookies=false", new { email, password = "Password123!" });
+        tokenResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
-		var tokens = await tokenResponse.Content.ReadFromJsonAsync<BearerTokenResponse>(JsonOptions);
-		tokens.Should().NotBeNull();
-		tokens!.AccessToken.Should().NotBeNullOrWhiteSpace();
-		tokens.TokenType.Should().Be("Bearer");
+        var tokens = await tokenResponse.Content.ReadFromJsonAsync<BearerTokenResponse>(JsonOptions);
+        tokens.Should().NotBeNull();
+        tokens!.AccessToken.Should().NotBeNullOrWhiteSpace();
+        tokens.TokenType.Should().Be("Bearer");
 
-		var bearerClient = _factory.CreateClient();
-		_factory.EnsureSeeded();
-		bearerClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
+        var bearerClient = _factory.CreateClient();
+        _factory.EnsureSeeded();
+        bearerClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
 
-		var profileResponse = await bearerClient.GetAsync("/api/v1/users/me");
-		profileResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        var profileResponse = await bearerClient.GetAsync("/api/v1/users/me");
+        profileResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
-		var profile = await profileResponse.Content.ReadFromJsonAsync<UserReadDto>(JsonOptions);
-		profile!.Email.Should().Be(email);
-	}
+        var profile = await profileResponse.Content.ReadFromJsonAsync<UserReadDto>(JsonOptions);
+        profile!.Email.Should().Be(email);
+    }
 
-	[Fact]
-	public async Task UpdateProfile_WithCookieAuth_UpdatesUserAndSetsOnboarded()
-	{
-		var client = CreateClient();
-		var email = UniqueEmail("update");
+    [Fact]
+    public async Task UpdateProfile_WithCookieAuth_UpdatesUserAndSetsOnboarded()
+    {
+        var client = CreateClient();
+        var email = UniqueEmail("update");
 
-		await RegisterAsync(client, email);
-		await LoginWithCookiesAsync(client, email);
+        await RegisterAsync(client, email);
+        await LoginWithCookiesAsync(client, email);
 
-		var updateDto = new UserUpdateDto(
-			Nickname: "eco_user",
-			FirstName: "Eco",
-			LastName: "Scolar",
-			PostalCode: "1000",
-			BirthdayDate: "2000-01-15",
-			SpokenLanguages: [new SpokenLanguageDto("FR", "Native")]
-		);
+        var updateDto = new UserUpdateDto(
+            Nickname: "eco_user",
+            FirstName: "Eco",
+            LastName: "Scolar",
+            PostalCode: "1000",
+            BirthdayDate: "2000-01-15",
+            Languages: [new SpokenLanguageDto("FR", "Native")]
+        );
 
-		var response = await client.PutAsJsonAsync("/api/v1/users/me", updateDto);
-		response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var response = await client.PutAsJsonAsync("/api/v1/users/me", updateDto);
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-		var updated = await response.Content.ReadFromJsonAsync<UserReadDto>(JsonOptions);
-		updated!.Nickname.Should().Be("eco_user");
-		updated.FirstName.Should().Be("Eco");
-		updated.LastName.Should().Be("Scolar");
-		updated.IsOnboarded.Should().BeTrue();
-		updated.Location!.PostalCode.Should().Be("1000");
-		updated.Location.City.Should().Be("Lausanne");
-		updated.SpokenLanguages.Should().ContainSingle(l => l.Language == "FR" && l.Level == "Native");
-	}
+        var updated = await response.Content.ReadFromJsonAsync<UserReadDto>(JsonOptions);
+        updated!.Nickname.Should().Be("eco_user");
+        updated.FirstName.Should().Be("Eco");
+        updated.LastName.Should().Be("Scolar");
+        updated.IsOnboarded.Should().BeTrue();
+        updated.Location!.PostalCode.Should().Be("1000");
+        updated.Location.City.Should().Be("Lausanne");
+        updated.Languages.Should().ContainSingle(l => l.Label == "FR" && l.LanguageLevel == "Native");
+    }
 
-	[Fact]
-	public async Task UpdateProfile_WithInvalidPostalCode_ReturnsBadRequest()
-	{
-		var client = CreateClient();
-		var email = UniqueEmail("badpostal");
+    [Fact]
+    public async Task UpdateProfile_WithInvalidPostalCode_ReturnsBadRequest()
+    {
+        var client = CreateClient();
+        var email = UniqueEmail("badpostal");
 
-		await RegisterAsync(client, email);
-		await LoginWithCookiesAsync(client, email);
+        await RegisterAsync(client, email);
+        await LoginWithCookiesAsync(client, email);
 
-		var updateDto = new UserUpdateDto(
-			Nickname: "user",
-			FirstName: "A",
-			LastName: "B",
-			PostalCode: "9999",
-			BirthdayDate: "2000-01-01",
-			SpokenLanguages: [new SpokenLanguageDto("FR", "Native")]
-		);
+        var updateDto = new UserUpdateDto(
+            Nickname: "user",
+            FirstName: "A",
+            LastName: "B",
+            PostalCode: "9999",
+            BirthdayDate: "2000-01-01",
+            Languages: [new SpokenLanguageDto("FR", "Native")]
+        );
 
-		var response = await client.PutAsJsonAsync("/api/v1/users/me", updateDto);
-		response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-	}
+        var response = await client.PutAsJsonAsync("/api/v1/users/me", updateDto);
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
 
-	[Fact]
-	public async Task Logout_WithCookieAuth_InvalidatesSession()
-	{
-		var client = CreateClient();
-		var email = UniqueEmail("logout");
+    [Fact]
+    public async Task Logout_WithCookieAuth_InvalidatesSession()
+    {
+        var client = CreateClient();
+        var email = UniqueEmail("logout");
 
-		await RegisterAsync(client, email);
-		await LoginWithCookiesAsync(client, email);
+        await RegisterAsync(client, email);
+        await LoginWithCookiesAsync(client, email);
 
-		(await client.GetAsync("/api/v1/users/me")).StatusCode.Should().Be(HttpStatusCode.OK);
+        (await client.GetAsync("/api/v1/users/me")).StatusCode.Should().Be(HttpStatusCode.OK);
 
-		var logoutResponse = await client.PostAsync("/api/v1/auth/logout", null);
-		logoutResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        var logoutResponse = await client.PostAsync("/api/v1/auth/logout", null);
+        logoutResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
-		(await client.GetAsync("/api/v1/users/me")).StatusCode.Should().Be(HttpStatusCode.Unauthorized);
-	}
+        (await client.GetAsync("/api/v1/users/me")).StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
 
-	[Fact]
-	public async Task GetPublicProfile_AfterOnboarding_ReturnsNickname()
-	{
-		var client = CreateClient();
-		var email = UniqueEmail("public");
+    [Fact]
+    public async Task GetPublicProfile_AfterOnboarding_ReturnsNickname()
+    {
+        var client = CreateClient();
+        var email = UniqueEmail("public");
 
-		await RegisterAsync(client, email);
-		await LoginWithCookiesAsync(client, email);
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-		var updateDto = new UserUpdateDto(
-			Nickname: "public_nick",
-			FirstName: "Pub",
-			LastName: "Lic",
-			PostalCode: "1000",
-			BirthdayDate: "1999-05-05",
-			SpokenLanguages: [new SpokenLanguageDto("DE", "Fluent")]
-		);
-		await client.PutAsJsonAsync("/api/v1/users/me", updateDto);
+            if (!await roleManager.RoleExistsAsync("User"))
+                await roleManager.CreateAsync(new IdentityRole("User"));
+        }
 
-		var profile = await GetProfileAsync(client);
+        await RegisterAsync(client, email);
+        await LoginWithCookiesAsync(client, email);
 
-		var publicResponse = await client.GetAsync($"/api/v1/users/{profile.Id}");
-		publicResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        var updateDto = new UserUpdateDto(
+            Nickname: "public_nick",
+            FirstName: "Pub",
+            LastName: "Lic",
+            PostalCode: "1000",
+            BirthdayDate: "1999-05-05",
+            Languages: [new SpokenLanguageDto("DE", "A1")]
+        );
+        await client.PutAsJsonAsync("/api/v1/users/me", updateDto);
 
-		var publicProfile = await publicResponse.Content.ReadFromJsonAsync<UserPublicReadDto>(JsonOptions);
-		publicProfile!.Nickname.Should().Be("public_nick");
-	}
+        var profile = await GetProfileAsync(client);
 
-	private static async Task LoginWithCookiesAsync(HttpClient client, string email, string password = "Password123!")
+        var publicResponse = await client.GetAsync($"/api/v1/users/{profile.Id}");
+        publicResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var publicProfile = await publicResponse.Content.ReadFromJsonAsync<UserPublicReadDto>(JsonOptions);
+        publicProfile!.Nickname.Should().Be("public_nick");
+    }
+
+    private static async Task LoginWithCookiesAsync(HttpClient client, string email, string password = "Password123!")
 	{
 		var response = await client.PostAsJsonAsync("/api/v1/auth/login?useCookies=true", new { email, password });
 		response.StatusCode.Should().Be(HttpStatusCode.OK);

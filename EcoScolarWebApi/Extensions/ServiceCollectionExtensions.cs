@@ -18,6 +18,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<SubjectMapper>();
         services.AddSingleton<LanguageMapper>();
         services.AddSingleton<PublicCommentMapper>();
+		    services.AddSingleton<UserMapper>();
         services.AddSingleton<ReviewMapper>();
         services.AddSingleton<LocationMapper>();
         return services;
@@ -46,6 +47,7 @@ public static class ServiceCollectionExtensions
 	public static IServiceCollection AddAuthAndIdentity(this IServiceCollection services)
 	{
 		services.AddIdentityApiEndpoints<User>()
+				.AddRoles<IdentityRole>()
 				.AddEntityFrameworkStores<EcoscolarDbContext>();
 
 		services.ConfigureApplicationCookie(options =>

@@ -1,5 +1,7 @@
+using EcoScolarWebApi.Data;
 using EcoScolarWebApi.Extensions;
 using EcoScolarWebApi.Models;
+using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 

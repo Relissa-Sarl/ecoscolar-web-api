@@ -1,3 +1,4 @@
+using DotNet.Testcontainers.Builders;
 using System.Globalization;
 using Bogus;
 using CsvHelper;
@@ -12,7 +13,7 @@ namespace EcoScolarWebApi.Data;
 
 public class DataSeeder
 {
-	public static async Task Seed(EcoscolarDbContext context, UserManager<User> userManager)
+	public static async Task Seed(EcoscolarDbContext context, UserManager<User> userManager, RoleManager<IdentityRole> roleManager)
 	{
 		// 1. Import Swiss localities from CSV (postal code + city + region)
 		await SeedLocationsAsync(context);
@@ -20,6 +21,16 @@ public class DataSeeder
 		if (await context.Users.AnyAsync())
 			return;
 
+    if (!await roleManager.RoleExistsAsync("User"))
+        await roleManager.CreateAsync(new IdentityRole("User"));
+
+    if (!await roleManager.RoleExistsAsync("Admin"))
+        await roleManager.CreateAsync(new IdentityRole("Admin"));
+
+    Randomizer.Seed = new Random(2025);
+		var faker = new Faker("fr_CH");
+		var users = new List<User>();
+    
 		// 2. Generate data to test (Albert / Marie)
 		await SeedTestDataAsync(context, userManager);
 
@@ -106,10 +117,13 @@ public class DataSeeder
 			LastName = "Curie"
 		};
 
-		await userManager.CreateAsync(albert, "P@ssw0rd!");
+        await userManager.CreateAsync(albert, "P@ssw0rd!");
 		await userManager.CreateAsync(marie, "P@ssw0rd!");
 
-		var productCategoryId = await context.Set<ProductCategory>().Select(p => p.ProductCategoryId).FirstOrDefaultAsync();
+        await userManager.AddToRoleAsync(albert, "Admin");
+
+        // Get category IDs for test products
+        var productCategoryId = await context.Set<ProductCategory>().Select(p => p.ProductCategoryId).FirstOrDefaultAsync();
 		var bookCategoryId = await context.Set<BookCategory>().Select(b => b.BookCategoryId).FirstOrDefaultAsync();
 
 		var albertItemSold = new PhysicalItem
@@ -235,9 +249,12 @@ public class DataSeeder
 		foreach (var user in randomUsers)
 		{
 			await userManager.CreateAsync(user, "P@ssw0rd!");
-		}
+        }
 
+		// Refresh the users list from the database to ensure all identities are persisted
 		var usersInDb = await context.Users.ToListAsync();
+		var userIds = usersInDb.Select(u => u.Id).ToList();
+        usersInDb = context.Users.Where(u => userIds.Contains(u.Id)).ToList();
 
 		var bookCategoryIds = await context.Set<BookCategory>().AsNoTracking().Select(c => c.BookCategoryId).ToListAsync();
 		var subjectList = await context.Set<Subject>().AsNoTracking().ToListAsync();
@@ -301,20 +318,54 @@ public class DataSeeder
 		context.Services.AddRange(services);
 		await context.SaveChangesAsync();
 
-		var pictures = new List<Picture>();
-		foreach (var item in physicalItems.Cast<PhysicalItem>().Concat(books))
-		{
-			var count = faker.Random.Int(1, 3);
-			for (var i = 1; i <= count; i++)
-			{
-				pictures.Add(new Picture
-				{
-					Label = $"https://picsum.photos/seed/{item.AdvertId}-{i}/800/600",
-					PhysicalItemId = item.AdvertId
-				});
-			}
-		}
-		context.Pictures.AddRange(pictures);
-		await context.SaveChangesAsync();
-	}
+        var pictures = new List<Picture>();
+        foreach (var item in physicalItems.Cast<PhysicalItem>().Concat(books))
+        {
+            var count = faker.Random.Int(1, 3);
+            for (var i = 1; i <= count; i++)
+            {
+                pictures.Add(new Picture
+                {
+                    Label = $"https://picsum.photos/seed/{item.AdvertId}-{i}/800/600",
+                    PhysicalItemId = item.AdvertId
+                });
+            }
+        }
+
+        context.Pictures.AddRange(pictures);
+        await context.SaveChangesAsync();
+
+        var publicComments = new List<PublicComment>
+        {
+            new()
+            {
+                AdvertId = physicalItems[0].AdvertId,
+                AuthorId = usersInDb[1].Id,
+                Content = "Peut-on récupérer l'objet rapidement ?",
+                CreatedAt = DateTime.UtcNow.AddDays(-1)
+            },
+            new()
+            {
+                AdvertId = books.First().AdvertId,
+                AuthorId = usersInDb[2].Id,
+                Content = "Le manuel est-il encore en bon état ?",
+                CreatedAt = DateTime.UtcNow.AddDays(-2)
+            },
+            new()
+            {
+                AdvertId = physicalItems[0].AdvertId,
+                AuthorId = usersInDb[3].Id,
+                Content = "J'ai une question sur cet article de test.",
+                CreatedAt = DateTime.UtcNow.AddDays(-3)
+            }
+        };
+
+        context.PublicComments.AddRange(publicComments);
+        await context.SaveChangesAsync();
+
+        foreach (var user in usersInDb)
+            await userManager.AddToRoleAsync(user, "User");
+
+        await context.SaveChangesAsync();
+    }
 }

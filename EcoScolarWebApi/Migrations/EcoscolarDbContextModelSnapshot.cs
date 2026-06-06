@@ -1066,6 +1066,9 @@ namespace EcoScolarWebApi.Migrations
                     b.Property<string>("FirstName")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("IsBanned")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsOnboarded")
                         .HasColumnType("bit");
 

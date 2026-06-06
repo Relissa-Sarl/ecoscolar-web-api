@@ -20,6 +20,8 @@ public class User : IdentityUser
 	[Required]
 	public bool IsOnboarded { get; set; } = false;
 
+	public bool IsBanned { get; set; } = false;
+
 	// === Foreign keys ===
 
 	[ForeignKey(nameof(Location))]

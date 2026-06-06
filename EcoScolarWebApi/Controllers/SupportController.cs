@@ -101,7 +101,7 @@ public class TicketsController(ISupportContactService supportContactService) : C
         {
             ErrorType.Unauthorized => Unauthorized(new { result.Errors }),
             ErrorType.NotFound => NotFound(new { result.Errors }),
-            ErrorType.Invalid => BadRequest(new { result.Errors }),
+            ErrorType.Conflict => BadRequest(new { result.Errors }),
             _ => BadRequest(new { result.Errors })
         };
 }

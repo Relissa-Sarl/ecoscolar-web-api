@@ -14,8 +14,9 @@ public interface IUserService
 	/// </summary>
 	/// <param name="user">Current user's claims principal.</param>
 	/// <returns>instance containing the user's profile information if successful.</returns>
-	Task<Result<UserReadDto>> GetCurrentUserProfileAsync(ClaimsPrincipal user);
-	Task<Result<UserReadDto>> UpdateProfileAsync(ClaimsPrincipal user, UserUpdateDto dto);
+	Task<Result<UserResponse>> GetCurrentUserProfileAsync(ClaimsPrincipal user);
+	Task<Result<UserResponse>> UpdateProfileAsync(ClaimsPrincipal user, UserUpdateDto dto);
 	Task<Result<UserPublicReadDto>> GetPublicProfileAsync(string userId);
+	Task<Result<List<UserResponse>>> GetAllUsers(ClaimsPrincipal user);
 	Task<Result<bool>> AnonymizeProfileAsync(ClaimsPrincipal userPrincipal);
 }
