@@ -1,4 +1,4 @@
-﻿using EcoScolarWebApi.Models;
+using EcoScolarWebApi.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -28,6 +28,7 @@ public class EcoscolarDbContext(DbContextOptions<EcoscolarDbContext> options) : 
     public DbSet<UserLanguage> UserLanguages { get; set; } = default!;
     public DbSet<Language> Languages { get; set; } = default!;
     public DbSet<Location> Locations { get; set; } = default!;
+    public DbSet<CartItem> CartItems { get; set; } = default!;
     public DbSet<Dispute> Disputes { get; set; }
     public DbSet<Review> Reviews { get; set; }
     public DbSet<Transaction> Transactions { get; set; }
@@ -35,6 +36,8 @@ public class EcoscolarDbContext(DbContextOptions<EcoscolarDbContext> options) : 
     public DbSet<PriceOffer> PriceOffers { get; set; }
     public DbSet<Flag> Flags { get; set; }
     public DbSet<SearchAlert> SearchAlerts { get; set; }
+    public DbSet<SupportTicket> SupportTickets { get; set; } = default!;
+    public DbSet<SupportTicketMessage> SupportTicketMessages { get; set; } = default!;
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -52,6 +55,18 @@ public class EcoscolarDbContext(DbContextOptions<EcoscolarDbContext> options) : 
             .WithMany()
             .HasForeignKey(uf => uf.AdvertId)
             .OnDelete(DeleteBehavior.Cascade);
+      
+        builder.Entity<CartItem>()
+          .HasOne(ci => ci.User)
+          .WithMany(u => u.CartItems)
+          .HasForeignKey(ci => ci.UserId)
+          .OnDelete(DeleteBehavior.NoAction);
+
+        builder.Entity<CartItem>()
+          .HasOne(ci => ci.Advert)
+          .WithMany()
+          .HasForeignKey(ci => ci.AdvertId)
+          .OnDelete(DeleteBehavior.Cascade);
 
         // Dispute
         builder.Entity<Dispute>(entity =>
@@ -68,14 +83,22 @@ public class EcoscolarDbContext(DbContextOptions<EcoscolarDbContext> options) : 
                 .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
             entity.HasOne(r => r.Reviewer)
-                .WithMany()
+                .WithMany(u => u.ReviewsGiven)
                 .HasForeignKey(r => r.ReviewerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(r => r.Reviewed)
+                .WithMany(u => u.ReviewsReceived)
+                .HasForeignKey(r => r.ReviewedId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne(r => r.Transaction)
                 .WithMany()
                 .HasForeignKey(r => r.TransactionId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(r => new { r.TransactionId, r.ReviewerId })
+                .IsUnique();
         });
 
         // Transaction
@@ -165,6 +188,23 @@ public class EcoscolarDbContext(DbContextOptions<EcoscolarDbContext> options) : 
                 .WithMany()
                 .HasForeignKey(sa => sa.BookCategoryId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // SupportTicket
+        builder.Entity<SupportTicket>(entity =>
+        {
+            entity.HasOne(t => t.User)
+                .WithMany()
+                .HasForeignKey(t => t.UserId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        builder.Entity<SupportTicketMessage>(entity =>
+        {
+            entity.HasOne(m => m.Ticket)
+                .WithMany(t => t.Messages)
+                .HasForeignKey(m => m.TicketId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         ConfigureUserLanguageEntity(builder);

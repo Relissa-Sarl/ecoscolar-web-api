@@ -146,4 +146,73 @@ public class UserService : IUserService
         }
         return Result<List<UserResponse>>.Success(userDtos);
 	}
+    /// <summary>
+    ///	Anonymize the currently connected user profile when deleting his account
+    /// </summary>
+    /// <param name="userPrincipal">Connected user principal</param>
+    /// <returns>A Result object with a boolean value; otherwise, a failure result indicating the reason.</returns>
+    public async Task<Result<bool>> AnonymizeProfileAsync(ClaimsPrincipal userPrincipal)
+    {
+        var userId = _userManager.GetUserId(userPrincipal);
+
+        if (string.IsNullOrEmpty(userId))
+            return Result<bool>.Failure("SESSION_INVALID", ErrorType.Unauthorized);
+
+        var currentUser = await _userManager.Users
+            .Include(u => u.Favorites)
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (currentUser == null)
+            return Result<bool>.Failure("SESSION_EXPIRED", ErrorType.NotFound);
+
+        // Hash personal information to anonymize the user while keeping the nickname unique
+        var salt = Guid.NewGuid().ToString("N");
+
+        currentUser.FirstName = Hasher.HashString($"{salt}:{currentUser.FirstName ?? string.Empty}");
+        currentUser.LastName = Hasher.HashString($"{salt}:{currentUser.LastName ?? string.Empty}");
+        currentUser.Nickname = $"DeletedUser_{salt[..8]}"; // Ensure nickname remains unique
+
+        if (!string.IsNullOrEmpty(currentUser.DateOfBirth) && currentUser.DateOfBirth.Length >= 4)
+        {
+            string year = currentUser.DateOfBirth[..4];
+            currentUser.DateOfBirth = $"{year}-01-01";
+        }
+        else
+            currentUser.DateOfBirth = "2000-01-01";
+
+        // Hash the native Identity User properties
+        var anonymousEmail = $"{salt[..8]}@deleted.ecoscolar.com";
+
+        var setEmailResult = await _userManager.SetEmailAsync(currentUser, anonymousEmail);
+        if (!setEmailResult.Succeeded)
+            return Result<bool>.Failure(setEmailResult.Errors.Select(e => e.Description));
+
+        var setUserNameResult = await _userManager.SetUserNameAsync(currentUser, anonymousEmail);
+        if (!setUserNameResult.Succeeded)
+            return Result<bool>.Failure(setUserNameResult.Errors.Select(e => e.Description));
+
+        currentUser.NormalizedEmail = _userManager.NormalizeEmail(anonymousEmail);
+        currentUser.NormalizedUserName = _userManager.NormalizeName(anonymousEmail);
+        currentUser.PasswordHash = Guid.NewGuid().ToString();
+        currentUser.PhoneNumber = null;
+
+        // Delete user favorites and mark as not onboarded to hide the profile from public listings
+        _context.UserFavorites.RemoveRange(currentUser.Favorites);
+        currentUser.IsOnboarded = false;
+
+        // Save the data
+        var updateResult = await _userManager.UpdateAsync(currentUser);
+        if (!updateResult.Succeeded)
+        {
+            var errors = updateResult.Errors.Select(e => e.Description);
+            return Result<bool>.Failure(errors);
+        }
+
+        await _context.SaveChangesAsync();
+
+        // Sign out the user to invalidate their session
+        await _signInManager.SignOutAsync();
+
+        return Result<bool>.Success(true);
+    }
 }

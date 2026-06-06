@@ -1,4 +1,4 @@
-﻿using Asp.Versioning;
+using Asp.Versioning;
 using EcoScolarWebApi.Data;
 using EcoScolarWebApi.Mappers;
 using EcoScolarWebApi.Models;
@@ -18,7 +18,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<SubjectMapper>();
         services.AddSingleton<LanguageMapper>();
         services.AddSingleton<PublicCommentMapper>();
-		services.AddSingleton<UserMapper>();
+		    services.AddSingleton<UserMapper>();
+        services.AddSingleton<ReviewMapper>();
         return services;
     }
 
@@ -117,7 +118,9 @@ public static class ServiceCollectionExtensions
 			services.AddScoped<IAdvertSearchService, AdvertSearchService>();
 
 		services.AddScoped<IUserService, UserService>();
+		services.AddScoped<ICartService, CartService>();
 		services.AddTransient<IEmailSender<User>, DevEmailSenderService>();
+		services.AddScoped<ISupportContactService, SupportContactService>();
 
 		return services;
 	}

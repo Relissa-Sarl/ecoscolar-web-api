@@ -2,7 +2,9 @@
 using EcoScolarWebApi.Commun;
 using EcoScolarWebApi.Data;
 using EcoScolarWebApi.DTOs.Adverts;
+using EcoScolarWebApi.DTOs.Reviews;
 using EcoScolarWebApi.DTOs.Users;
+using EcoScolarWebApi.Mappers;
 using EcoScolarWebApi.Models;
 using EcoScolarWebApi.Services.Contracts;
 using Microsoft.AspNetCore.Authorization;
@@ -12,26 +14,20 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EcoScolarWebApi.Controllers;
 
+/// <summary>
+/// UsersController constructor
+/// </summary>
+/// <param name="userService">The user service for handling user-related operations</param>
 [ApiVersion("1.0")]
 [ApiController]
 [Route("api/v{version:apiVersion}/[controller]")]
 [Authorize]
-public class UsersController : ControllerBase
+public class UsersController(IUserService userService, UserManager<User> userManager, EcoscolarDbContext context, ReviewMapper reviewMapper) : ControllerBase
 {
-	private readonly UserManager<User> _userManager;
-	private readonly IUserService _userService;            // Seller service for handling user-related operations
-	private readonly EcoscolarDbContext _context;
-
-	/// <summary>
-	/// UsersController constructor
-	/// </summary>
-	/// <param name="userService">The user service for handling user-related operations</param>
-	public UsersController(IUserService userService, UserManager<User> userManager, EcoscolarDbContext context)
-	{
-		_userService = userService;
-		_userManager = userManager;
-		_context = context;
-	}
+	private readonly UserManager<User> _userManager = userManager;
+	private readonly IUserService _userService = userService;            // Seller service for handling user-related operations
+	private readonly EcoscolarDbContext _context = context;
+	private readonly ReviewMapper _reviewMapper = reviewMapper;
 
 	#region Current user
 
@@ -85,8 +81,19 @@ public class UsersController : ControllerBase
 	[HttpDelete("me")]
 	public async Task<IActionResult> DeleteMyProfile()
 	{
-		return null;
-	}
+        var result = await _userService.AnonymizeProfileAsync(User);
+
+        if (result.IsSuccess)
+            return Ok(new { message = "The account has successfully got anonymized" });
+
+        return result.ErrorType switch
+        {
+            ErrorType.NotFound => NotFound(new { result.Errors }),
+            ErrorType.Unauthorized => Unauthorized(new { result.Errors }),
+
+            _ => BadRequest(new { result.Errors })
+        };
+    }
 
 	/// <summary>
 	/// Creates a search alert for the authenticated user.
@@ -306,31 +313,47 @@ public class UsersController : ControllerBase
 
 		return CatalogAdvertTypeCodes.Books;
 	}
-    #endregion
+  #endregion
 
-    #region admin
-    [HttpGet("")]
-    public async Task<IActionResult> GetAllUsers()
-    {
-        // Pass the HTTP session's Seller directly to the service
-        var result = await _userService.GetAllUsers(User);
+  #region admin
+  [HttpGet("")]
+  public async Task<IActionResult> GetAllUsers()
+  {
+      // Pass the HTTP session's Seller directly to the service
+      var result = await _userService.GetAllUsers(User);
 
-        // If successful, return 200 OK along with the user's data
-        if (result.IsSuccess)
-            return Ok(result.Data);
+      // If successful, return 200 OK along with the user's data
+      if (result.IsSuccess)
+          return Ok(result.Data);
 
-        // Dispatch the response depending on the error code
-        return result.ErrorType switch
-        {
-            // 401 Unauthorized if the user isn't connected
-            ErrorType.Unauthorized => Unauthorized(new { result.Errors }),
+      // Dispatch the response depending on the error code
+      return result.ErrorType switch
+      {
+          // 401 Unauthorized if the user isn't connected
+          ErrorType.Unauthorized => Unauthorized(new { result.Errors }),
 
-            // 404 Not Found if the user was deleted
-            ErrorType.NotFound => NotFound(new { result.Errors }),
+          // 404 Not Found if the user was deleted
+          ErrorType.NotFound => NotFound(new { result.Errors }),
 
-            // 400 Bad Request fallback
-            _ => BadRequest(new { result.Errors })
-        };
-    }
-    #endregion
+          // 400 Bad Request fallback
+          _ => BadRequest(new { result.Errors })
+      };
+  }
+  #endregion
+
+	#region Reviews
+	[HttpGet("{userId}/reviews")]
+	public async Task<ActionResult<IEnumerable<ReviewResponseDTO>>> GetUserReviews(string userId)
+	{
+		var userExists = await _context.Users.AnyAsync(u => u.Id == userId);
+		if (!userExists)
+			return NotFound();
+
+		var reviews = await _reviewMapper.ProjectToReviewResponseDTOs(
+			_context.Reviews.Where(r => r.ReviewedId == userId))
+			.ToListAsync();
+
+		return Ok(reviews);
+	}
+	#endregion
 }
