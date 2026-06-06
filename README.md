@@ -116,7 +116,7 @@ dotnet user-secrets init
 # Setup the connection string (replace {{...}} with your local configuration)
 dotnet user-secrets set "ConnectionStrings:Default" "Server={{server_name}};Database=db-ecoscolar;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True"
 
-# Setup strip secret key
+# Setup stripe secret key
 dotnet user-secrets set "Stripe:SecretKey" "{{sk_here}}"
 
 # Open swagger
@@ -147,6 +147,17 @@ To use the seed data:
    dotnet run
    ```
    The seeds will automatically populate the database on startup when running in Development mode.
+
+### Step 4: Create a docker container for mailpit (Development)
+To test the email sending functionality, you can use Mailpit, a local SMTP server. Run the following command to start a Mailpit container:
+
+You need to use the ports `1026` for SMTP and `8026` for the web interface because of the configuration in `appsettings.Development.json`:
+
+*Note: When running the backend using docker, a mailpit container will be integrated with the other containers*
+
+```bash
+docker run -d --name mailpit -p 1026:1025 -p 8026:8025 axllent/mailpit
+```
 
 #### Test User Credentials
 Use the following credentials to test the application:
