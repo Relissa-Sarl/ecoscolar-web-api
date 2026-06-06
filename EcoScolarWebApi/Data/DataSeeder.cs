@@ -124,7 +124,6 @@ public class DataSeeder
 
         // Get category IDs for test products
         var productCategoryId = await context.Set<ProductCategory>().Select(p => p.ProductCategoryId).FirstOrDefaultAsync();
-		var productCategoryId = await context.Set<ProductCategory>().Select(p => p.ProductCategoryId).FirstOrDefaultAsync();
 		var bookCategoryId = await context.Set<BookCategory>().Select(b => b.BookCategoryId).FirstOrDefaultAsync();
 
 		var albertItemSold = new PhysicalItem
