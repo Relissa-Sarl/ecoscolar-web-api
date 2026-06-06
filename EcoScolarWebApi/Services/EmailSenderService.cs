@@ -37,16 +37,13 @@ public class EmailSenderService : IEmailSender<User>
     {
         var subject = "Réinitialisation de votre mot de passe - EcoScolar";
 
-        // 1. On encode le gros jeton pour qu'il passe proprement dans une URL sans casser les caractères spéciaux
         var encodedToken = Uri.EscapeDataString(resetCode);
 
-        // 2. On construit le lien vers la page de ton choix sur ton FRONTEND
         var frontendResetLink = $"http://localhost:3000/reset-password?email={Uri.EscapeDataString(email)}&token={encodedToken}";
 
-        // 3. On génère un corps de mail propre avec un bouton ou un lien cliquable
         var body = $"""
         <div style="font-family: sans-serif; line-height: 1.5; color: #333;">
-            <p>Bonjour {user.Nickname ?? ""},</p>
+            <p>Bonjour {user.Nickname ?? user.UserName ?? ""},</p>
             <p>Nous avons reçu une demande de réinitialisation de mot de passe pour votre compte <strong>EcoScolar</strong>.</p>
             <p>Pour choisir un nouveau mot de passe, veuillez cliquer sur le bouton ci-dessous :</p>
             <p style="margin: 24px 0;">
