@@ -21,10 +21,11 @@ public record UserResponse(
     string? FirstName,
     string? LastName,
     string Email,
+    bool IsOnboarded,
+    bool IsBanned,
+    IEnumerable<SpokenLanguageDto> Languages,
     LocationReadDto? Location = null!,
     string? BirthdayDate = null!,
-    bool IsOnboarded = false,
-    IEnumerable<SpokenLanguageDto> Languages = null!,
     string[] Roles = null!
 //double GlobalRating,
 //bool IsBanned,

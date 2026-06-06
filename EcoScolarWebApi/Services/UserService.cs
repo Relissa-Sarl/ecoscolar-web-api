@@ -6,6 +6,7 @@ using EcoScolarWebApi.Models;
 using EcoScolarWebApi.Services.Contracts;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 
 namespace EcoScolarWebApi.Services;
@@ -128,5 +129,21 @@ public class UserService : IUserService
 
 		// Return the safe public DTO
 		return Result<UserPublicReadDto>.Success(UserPublicReadDto.FromEntity(user));
+	}
+
+	public async Task<Result<List<UserResponse>>> GetAllUsers(ClaimsPrincipal user)
+	{
+        if (!user.IsInRole("Admin"))
+            return Result<List<UserResponse>>.Failure("Unauthorized access.", ErrorType.Unauthorized);
+        var users = await _userManager.Users.
+			Include(u => u.Languages)
+			.ToListAsync();
+		var userDtos = new List<UserResponse>();
+
+        foreach (var item in users)
+        {
+			userDtos.Add(_userMapper.ToResponse(item) with { Roles = (await _userManager.GetRolesAsync(item)).ToArray() });
+        }
+        return Result<List<UserResponse>>.Success(userDtos);
 	}
 }
