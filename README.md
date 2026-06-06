@@ -153,6 +153,8 @@ To test the email sending functionality, you can use Mailpit, a local SMTP serve
 
 You need to use the ports `1026` for SMTP and `8026` for the web interface because of the configuration in `appsettings.Development.json`:
 
+**This only works in development mode when running the backend locally using the IDE**
+
 *Note: When running the backend using docker, a mailpit container will be integrated with the other containers*
 
 ```bash

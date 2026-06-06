@@ -14,7 +14,6 @@ public class DevEmailSenderService : IEmailSender<User>
         _configuration = configuration;
     }
 
-    // Cette méthode est appelée par Identity pour le endpoint /forgotPassword
     public async Task SendPasswordResetLinkAsync(User user, string email, string resetLink)
     {
         var subject = "Réinitialisation de votre mot de passe - EcoScolar";
@@ -25,7 +24,6 @@ public class DevEmailSenderService : IEmailSender<User>
         await SendEmailAsync(email, subject, body);
     }
 
-    // Cette méthode est appelée pour la confirmation de compte (/register)
     public async Task SendConfirmationLinkAsync(User user, string email, string confirmationLink)
     {
         var subject = "Confirmez votre adresse e-mail - EcoScolar";
@@ -35,16 +33,40 @@ public class DevEmailSenderService : IEmailSender<User>
         await SendEmailAsync(email, subject, body);
     }
 
-    // Cette méthode est appelée pour le code de double authentification (2FA)
     public async Task SendPasswordResetCodeAsync(User user, string email, string resetCode)
     {
-        var subject = "Code de réinitialisation de mot de passe";
-        var body = $"<p>Votre code de réinitialisation est : <strong>{resetCode}</strong></p>";
+        var subject = "Réinitialisation de votre mot de passe - EcoScolar";
+
+        // 1. On encode le gros jeton pour qu'il passe proprement dans une URL sans casser les caractères spéciaux
+        var encodedToken = Uri.EscapeDataString(resetCode);
+
+        // 2. On construit le lien vers la page de ton choix sur ton FRONTEND
+        var frontendResetLink = $"http://localhost:3000/reset-password?email={Uri.EscapeDataString(email)}&token={encodedToken}";
+
+        // 3. On génère un corps de mail propre avec un bouton ou un lien cliquable
+        var body = $"""
+        <div style="font-family: sans-serif; line-height: 1.5; color: #333;">
+            <p>Bonjour {user.Nickname ?? ""},</p>
+            <p>Nous avons reçu une demande de réinitialisation de mot de passe pour votre compte <strong>EcoScolar</strong>.</p>
+            <p>Pour choisir un nouveau mot de passe, veuillez cliquer sur le bouton ci-dessous :</p>
+            <p style="margin: 24px 0;">
+                <a href="{frontendResetLink}" 
+                   style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
+                   Réinitialiser mon mot de passe
+                </a>
+            </p>
+            <p style="font-size: 12px; color: #666;">
+                Si le bouton ne fonctionne pas, vous pouvez copier-coller ce lien dans votre navigateur :<br/>
+                <a href="{frontendResetLink}">{frontendResetLink}</a>
+            </p>
+            <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
+            <p style="font-size: 12px; color: #999;">Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet e-mail en toute sécurité.</p>
+        </div>
+        """;
 
         await SendEmailAsync(email, subject, body);
     }
 
-    // Facto de la logique d'envoi MailKit vers Mailpit
     private async Task SendEmailAsync(string toEmail, string subject, string htmlMessage)
     {
         // Récupération de la config (ou valeurs par défaut pour le dev local)
