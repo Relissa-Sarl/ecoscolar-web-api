@@ -5,11 +5,11 @@ using MimeKit;
 
 namespace EcoScolarWebApi.Services;
 
-public class DevEmailSenderService : IEmailSender<User>
+public class EmailSenderService : IEmailSender<User>
 {
     private readonly IConfiguration _configuration;
 
-    public DevEmailSenderService(IConfiguration configuration)
+    public EmailSenderService(IConfiguration configuration)
     {
         _configuration = configuration;
     }
