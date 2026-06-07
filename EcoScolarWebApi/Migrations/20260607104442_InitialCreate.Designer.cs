@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EcoScolarWebApi.Migrations
 {
     [DbContext(typeof(EcoscolarDbContext))]
-    [Migration("20260606102731_fixMergeConflict")]
-    partial class fixMergeConflict
+    [Migration("20260607104442_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -368,29 +368,6 @@ namespace EcoScolarWebApi.Migrations
                     b.HasKey("LocationId");
 
                     b.ToTable("Location");
-
-                    b.HasData(
-                        new
-                        {
-                            LocationId = 1,
-                            City = "Lausanne",
-                            PostalCode = "1000",
-                            Region = "Vaud"
-                        },
-                        new
-                        {
-                            LocationId = 2,
-                            City = "Montreux",
-                            PostalCode = "1820",
-                            Region = "Vaud"
-                        },
-                        new
-                        {
-                            LocationId = 3,
-                            City = "Martigny",
-                            PostalCode = "1920",
-                            Region = "Valais"
-                        });
                 });
 
             modelBuilder.Entity("EcoScolarWebApi.Models.Picture", b =>
