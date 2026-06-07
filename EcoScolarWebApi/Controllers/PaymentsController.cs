@@ -1,4 +1,4 @@
-﻿using Asp.Versioning;
+using Asp.Versioning;
 using EcoScolarWebApi.DTOs.Stripe;
 using Microsoft.AspNetCore.Mvc;
 using Stripe;
@@ -39,6 +39,18 @@ public class PaymentsController : ControllerBase
 	{
 		double price = request.ProductPrice * 100;
         string baseUrl = $"{Request.Scheme}://{Request.Host}";
+        if (Request.Headers.TryGetValue("Referer", out var refererHeader) && !string.IsNullOrEmpty(refererHeader))
+        {
+            try
+            {
+                var uri = new Uri(refererHeader.ToString());
+                baseUrl = $"{uri.Scheme}://{uri.Authority}";
+            }
+            catch
+            {
+                // Fallback in case of malformed Referer
+            }
+        }
 
         var options = new SessionCreateOptions
 		{
