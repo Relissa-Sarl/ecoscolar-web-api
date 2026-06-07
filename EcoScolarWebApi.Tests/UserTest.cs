@@ -1,7 +1,8 @@
-﻿using EcoScolarWebApi.Commun;
+using EcoScolarWebApi.Commun;
 using EcoScolarWebApi.Controllers;
 using EcoScolarWebApi.Data;
 using EcoScolarWebApi.DTOs.Adverts;
+using EcoScolarWebApi.DTOs.Reviews;
 using EcoScolarWebApi.DTOs.Users;
 using EcoScolarWebApi.Enums;
 using EcoScolarWebApi.Models;
@@ -14,9 +15,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NSubstitute;
 using System.Security.Claims;
+using EcoScolarWebApi.Mappers;
 using Xunit;
 
-namespace EcoScolarWebApi.Tests.Controllers;
+namespace EcoScolarWebApi.Tests;
 
 public class UsersControllerTests
 {
@@ -24,6 +26,8 @@ public class UsersControllerTests
 	private readonly IUserService _userServiceMock;
 	private readonly EcoscolarDbContext _context;
 	private readonly UsersController _controller;
+	private readonly ReviewMapper _reviewMapper;
+	private readonly UserMapper _userMapper;
 
 	public UsersControllerTests()
 	{
@@ -37,9 +41,12 @@ public class UsersControllerTests
 		_context = new EcoscolarDbContext(options);
 
 		_userServiceMock = Substitute.For<IUserService>();
+        _reviewMapper = new ReviewMapper();
 
-		// Simulate the dependency injection of UserManager and DbContext into the UsersController
-		_controller = new UsersController(_userServiceMock, _userManagerMock, _context);
+		_userMapper = new UserMapper();
+
+        // Simulate the dependency injection of UserManager and DbContext into the UsersController
+        _controller = new UsersController(_userServiceMock, _userManagerMock, _context, _reviewMapper);
 	}
 
 
@@ -50,7 +57,7 @@ public class UsersControllerTests
 	{
 		// Arrange
 		_userServiceMock.GetCurrentUserProfileAsync(Arg.Any<ClaimsPrincipal>())
-			.Returns(Result<UserReadDto>.Failure(new[] { "Seller not found" }, ErrorType.NotFound));
+			.Returns(Result<UserResponse>.Failure(new[] { "Seller not found" }, ErrorType.NotFound));
 
 		// Act
 		var result = await _controller.GetMyProfile();
@@ -63,20 +70,22 @@ public class UsersControllerTests
 	public async Task GetMyProfile_ShouldReturnOk_WithUserData_WhenUserExists()
 	{
 		// Arrange
-		var userReadDto = new UserReadDto(
+		var UserResponse = new UserResponse(
 			"guid-123",
 			"alexis",
 			"Alexis",
 			"Rojas",
 			"alexis@etml.ch",
+			true,
+			false,
+			new List<SpokenLanguageDto>(),
 			null,
 			"2000-01-01",
-			true,
-			new List<SpokenLanguageDto>()
+			["User"]
 		);
 
 		_userServiceMock.GetCurrentUserProfileAsync(Arg.Any<ClaimsPrincipal>())
-			.Returns(Result<UserReadDto>.Success(userReadDto));
+			.Returns(Result<UserResponse>.Success(UserResponse));
 
 		// Act
 		var result = await _controller.GetMyProfile();
@@ -85,14 +94,14 @@ public class UsersControllerTests
 		var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
 
 		// Vérification que les données retournées correspondent à l'utilisateur existant
-		okResult.Value.Should().BeEquivalentTo(userReadDto);
+		okResult.Value.Should().BeEquivalentTo(UserResponse);
 	}
 
 	[Fact]
 	public async Task GetMyProfile_ShouldReturnUnauthorized_WhenSessionInvalid()
 	{
 		_userServiceMock.GetCurrentUserProfileAsync(Arg.Any<ClaimsPrincipal>())
-			.Returns(Result<UserReadDto>.Failure("Invalid session.", ErrorType.Unauthorized));
+			.Returns(Result<UserResponse>.Failure("Invalid session.", ErrorType.Unauthorized));
 
 		var result = await _controller.GetMyProfile();
 
@@ -115,7 +124,7 @@ public class UsersControllerTests
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
         using var context = new EcoscolarDbContext(options);
 
-        var userService = new UserService(userManagerMock, context, signInManagerMock);
+        var userService = new UserService(userManagerMock, context, signInManagerMock, _userMapper);
 
         userManagerMock.GetUserId(Arg.Any<ClaimsPrincipal>()).Returns((string?)null);
 
@@ -139,7 +148,7 @@ public class UsersControllerTests
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
 
         using var context = new EcoscolarDbContext(options);
-        var userService = new UserService(userManagerMock, context, signInManagerMock);
+        var userService = new UserService(userManagerMock, context, signInManagerMock, _userMapper);
 
         var existingUser = new User
         {
@@ -253,34 +262,36 @@ public class UsersControllerTests
     [Fact]
 	public async Task UpdateFullProfile_ShouldReturnOk_WhenUpdateSucceeds()
 	{
-		var updatedDto = new UserReadDto(
+		var UserResponse = new UserResponse(
 			"guid-update",
 			"nick",
 			"First",
 			"Last",
 			"update@example.com",
+			true,
+			false,
+			[new SpokenLanguageDto("FR", "Native")],
 			new LocationReadDto("1000", "Lausanne", "Vaud"),
 			"2000-01-01",
-			true,
-			[new SpokenLanguageDto("FR", "Native")]
+			["User"]
 		);
 
 		_userServiceMock.UpdateProfileAsync(Arg.Any<ClaimsPrincipal>(), Arg.Any<UserUpdateDto>())
-			.Returns(Result<UserReadDto>.Success(updatedDto));
+			.Returns(Result<UserResponse>.Success(UserResponse));
 
 		var result = await _controller.UpdateFullProfile(new UserUpdateDto(
 			"nick", "First", "Last", "1000", "2000-01-01",
 			[new SpokenLanguageDto("FR", "Native")]));
 
 		var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
-		okResult.Value.Should().BeEquivalentTo(updatedDto);
+		okResult.Value.Should().BeEquivalentTo(UserResponse);
 	}
 
 	[Fact]
 	public async Task UpdateFullProfile_ShouldReturnNotFound_WhenUserMissing()
 	{
 		_userServiceMock.UpdateProfileAsync(Arg.Any<ClaimsPrincipal>(), Arg.Any<UserUpdateDto>())
-			.Returns(Result<UserReadDto>.Failure("User not found", ErrorType.NotFound));
+			.Returns(Result<UserResponse>.Failure("User not found", ErrorType.NotFound));
 
 		var result = await _controller.UpdateFullProfile(new UserUpdateDto(
 			"nick", "First", "Last", "1000", "2000-01-01",
@@ -293,7 +304,7 @@ public class UsersControllerTests
 	public async Task UpdateFullProfile_ShouldReturnBadRequest_WhenPostalCodeInvalid()
 	{
 		_userServiceMock.UpdateProfileAsync(Arg.Any<ClaimsPrincipal>(), Arg.Any<UserUpdateDto>())
-			.Returns(Result<UserReadDto>.Failure("Invalid postal code"));
+			.Returns(Result<UserResponse>.Failure("Invalid postal code", ErrorType.BadRequest));
 
 		var result = await _controller.UpdateFullProfile(new UserUpdateDto(
 			"nick", "First", "Last", "9999", "2000-01-01",
@@ -745,5 +756,90 @@ public class UsersControllerTests
 		returnedAdverts.Should().NotBeNull();
 		returnedAdverts.Should().BeEmpty();
 	}
-    #endregion
-    }
+     #endregion
+
+	#region Tests for GetUserReviews
+
+	[Fact]
+	public async Task GetUserReviews_ShouldReturnNotFound_WhenUserDoesNotExist()
+	{
+		// Arrange
+		// Act
+		var result = await _controller.GetUserReviews("non-existent-user");
+
+		// Assert
+		result.Result.Should().BeOfType<NotFoundResult>();
+	}
+
+	[Fact]
+	public async Task GetUserReviews_ShouldReturnOkWithReviews_WhenUserExists()
+	{
+		// Arrange
+		var userId = "test-user-id";
+		var reviewerId = "reviewer-user-id";
+
+		var user = new User { Id = userId, Nickname = "test_user", FirstName = "Test", LastName = "User" };
+		var reviewer = new User { Id = reviewerId, Nickname = "reviewer", FirstName = "Review", LastName = "Er" };
+
+		var transaction = new Transaction
+		{
+			TransactionId = 10,
+			BuyerId = userId,
+			AdvertId = 101,
+			Advert = new Book
+			{
+				AdvertId = 101,
+				Title = "Book Title",
+				Description = "Book Desc",
+				SellerId = reviewerId,
+				Seller = reviewer,
+				ISBN = "12345",
+				Author = "John",
+				Publisher = "Pub",
+				Edition = "1st",
+				WrittenLanguage = Enums.LanguageEnum.FR
+			}
+		};
+
+		var review = new Review
+		{
+			ReviewId = 1,
+			Comment = "Great service!",
+			Rating = 5,
+			Date = DateTime.UtcNow,
+			ReviewerId = reviewerId,
+			Reviewer = reviewer,
+			ReviewedId = userId,
+			Reviewed = user,
+			TransactionId = 10,
+			Transaction = transaction,
+			ReviewedRole = ReviewedRole.BUYER
+		};
+
+		_context.Users.AddRange(user, reviewer);
+		_context.Transactions.Add(transaction);
+		_context.Reviews.Add(review);
+		await _context.SaveChangesAsync();
+
+		// Act
+		var result = await _controller.GetUserReviews(userId);
+
+		// Assert
+		var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+		var returnedReviews = okResult.Value.Should().BeAssignableTo<IEnumerable<ReviewResponseDTO>>().Subject.ToList();
+		returnedReviews.Should().HaveCount(1);
+		returnedReviews[0].ReviewId.Should().Be(1);
+		returnedReviews[0].Comment.Should().Be("Great service!");
+		returnedReviews[0].Rating.Should().Be(5);
+		returnedReviews[0].ReviewedId.Should().Be(userId);
+		returnedReviews[0].ReviewerId.Should().Be(reviewerId);
+
+		// Cleanup
+		_context.Reviews.Remove(review);
+		_context.Transactions.Remove(transaction);
+		_context.Users.RemoveRange(user, reviewer);
+		await _context.SaveChangesAsync();
+	}
+
+	#endregion
+}

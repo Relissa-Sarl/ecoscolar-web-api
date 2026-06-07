@@ -1,4 +1,5 @@
 using EcoScolarWebApi.Data;
+using EcoScolarWebApi.Mappers;
 using EcoScolarWebApi.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -22,16 +23,19 @@ internal static class IntegrationTestIdentityHelper
 		services.AddAuthorization();
 
 		services.AddIdentityApiEndpoints<User>()
-			.AddEntityFrameworkStores<EcoscolarDbContext>();
+			.AddRoles<IdentityRole>()
+			.AddEntityFrameworkStores<EcoscolarDbContext>()
+			.AddDefaultTokenProviders();
 
-		services.ConfigureApplicationCookie(options =>
+        services.ConfigureApplicationCookie(options =>
 		{
 			options.Cookie.Name = "Ecoscolar.Auth.Session";
 			options.Cookie.HttpOnly = true;
 			options.Cookie.SecurePolicy = CookieSecurePolicy.None;
 		});
 
-		services.AddLogging();
+        services.AddScoped<UserMapper>();
+        services.AddLogging();
 
 		var provider = services.BuildServiceProvider();
 		context = provider.GetRequiredService<EcoscolarDbContext>();

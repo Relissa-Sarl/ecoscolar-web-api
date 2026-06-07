@@ -1,3 +1,4 @@
+using EcoScolarWebApi.Data;
 using EcoScolarWebApi.Extensions;
 using EcoScolarWebApi.Models;
 using EcoScolarWebApi.Services;
@@ -30,6 +31,8 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 
 // Migrations and seeding
 app.ApplyDatabaseMigrations(app.Configuration);
+await app.SeedLocationsIfEmptyAsync(app.Configuration);
+await app.SeedIdentityRolesAsync(app.Configuration);
 await app.SeedDatabaseInDevelopmentAsync();
 
 // Middleware configuration

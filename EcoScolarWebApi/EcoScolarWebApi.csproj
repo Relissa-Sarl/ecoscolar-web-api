@@ -15,12 +15,17 @@
     <EmbeddedResource Remove="Utils\**" />
     <None Remove="Utils\**" />
   </ItemGroup>
-
+  <ItemGroup>
+	  <None Update="Resources\switzerland_localities.csv">
+	   <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Asp.Versioning.Mvc" Version="10.0.0" />
     <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" Version="10.0.0" />
     <PackageReference Include="Bogus" Version="35.6.1" />
     <PackageReference Include="MailKit" Version="4.17.0" />
+    <PackageReference Include="CsvHelper" Version="33.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.7" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="10.0.7" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.8" />

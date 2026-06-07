@@ -1,8 +1,38 @@
-﻿using EcoScolarWebApi.Models;
+using EcoScolarWebApi.Models;
 using System.ComponentModel.DataAnnotations;
 
 namespace EcoScolarWebApi.DTOs.Users;
 
+
+public record UserRequest(
+    [Required] string Nickname,
+    [Required] string FirstName,
+    [Required] string LastName,
+    [Required] string Email,
+    [Required] string PostalCode,
+    [Required] string BirthdayDate,
+    //[Required] int CurrentSchoolLevelId,
+    [Required] IEnumerable<SpokenLanguageDto> Languages
+);
+
+public record UserResponse(
+    string Id,
+    string? Nickname,
+    string? FirstName,
+    string? LastName,
+    string Email,
+    bool IsOnboarded,
+    bool IsBanned,
+    IEnumerable<SpokenLanguageDto> Languages,
+    LocationReadDto? Location = null!,
+    string? BirthdayDate = null!,
+    string[] Roles = null!
+//double GlobalRating,
+//bool IsBanned,
+//int CurrentSchoolLevelId,
+//string? StripeAccountId,
+//bool IsStripeOnboarded
+);
 
 public record UserReadDto(
     string Id,
@@ -13,12 +43,12 @@ public record UserReadDto(
     LocationReadDto? Location,
     string BirthdayDate,
     bool IsOnboarded,
-    IEnumerable<SpokenLanguageDto> SpokenLanguages
-    //double GlobalRating,
-    //bool IsBanned,
-    //int CurrentSchoolLevelId,
-    //string? StripeAccountId,
-    //bool IsStripeOnboarded
+    IEnumerable<SpokenLanguageDto> Languages
+//double GlobalRating,
+//bool IsBanned,
+//int CurrentSchoolLevelId,
+//string? StripeAccountId,
+//bool IsStripeOnboarded
 )
 {
     /// <summary>
@@ -34,9 +64,9 @@ public record UserReadDto(
         Email: entity.Email ?? "",
         BirthdayDate: entity.DateOfBirth,
         IsOnboarded: entity.IsOnboarded,
-        Location: LocationReadDto.FromEntity(entity.Location) ?? null,
-        SpokenLanguages: entity.Languages != null
-            ? entity.Languages.Select(ul => new SpokenLanguageDto(Language: ul.Label, Level: ul.LanguageLevel))
+        Location: entity.Location != null ? LocationReadDto.FromEntity(entity.Location) : null,
+        Languages: entity.Languages != null
+            ? entity.Languages.Select(ul => new SpokenLanguageDto(Label: ul.Label, LanguageLevel: ul.LanguageLevel))
             : Array.Empty<SpokenLanguageDto>()
     //GlobalRating: 0,
     //IsBanned: false,
@@ -49,11 +79,11 @@ public record UserReadDto(
 /// <summary>
 /// Represents a spoken language and the proficiency level for a user or entity.
 /// </summary>
-/// <param name="Language">The ISO code or name of the spoken language. Cannot be null.</param>
-/// <param name="Level">The proficiency level of the spoken language (for example, "Native", "Fluent", or "Beginner"). Cannot be null.</param>
+/// <param name="Label">The ISO code or name of the spoken language. Cannot be null.</param>
+/// <param name="LanguageLevel">The proficiency level of the spoken language (for example, "Native", "Fluent", or "Beginner"). Cannot be null.</param>
 public record SpokenLanguageDto(
-    [Required] string Language,
-    [Required] string Level
+    [Required] string Label,
+    [Required] string LanguageLevel
 );
 
 public record UserUpdateDto(
@@ -63,7 +93,7 @@ public record UserUpdateDto(
     [Required] string PostalCode,
     [Required] string BirthdayDate,
     //[Required] int CurrentSchoolLevelId,
-    [Required] IEnumerable<SpokenLanguageDto> SpokenLanguages
+    [Required] IEnumerable<SpokenLanguageDto> Languages
 );
 
 public record UserPublicReadDto(
@@ -82,8 +112,10 @@ string Region
 {
     public static LocationReadDto? FromEntity(Location location)
     {
-        if (location is null)
+        if (location == null)
+        {
             return null;
+        }
 
         return new LocationReadDto(
             PostalCode: location.PostalCode,

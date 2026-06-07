@@ -1,4 +1,4 @@
-﻿using Asp.Versioning;
+using Asp.Versioning;
 using EcoScolarWebApi.Data;
 using EcoScolarWebApi.Mappers;
 using EcoScolarWebApi.Models;
@@ -18,6 +18,9 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<SubjectMapper>();
         services.AddSingleton<LanguageMapper>();
         services.AddSingleton<PublicCommentMapper>();
+		    services.AddSingleton<UserMapper>();
+        services.AddSingleton<ReviewMapper>();
+        services.AddSingleton<LocationMapper>();
         return services;
     }
 
@@ -45,7 +48,8 @@ public static class ServiceCollectionExtensions
 	{
 		services.AddIdentityApiEndpoints<User>()
 				.AddEntityFrameworkStores<EcoscolarDbContext>()
-				.AddDefaultTokenProviders();
+				.AddDefaultTokenProviders()
+				.AddRoles<IdentityRole>();
 
 		services.ConfigureApplicationCookie(options =>
 		{
@@ -117,6 +121,8 @@ public static class ServiceCollectionExtensions
 
 		services.AddScoped<IUserService, UserService>();
 		services.AddTransient<IEmailSender<User>, EmailSenderService>();
+		services.AddScoped<ICartService, CartService>();
+		services.AddScoped<ISupportContactService, SupportContactService>();
 
         return services;
 	}

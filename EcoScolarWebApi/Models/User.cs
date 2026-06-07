@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
@@ -20,6 +20,8 @@ public class User : IdentityUser
 	[Required]
 	public bool IsOnboarded { get; set; } = false;
 
+	public bool IsBanned { get; set; } = false;
+
 	// === Foreign keys ===
 
 	[ForeignKey(nameof(Location))]
@@ -27,8 +29,10 @@ public class User : IdentityUser
 
 	// === Navigation properties ===
 	public Location? Location { get; set; }
+	public virtual ICollection<Review> ReviewsGiven { get; set; } = [];
+	public virtual ICollection<Review> ReviewsReceived { get; set; } = [];
 
-	// === Many-to-many relationships ===
-	public ICollection<UserLanguage> Languages { get; set; } = new List<UserLanguage>();
+	public virtual ICollection<UserLanguage> Languages { get; set; } = new List<UserLanguage>();
 	public virtual ICollection<UserFavorite> Favorites { get; set; } = [];
+	public virtual ICollection<CartItem> CartItems { get; set; } = [];
 }
