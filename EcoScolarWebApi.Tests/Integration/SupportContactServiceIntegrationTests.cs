@@ -83,7 +83,7 @@ public class SupportContactServiceIntegrationTests : IDisposable
         var result = await _service.SubmitAsync(request, user: null);
 
         result.IsSuccess.Should().BeFalse();
-        result.ErrorType.Should().Be(ErrorType.Invalid);
+        result.ErrorType.Should().Be(ErrorType.Conflict);
         result.Errors.Should().Contain("Veuillez saisir un message.");
         (await _context.SupportTickets.CountAsync()).Should().Be(0);
     }
@@ -101,7 +101,7 @@ public class SupportContactServiceIntegrationTests : IDisposable
         var result = await _service.SubmitAsync(request, user: null);
 
         result.IsSuccess.Should().BeFalse();
-        result.ErrorType.Should().Be(ErrorType.Invalid);
+        result.ErrorType.Should().Be(ErrorType.Conflict);
         result.Errors.Should().Contain("Veuillez saisir l'objet du message.");
         (await _context.SupportTickets.CountAsync()).Should().Be(0);
     }

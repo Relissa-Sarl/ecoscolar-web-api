@@ -27,6 +27,7 @@ public class UsersControllerTests
 	private readonly EcoscolarDbContext _context;
 	private readonly UsersController _controller;
 	private readonly ReviewMapper _reviewMapper;
+	private readonly UserMapper _userMapper;
 
 	public UsersControllerTests()
 	{
@@ -42,6 +43,8 @@ public class UsersControllerTests
 		_userServiceMock = Substitute.For<IUserService>();
         _reviewMapper = new ReviewMapper();
 
+		_userMapper = new UserMapper();
+
         // Simulate the dependency injection of UserManager and DbContext into the UsersController
         _controller = new UsersController(_userServiceMock, _userManagerMock, _context, _reviewMapper);
 	}
@@ -54,7 +57,7 @@ public class UsersControllerTests
 	{
 		// Arrange
 		_userServiceMock.GetCurrentUserProfileAsync(Arg.Any<ClaimsPrincipal>())
-			.Returns(Result<UserReadDto>.Failure(new[] { "Seller not found" }, ErrorType.NotFound));
+			.Returns(Result<UserResponse>.Failure(new[] { "Seller not found" }, ErrorType.NotFound));
 
 		// Act
 		var result = await _controller.GetMyProfile();
@@ -67,20 +70,22 @@ public class UsersControllerTests
 	public async Task GetMyProfile_ShouldReturnOk_WithUserData_WhenUserExists()
 	{
 		// Arrange
-		var userReadDto = new UserReadDto(
+		var UserResponse = new UserResponse(
 			"guid-123",
 			"alexis",
 			"Alexis",
 			"Rojas",
 			"alexis@etml.ch",
+			true,
+			false,
+			new List<SpokenLanguageDto>(),
 			null,
 			"2000-01-01",
-			true,
-			new List<SpokenLanguageDto>()
+			["User"]
 		);
 
 		_userServiceMock.GetCurrentUserProfileAsync(Arg.Any<ClaimsPrincipal>())
-			.Returns(Result<UserReadDto>.Success(userReadDto));
+			.Returns(Result<UserResponse>.Success(UserResponse));
 
 		// Act
 		var result = await _controller.GetMyProfile();
@@ -89,14 +94,14 @@ public class UsersControllerTests
 		var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
 
 		// Vérification que les données retournées correspondent à l'utilisateur existant
-		okResult.Value.Should().BeEquivalentTo(userReadDto);
+		okResult.Value.Should().BeEquivalentTo(UserResponse);
 	}
 
 	[Fact]
 	public async Task GetMyProfile_ShouldReturnUnauthorized_WhenSessionInvalid()
 	{
 		_userServiceMock.GetCurrentUserProfileAsync(Arg.Any<ClaimsPrincipal>())
-			.Returns(Result<UserReadDto>.Failure("Invalid session.", ErrorType.Unauthorized));
+			.Returns(Result<UserResponse>.Failure("Invalid session.", ErrorType.Unauthorized));
 
 		var result = await _controller.GetMyProfile();
 
@@ -119,7 +124,7 @@ public class UsersControllerTests
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
         using var context = new EcoscolarDbContext(options);
 
-        var userService = new UserService(userManagerMock, context, signInManagerMock);
+        var userService = new UserService(userManagerMock, context, signInManagerMock, _userMapper);
 
         userManagerMock.GetUserId(Arg.Any<ClaimsPrincipal>()).Returns((string?)null);
 
@@ -143,7 +148,7 @@ public class UsersControllerTests
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
 
         using var context = new EcoscolarDbContext(options);
-        var userService = new UserService(userManagerMock, context, signInManagerMock);
+        var userService = new UserService(userManagerMock, context, signInManagerMock, _userMapper);
 
         var existingUser = new User
         {
@@ -257,34 +262,36 @@ public class UsersControllerTests
     [Fact]
 	public async Task UpdateFullProfile_ShouldReturnOk_WhenUpdateSucceeds()
 	{
-		var updatedDto = new UserReadDto(
+		var UserResponse = new UserResponse(
 			"guid-update",
 			"nick",
 			"First",
 			"Last",
 			"update@example.com",
+			true,
+			false,
+			[new SpokenLanguageDto("FR", "Native")],
 			new LocationReadDto("1000", "Lausanne", "Vaud"),
 			"2000-01-01",
-			true,
-			[new SpokenLanguageDto("FR", "Native")]
+			["User"]
 		);
 
 		_userServiceMock.UpdateProfileAsync(Arg.Any<ClaimsPrincipal>(), Arg.Any<UserUpdateDto>())
-			.Returns(Result<UserReadDto>.Success(updatedDto));
+			.Returns(Result<UserResponse>.Success(UserResponse));
 
 		var result = await _controller.UpdateFullProfile(new UserUpdateDto(
 			"nick", "First", "Last", "1000", "2000-01-01",
 			[new SpokenLanguageDto("FR", "Native")]));
 
 		var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
-		okResult.Value.Should().BeEquivalentTo(updatedDto);
+		okResult.Value.Should().BeEquivalentTo(UserResponse);
 	}
 
 	[Fact]
 	public async Task UpdateFullProfile_ShouldReturnNotFound_WhenUserMissing()
 	{
 		_userServiceMock.UpdateProfileAsync(Arg.Any<ClaimsPrincipal>(), Arg.Any<UserUpdateDto>())
-			.Returns(Result<UserReadDto>.Failure("User not found", ErrorType.NotFound));
+			.Returns(Result<UserResponse>.Failure("User not found", ErrorType.NotFound));
 
 		var result = await _controller.UpdateFullProfile(new UserUpdateDto(
 			"nick", "First", "Last", "1000", "2000-01-01",
@@ -297,7 +304,7 @@ public class UsersControllerTests
 	public async Task UpdateFullProfile_ShouldReturnBadRequest_WhenPostalCodeInvalid()
 	{
 		_userServiceMock.UpdateProfileAsync(Arg.Any<ClaimsPrincipal>(), Arg.Any<UserUpdateDto>())
-			.Returns(Result<UserReadDto>.Failure("Invalid postal code"));
+			.Returns(Result<UserResponse>.Failure("Invalid postal code", ErrorType.BadRequest));
 
 		var result = await _controller.UpdateFullProfile(new UserUpdateDto(
 			"nick", "First", "Last", "9999", "2000-01-01",

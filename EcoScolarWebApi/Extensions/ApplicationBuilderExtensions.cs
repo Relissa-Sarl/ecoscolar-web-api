@@ -17,6 +17,29 @@ public static class ApplicationBuilderExtensions
 		}
 	}
 
+	/// <summary>
+	/// Seeds Swiss localities from switzerland_localities.csv when Location is empty.
+	/// </summary>
+	public static async Task SeedLocationsIfEmptyAsync(this WebApplication app, IConfiguration config)
+	{
+		if (!config.GetValue<bool>("ApplyDatabaseMigrations"))
+			return;
+
+		using var scope = app.Services.CreateScope();
+		var db = scope.ServiceProvider.GetRequiredService<EcoscolarDbContext>();
+		await DataSeeder.SeedLocationsIfEmptyAsync(db);
+	}
+
+	public static async Task SeedIdentityRolesAsync(this WebApplication app, IConfiguration config)
+	{
+		if (!config.GetValue<bool>("ApplyDatabaseMigrations"))
+			return;
+
+		using var scope = app.Services.CreateScope();
+		var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+		await DataSeeder.SeedIdentityRolesAsync(roleManager);
+	}
+
 	public static async Task SeedDatabaseInDevelopmentAsync(this WebApplication app)
 	{
 		if (app.Environment.IsDevelopment())
@@ -25,7 +48,9 @@ public static class ApplicationBuilderExtensions
 			var db = scope.ServiceProvider.GetRequiredService<EcoscolarDbContext>();
 			var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
 
-			await DataSeeder.Seed(db, userManager);
-		}
+			var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+			await DataSeeder.Seed(db, userManager, roleManager);
+        }
 	}
 }

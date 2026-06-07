@@ -29,17 +29,17 @@ public class SupportContactService(
         if (string.IsNullOrWhiteSpace(email))
             return Result<SupportContactResponseDto>.Failure(
                 "Veuillez saisir une adresse e-mail valide.",
-                ErrorType.Invalid);
+                ErrorType.Conflict);
 
         if (string.IsNullOrWhiteSpace(subject) || subject.Length < 5)
             return Result<SupportContactResponseDto>.Failure(
                 "Veuillez saisir l'objet du message.",
-                ErrorType.Invalid);
+                ErrorType.Conflict);
 
         if (string.IsNullOrWhiteSpace(message) || message.Length < 10)
             return Result<SupportContactResponseDto>.Failure(
                 "Veuillez saisir un message.",
-                ErrorType.Invalid);
+                ErrorType.Conflict);
 
         string? userId = null;
         if (user?.Identity?.IsAuthenticated == true)
@@ -167,7 +167,7 @@ public class SupportContactService(
         if (string.IsNullOrWhiteSpace(body))
             return Result<SupportTicketMessageDto>.Failure(
                 "Veuillez saisir un message.",
-                ErrorType.Invalid);
+                ErrorType.Conflict);
 
         if (!await TicketIsAccessibleAsync(currentUser, ticketId))
             return Result<SupportTicketMessageDto>.Failure(

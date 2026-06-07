@@ -1,5 +1,7 @@
+using EcoScolarWebApi.Data;
 using EcoScolarWebApi.Extensions;
 using EcoScolarWebApi.Models;
+using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +24,8 @@ var app = builder.Build();
 
 // Migrations and seeding
 app.ApplyDatabaseMigrations(app.Configuration);
+await app.SeedLocationsIfEmptyAsync(app.Configuration);
+await app.SeedIdentityRolesAsync(app.Configuration);
 await app.SeedDatabaseInDevelopmentAsync();
 
 // Middleware configuration

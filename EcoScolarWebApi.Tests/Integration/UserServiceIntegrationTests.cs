@@ -2,6 +2,7 @@ using System.Security.Claims;
 using EcoScolarWebApi.Commun;
 using EcoScolarWebApi.Data;
 using EcoScolarWebApi.DTOs.Users;
+using EcoScolarWebApi.Mappers;
 using EcoScolarWebApi.Models;
 using EcoScolarWebApi.Services;
 using FluentAssertions;
@@ -20,13 +21,20 @@ public class UserServiceIntegrationTests : IDisposable
 	private readonly EcoscolarDbContext _context;
 	private readonly UserManager<User> _userManager;
 	private readonly UserService _userService;
+	private readonly UserMapper _userMapper;
 
-	public UserServiceIntegrationTests()
+    public UserServiceIntegrationTests()
 	{
 		_provider = IntegrationTestIdentityHelper.CreateIdentityProvider(out _context);
 		_userManager = _provider.GetRequiredService<UserManager<User>>();
-		var signInManager = _provider.GetRequiredService<SignInManager<User>>();
-		_userService = new UserService(_userManager, _context, signInManager);
+		var roleManager = _provider.GetRequiredService<RoleManager<IdentityRole>>();
+        if (!roleManager.RoleExistsAsync("User").Result)
+        {
+            roleManager.CreateAsync(new IdentityRole("User")).Wait();
+        }
+        var signInManager = _provider.GetRequiredService<SignInManager<User>>();
+        _userMapper = new UserMapper();
+        _userService = new UserService(_userManager, _context, signInManager, _userMapper);
 	}
 
 	[Fact]
@@ -64,7 +72,7 @@ public class UserServiceIntegrationTests : IDisposable
 			LastName: "Last",
 			PostalCode: "1000",
 			BirthdayDate: "2001-06-01",
-			SpokenLanguages: [
+            Languages: [
 				new SpokenLanguageDto("FR", "Native"),
 				new SpokenLanguageDto("DE", "Intermediate")
 			]
@@ -78,7 +86,7 @@ public class UserServiceIntegrationTests : IDisposable
 		result.Data.LastName.Should().Be("Last");
 		result.Data.IsOnboarded.Should().BeTrue();
 		result.Data.Location!.PostalCode.Should().Be("1000");
-		result.Data.SpokenLanguages.Should().HaveCount(2);
+		result.Data.Languages.Should().HaveCount(2);
 
 		var reloaded = await _userManager.FindByEmailAsync(email);
 		reloaded!.IsOnboarded.Should().BeTrue();
@@ -97,7 +105,7 @@ public class UserServiceIntegrationTests : IDisposable
 			LastName: "B",
 			PostalCode: "0000",
 			BirthdayDate: "2000-01-01",
-			SpokenLanguages: [new SpokenLanguageDto("FR", "Native")]
+            Languages: [new SpokenLanguageDto("FR", "Native")]
 		);
 
 		var result = await _userService.UpdateProfileAsync(principal, dto);
@@ -118,7 +126,7 @@ public class UserServiceIntegrationTests : IDisposable
 			LastName: "Lic",
 			PostalCode: "1820",
 			BirthdayDate: "1998-03-03",
-			SpokenLanguages: [new SpokenLanguageDto("IT", "Native")]
+            Languages: [new SpokenLanguageDto("IT", "Native")]
 		));
 
 		var result = await _userService.GetPublicProfileAsync(user.Id);

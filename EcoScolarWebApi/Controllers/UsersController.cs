@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace EcoScolarWebApi.Controllers;
 
@@ -313,6 +314,57 @@ public class UsersController(IUserService userService, UserManager<User> userMan
 
 		return CatalogAdvertTypeCodes.Books;
 	}
+  #endregion
+
+	#region admin
+	[HttpGet("")]
+	public async Task<IActionResult> GetAllUsers()
+	{
+		// Pass the HTTP session's Seller directly to the service
+		var result = await _userService.GetAllUsers(User);
+
+		// If successful, return 200 OK along with the user's data
+		if (result.IsSuccess)
+			return Ok(result.Data);
+
+		// Dispatch the response depending on the error code
+		return result.ErrorType switch
+		{
+			// 401 Unauthorized if the user isn't connected
+			ErrorType.Unauthorized => Unauthorized(new { result.Errors }),
+
+			// 404 Not Found if the user was deleted
+			ErrorType.NotFound => NotFound(new { result.Errors }),
+
+			// 400 Bad Request fallback
+			_ => BadRequest(new { result.Errors })
+		};
+	}
+
+	[HttpPatch("{userId}/ban")]
+	public async Task<IActionResult> BanUser(string userId)
+	{
+        // Pass the HTTP session's Seller directly to the service
+        var result = await _userService.BanUserToggle(User, userId);
+
+        // If successful, return 200 OK along with the user's data
+        if (result.IsSuccess)
+            return Ok(result.Data);
+
+        // Dispatch the response depending on the error code
+        return result.ErrorType switch
+        {
+            // 401 Unauthorized if the user isn't connected
+            ErrorType.Unauthorized => Unauthorized(new { result.Errors }),
+
+            // 404 Not Found if the user was deleted
+            ErrorType.NotFound => NotFound(new { result.Errors }),
+
+            // 400 Bad Request fallback
+            _ => BadRequest(new { result.Errors })
+        };
+    }
+	
 	#endregion
 
 	#region Reviews
