@@ -36,18 +36,21 @@ public class TransactionsController(EcoscolarDbContext context, UserManager<User
 			return Unauthorized();
 
 		string? reviewedUserId = null;
+		ReviewedRole reviewedRole;
 
         // Check if the current user is either the buyer or the seller in this transaction
         if (user.Id == transactionUserIds.BuyerId)
+		{
 			reviewedUserId = transactionUserIds.SellerId;
+			reviewedRole = ReviewedRole.SELLER;
+		}
 		else if (user.Id == transactionUserIds.SellerId)
+		{
 			reviewedUserId = transactionUserIds.BuyerId;
+			reviewedRole = ReviewedRole.BUYER;
+		}
 		else
 			return Forbid();
-
-		var reviewedRole = (reviewedUserId == transactionUserIds.BuyerId)
-			? ReviewedRole.BUYER
-			: ReviewedRole.SELLER;
 
 		var alreadyReviewed = await _context.Reviews.AnyAsync(r => r.TransactionId == transactionId && r.ReviewerId == user.Id);
 		if (alreadyReviewed)
