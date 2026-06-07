@@ -17,6 +17,19 @@ public static class ApplicationBuilderExtensions
 		}
 	}
 
+	/// <summary>
+	/// Seeds Swiss localities from switzerland_localities.csv when Location is empty (all envs except Testing).
+	/// </summary>
+	public static async Task SeedLocationsIfEmptyAsync(this WebApplication app)
+	{
+		if (app.Environment.IsEnvironment("Testing"))
+			return;
+
+		using var scope = app.Services.CreateScope();
+		var db = scope.ServiceProvider.GetRequiredService<EcoscolarDbContext>();
+		await DataSeeder.SeedLocationsIfEmptyAsync(db);
+	}
+
 	public static async Task SeedDatabaseInDevelopmentAsync(this WebApplication app)
 	{
 		if (app.Environment.IsDevelopment())
