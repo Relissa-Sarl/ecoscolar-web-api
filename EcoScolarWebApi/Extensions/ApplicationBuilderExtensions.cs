@@ -33,6 +33,19 @@ public static class ApplicationBuilderExtensions
 		await DataSeeder.SeedLocationsIfEmptyAsync(db);
 	}
 
+	public static async Task SeedIdentityRolesAsync(this WebApplication app, IConfiguration config)
+	{
+		if (app.Environment.IsEnvironment("Testing"))
+			return;
+
+		if (!config.GetValue<bool>("ApplyDatabaseMigrations"))
+			return;
+
+		using var scope = app.Services.CreateScope();
+		var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+		await DataSeeder.SeedIdentityRolesAsync(roleManager);
+	}
+
 	public static async Task SeedDatabaseInDevelopmentAsync(this WebApplication app)
 	{
 		if (app.Environment.IsDevelopment())

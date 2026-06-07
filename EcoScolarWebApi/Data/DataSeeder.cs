@@ -18,14 +18,10 @@ public class DataSeeder
 		// 1. Import Swiss localities from CSV (postal code + city + region)
 		await SeedLocationsIfEmptyAsync(context);
 
+		await SeedIdentityRolesAsync(roleManager);
+
 		if (await context.Users.AnyAsync())
 			return;
-
-    if (!await roleManager.RoleExistsAsync("User"))
-        await roleManager.CreateAsync(new IdentityRole("User"));
-
-    if (!await roleManager.RoleExistsAsync("Admin"))
-        await roleManager.CreateAsync(new IdentityRole("Admin"));
 
     Randomizer.Seed = new Random(2025);
 		var faker = new Faker("fr_CH");
@@ -36,6 +32,15 @@ public class DataSeeder
 
 		// 3. Generate random data for more realistic testing
 		await SeedRandomDataAsync(context, userManager);
+	}
+
+	public static async Task SeedIdentityRolesAsync(RoleManager<IdentityRole> roleManager)
+	{
+		if (!await roleManager.RoleExistsAsync("User"))
+			await roleManager.CreateAsync(new IdentityRole("User"));
+
+		if (!await roleManager.RoleExistsAsync("Admin"))
+			await roleManager.CreateAsync(new IdentityRole("Admin"));
 	}
 
 	/// <summary>
