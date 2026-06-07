@@ -6,7 +6,6 @@ using EcoScolarWebApi.Models;
 using EcoScolarWebApi.Services.Contracts;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 
 namespace EcoScolarWebApi.Services;
@@ -19,16 +18,16 @@ public class UserService : IUserService
 	private readonly UserManager<User> _userManager;            // Seller manager
 	private readonly SignInManager<User> _signInManager;        // Sign-in manager
 	private readonly EcoscolarDbContext _context;               // Database context
-	private readonly UserMapper _userMapper;
+	private readonly UserMapper _userMapper;                    // User mapper for converting between entities and DTOs
 
-	/// <summary>
-	/// Initialize the service with required dependencies.
-	/// </summary>
-	/// <param name="userManager">Seller manager.</param>
-	/// <param name="dbContext">Database context.</param>
-	/// <param name="signInManager">Sign-in manager.</param>
-	/// <param name="userMapper">User mapper.</param>
-	public UserService(UserManager<User> userManager, EcoscolarDbContext dbContext, SignInManager<User> signInManager, UserMapper userMapper)
+    /// <summary>
+    /// Initialize the service with required dependencies.
+    /// </summary>
+    /// <param name="userManager">Seller manager.</param>
+    /// <param name="dbContext">Database context.</param>
+    /// <param name="signInManager">Sign-in manager.</param>
+    /// <param name="userMapper">User mapper.</param>
+    public UserService(UserManager<User> userManager, EcoscolarDbContext dbContext, SignInManager<User> signInManager, UserMapper userMapper)
 	{
 		_userManager = userManager;
 		_context = dbContext;
@@ -130,62 +129,6 @@ public class UserService : IUserService
 		// Return the safe public DTO
 		return Result<UserPublicReadDto>.Success(UserPublicReadDto.FromEntity(user));
 	}
-
-	/// <summary>
-	/// Get all users if the connected user is admin
-	/// </summary>
-	/// <param name="user">Connected user principal</param>
-	/// <returns>A Result object with a UserResponse DTO value; otherwise, a failure result indicating the reason.</returns>
-	public async Task<Result<List<UserResponse>>> GetAllUsers(ClaimsPrincipal user)
-	{
-        if (!user.IsInRole("Admin"))
-            return Result<List<UserResponse>>.Failure("Unauthorized access.", ErrorType.Unauthorized);
-        var users = await _userManager.Users.
-			Include(u => u.Languages)
-			.ToListAsync();
-		var userDtos = new List<UserResponse>();
-
-        foreach (var item in users)
-        {
-			userDtos.Add(_userMapper.ToResponse(item) with { Roles = (await _userManager.GetRolesAsync(item)).ToArray() });
-        }
-        return Result<List<UserResponse>>.Success(userDtos);
-	}
-
-	public async Task<Result<UserResponse>> BanUserToggle(ClaimsPrincipal user, string userId)
-	{
-        var currentUser = await _userManager.Users
-            .Include(u => u.Languages)
-            .FirstOrDefaultAsync(u => u.Id == userId);
-        if (currentUser == null)
-            return Result<UserResponse>.Failure("User not found.", ErrorType.NotFound);
-
-		if (!user.IsInRole("Admin") || _userManager.IsInRoleAsync(currentUser, "Admin").Result)
-            return Result<UserResponse>.Failure("Unauthorized access.", ErrorType.Unauthorized);
-
-        currentUser.IsBanned = !currentUser.IsBanned;
-		if (currentUser.IsBanned)
-		{
-            //await _userManager.SetLockoutEnabledAsync(currentUser, true);
-            await _userManager.SetLockoutEndDateAsync(currentUser, DateTime.Today.AddYears(999));
-		}
-		else
-		{
-            //await _userManager.SetLockoutEnabledAsync(currentUser, false);
-            await _userManager.SetLockoutEndDateAsync(currentUser, null);
-        }
-
-        var updateResult = await _userManager.UpdateAsync(currentUser);
-        if (!updateResult.Succeeded)
-        {
-            var errors = updateResult.Errors.Select(e => e.Description);
-            return Result<UserResponse>.Failure(errors);
-        }
-
-        var roles = await _userManager.GetRolesAsync(currentUser);
-
-        return Result<UserResponse>.Success(_userMapper.ToResponse(currentUser) with { Roles = roles.ToArray() });
-    }
 
     /// <summary>
     ///	Anonymize the currently connected user profile when deleting his account

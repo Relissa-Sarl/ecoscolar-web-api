@@ -18,7 +18,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<SubjectMapper>();
         services.AddSingleton<LanguageMapper>();
         services.AddSingleton<PublicCommentMapper>();
-		    services.AddSingleton<UserMapper>();
+		services.AddSingleton<UserMapper>();
         services.AddSingleton<ReviewMapper>();
         services.AddSingleton<LocationMapper>();
         return services;
@@ -120,6 +120,7 @@ public static class ServiceCollectionExtensions
 
 		services.AddScoped<IUserService, UserService>();
 		services.AddScoped<ICartService, CartService>();
+		services.AddScoped<IAdminService, AdminService>();
 		services.AddTransient<IEmailSender<User>, DevEmailSenderService>();
 		services.AddScoped<ISupportContactService, SupportContactService>();
 
