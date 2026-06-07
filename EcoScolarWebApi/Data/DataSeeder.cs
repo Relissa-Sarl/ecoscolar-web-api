@@ -16,7 +16,7 @@ public class DataSeeder
 	public static async Task Seed(EcoscolarDbContext context, UserManager<User> userManager, RoleManager<IdentityRole> roleManager)
 	{
 		// 1. Import Swiss localities from CSV (postal code + city + region)
-		await SeedLocationsAsync(context);
+		await SeedLocationsIfEmptyAsync(context);
 
 		if (await context.Users.AnyAsync())
 			return;
@@ -38,7 +38,10 @@ public class DataSeeder
 		await SeedRandomDataAsync(context, userManager);
 	}
 
-	private static async Task SeedLocationsAsync(EcoscolarDbContext context)
+	/// <summary>
+	/// Imports Swiss localities from CSV when the Location table is empty.
+	/// </summary>
+	public static async Task SeedLocationsIfEmptyAsync(EcoscolarDbContext context)
 	{
 		if (await context.Locations.AnyAsync())
 			return;
