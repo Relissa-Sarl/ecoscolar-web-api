@@ -1,5 +1,6 @@
 ﻿using EcoScolarWebApi.Commun;
 using EcoScolarWebApi.Data;
+using EcoScolarWebApi.DTOs.Support;
 using EcoScolarWebApi.DTOs.Users;
 using EcoScolarWebApi.Mappers;
 using EcoScolarWebApi.Models;
@@ -44,6 +45,65 @@ namespace EcoScolarWebApi.Services
                 userDtos.Add(_userMapper.ToResponse(item) with { Roles = (await _userManager.GetRolesAsync(item)).ToArray() });
             }
             return Result<List<UserResponse>>.Success(userDtos);
+        }
+
+        public async Task<Result<List<SupportTicketAdminDto>>> GetAllSupports(ClaimsPrincipal user)
+        {
+            if (!user.IsInRole("Admin"))
+                return Result<List<SupportTicketAdminDto>>.Failure("Unauthorized access.", ErrorType.Unauthorized);
+            var supports = await _context.SupportTickets
+                .Include(s => s.User)
+                .Include(s => s.Messages)
+                .OrderByDescending(t => t.CreatedAt)
+                .Select(m => new SupportTicketAdminDto(
+                    m.Id,
+                    m.Email,
+                    m.Subject,
+                    m.Message,
+                    m.UserId,
+                    m.CreatedAt,
+                    // On mappe l'utilisateur vers un DTO simplifié ou on extrait juste les infos nécessaires
+                    new UserAdminDto(m.User.FirstName, m.User.LastName, m.User.Nickname, m.User.Email),
+                    // On projette chaque message de l'entité vers le DTO Message
+                    m.Messages.Select(msg => new SupportTicketMessageAdminDto(
+                        msg.Id,
+                        msg.Body,
+                        msg.IsFromSupport,
+                        msg.CreatedAt
+                    )).ToList()
+                ))
+                .ToListAsync();
+            return Result<List<SupportTicketAdminDto>>.Success(supports);
+        }
+
+        public async Task<Result<SupportTicketMessageAdminDto>> AddTicketMessage(ClaimsPrincipal user, int ticketId, SupportTicketMessageRequestDto request)
+        {
+            if (!user.IsInRole("Admin"))
+                return Result<SupportTicketMessageAdminDto>.Failure("Unauthorized access.", ErrorType.Unauthorized);
+
+            var body = request.Message.Trim();
+            if (string.IsNullOrWhiteSpace(body))
+                return Result<SupportTicketMessageAdminDto>.Failure("Please enter a message.", ErrorType.Conflict);
+
+            if (! await _context.SupportTickets.AnyAsync(t => t.Id == ticketId))
+                return Result<SupportTicketMessageAdminDto>.Failure("Request not found.", ErrorType.NotFound);
+
+            var message = new SupportTicketMessage
+            {
+                TicketId = ticketId,
+                Body = body,
+                IsFromSupport = true,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.SupportTicketMessages.Add(message);
+            await _context.SaveChangesAsync();
+
+            return Result<SupportTicketMessageAdminDto>.Success(new SupportTicketMessageAdminDto(
+                message.Id,
+                message.Body,
+                message.IsFromSupport,
+                message.CreatedAt));
         }
 
         /// <summary>

@@ -1,7 +1,8 @@
 ﻿using EcoScolarWebApi.Commun;
 using EcoScolarWebApi.Data;
-using EcoScolarWebApi.Mappers;
+using EcoScolarWebApi.DTOs.Support;
 using EcoScolarWebApi.Models;
+using EcoScolarWebApi.Services;
 using EcoScolarWebApi.Services.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -31,7 +32,7 @@ namespace EcoScolarWebApi.Controllers
 
 
         #region admin
-        [HttpGet("")]
+        [HttpGet("users")]
         public async Task<IActionResult> GetAllUsers()
         {
             // Pass the HTTP session's Seller directly to the service
@@ -42,6 +43,53 @@ namespace EcoScolarWebApi.Controllers
                 return Ok(result.Data);
 
             // Dispatch the response depending on the error code
+            return result.ErrorType switch
+            {
+                // 401 Unauthorized if the user isn't connected
+                ErrorType.Unauthorized => Unauthorized(new { result.Errors }),
+
+                // 404 Not Found if the user was deleted
+                ErrorType.NotFound => NotFound(new { result.Errors }),
+
+                // 400 Bad Request fallback
+                _ => BadRequest(new { result.Errors })
+            };
+        }
+
+        [HttpGet("supports")]
+        public async Task<IActionResult> GetAllSupports()
+        {
+            // Pass the HTTP session's Seller directly to the service
+            var result = await _adminService.GetAllSupports(User);
+
+            // If successful, return 200 OK along with the user's data
+            if (result.IsSuccess)
+                return Ok(result.Data);
+
+            // Dispatch the response depending on the error code
+            return result.ErrorType switch
+            {
+                // 401 Unauthorized if the user isn't connected
+                ErrorType.Unauthorized => Unauthorized(new { result.Errors }),
+
+                // 404 Not Found if the user was deleted
+                ErrorType.NotFound => NotFound(new { result.Errors }),
+
+                // 400 Bad Request fallback
+                _ => BadRequest(new { result.Errors })
+            };
+        }
+        [HttpPost("supports/{id}/message")]
+        public async Task<IActionResult> AddTicketMessage(int id, [FromBody] SupportTicketMessageRequestDto request)
+        {
+            if (!ModelState.IsValid)
+                return ValidationProblem(ModelState);
+
+            var result = await _adminService.AddTicketMessage(User, id, request);
+
+            if (result.IsSuccess)
+                return StatusCode(StatusCodes.Status201Created, result.Data);
+
             return result.ErrorType switch
             {
                 // 401 Unauthorized if the user isn't connected
