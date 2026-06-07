@@ -18,13 +18,10 @@ public static class ApplicationBuilderExtensions
 	}
 
 	/// <summary>
-	/// Seeds Swiss localities from switzerland_localities.csv when Location is empty (all envs except Testing).
+	/// Seeds Swiss localities from switzerland_localities.csv when Location is empty.
 	/// </summary>
 	public static async Task SeedLocationsIfEmptyAsync(this WebApplication app, IConfiguration config)
 	{
-		if (app.Environment.IsEnvironment("Testing"))
-			return;
-
 		if (!config.GetValue<bool>("ApplyDatabaseMigrations"))
 			return;
 
@@ -35,9 +32,6 @@ public static class ApplicationBuilderExtensions
 
 	public static async Task SeedIdentityRolesAsync(this WebApplication app, IConfiguration config)
 	{
-		if (app.Environment.IsEnvironment("Testing"))
-			return;
-
 		if (!config.GetValue<bool>("ApplyDatabaseMigrations"))
 			return;
 
