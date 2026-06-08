@@ -12,6 +12,9 @@ builder.Services.AddSwaggerAndVersioning();
 builder.Services.AddEcoScolarServices(builder.Configuration);
 builder.Services.AddMappersServices(builder.Configuration);
 
+// Background Services
+builder.Services.AddHostedService<EcoScolarWebApi.Services.AutoReleaseFundsService>();
+
 builder.Services.AddControllers().AddJsonOptions(options =>
 	options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
 

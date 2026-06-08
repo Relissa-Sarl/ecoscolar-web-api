@@ -22,6 +22,8 @@ public class User : IdentityUser
 
 	public bool IsBanned { get; set; } = false;
 
+	public string? StripeAccountId { get; set; }
+
 	// === Foreign keys ===
 
 	[ForeignKey(nameof(Location))]

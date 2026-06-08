@@ -1,7 +1,12 @@
-﻿namespace EcoScolarWebApi.DTOs.Stripe;
+using System.ComponentModel.DataAnnotations;
+
+namespace EcoScolarWebApi.DTOs.Stripe;
 
 public class CheckoutRequestDto
 {
-    public int ProductId { get; set; }
-    public double ProductPrice { get; set; }
+    [Required]
+    public long AdvertId { get; set; }
+
+    [Required]
+    public string ShippingAddress { get; set; } = string.Empty;
 }
