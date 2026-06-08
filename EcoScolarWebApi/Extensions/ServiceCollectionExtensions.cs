@@ -35,8 +35,14 @@ public static class ServiceCollectionExtensions
 		{
 			var connectionString = config.GetConnectionString("Default")
 				?? throw new InvalidOperationException("Connection string 'Default' is missing.");
-
-			services.AddDbContext<EcoscolarDbContext>(options => options.UseSqlServer(connectionString));
+			services.AddDbContext<EcoscolarDbContext>(options => 
+				options.UseSqlServer(connectionString, sqlOptions => 
+				{
+					sqlOptions.EnableRetryOnFailure(
+						maxRetryCount: 10,
+						maxRetryDelay: TimeSpan.FromSeconds(30),
+						errorNumbersToAdd: null);
+				}));
 		}
 
 		StripeConfiguration.ApiKey = config["Stripe:SecretKey"];
