@@ -11,7 +11,7 @@ public class SupportContactRequestDto
     public string Email { get; set; } = string.Empty;
 
     [Required]
-    [MinLength(5, ErrorMessage = "Veuillez saisir l'objet du message.")]
+    [MinLength(3, ErrorMessage = "Veuillez saisir l'objet du message.")]
     [MaxLength(200)]
     public string Subject { get; set; } = string.Empty;
 
