@@ -1,4 +1,4 @@
-﻿using EcoScolarWebApi.Data;
+using EcoScolarWebApi.Data;
 using EcoScolarWebApi.DTOs.Adverts;
 using EcoScolarWebApi.Models;
 using EcoScolarWebApi.Services.Contracts;
@@ -24,7 +24,8 @@ public sealed class AdvertSearchService : IAdvertSearchService
 		AdvertSearchQuery? query,
 		CancellationToken cancellationToken = default)
 	{
-		IQueryable<Advert> advertsQuery = _context.Adverts.AsNoTracking();
+		IQueryable<Advert> advertsQuery = _context.Adverts.AsNoTracking()
+			.Where(a => a.Status == Enums.AdvertStatus.ACTIVE && (a.ReservedUntil == null || a.ReservedUntil <= DateTime.UtcNow));
 
 		if (query != null && !string.IsNullOrWhiteSpace(query.Isbn))
 		{

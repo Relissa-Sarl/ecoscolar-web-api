@@ -1,4 +1,4 @@
-﻿using EcoScolarWebApi.Enums;
+using EcoScolarWebApi.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -30,6 +30,10 @@ public class Advert
 
     [Required]
     public AdvertStatus Status { get; set; }
+
+    public DateTime? ReservedUntil { get; set; }
+
+    public string? ReservedByUserId { get; set; }
 
     [Required]
     public string SellerId { get; set; }

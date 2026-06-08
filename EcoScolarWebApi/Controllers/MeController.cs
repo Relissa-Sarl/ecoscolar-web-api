@@ -47,7 +47,7 @@ public class MeController : ControllerBase
             t.Advert!.Title,
             t.Advert.Price,
             t.Date,
-            t.Status,
+            t.Status.ToString(),
             GetPrimaryImage(t.Advert),
             t.Advert.Seller?.Nickname ?? t.Advert.Seller?.UserName ?? "Anonyme"
         )).ToList();

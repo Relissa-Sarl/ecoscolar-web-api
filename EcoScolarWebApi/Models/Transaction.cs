@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+using EcoScolarWebApi.Enums;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EcoScolarWebApi.Models;
@@ -16,7 +17,7 @@ public class Transaction
     public DateTime Date { get; set; } = DateTime.UtcNow;
 
     [Required]
-    public string Status { get; set; } = string.Empty;
+    public TransactionStatus Status { get; set; } = TransactionStatus.PENDING_PAYMENT;
 
     public DateTime? ExpirationReservationTime { get; set; }
 
@@ -33,6 +34,15 @@ public class Transaction
     public DateTime? ReminderDate { get; set; }
 
     public string? StripeSessionId { get; set; }
+
+    public string? StripePaymentIntentId { get; set; }
+
+    public string? ShippingAddress { get; set; }
+
+    [Column(TypeName = "decimal(18,2)")]
+    public decimal ShippingCost { get; set; } = 0;
+
+    public DateTime? ShippedDate { get; set; }
 
     // === Foreign Keys ===
 
