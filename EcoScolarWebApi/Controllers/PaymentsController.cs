@@ -79,7 +79,7 @@ public class PaymentsController : ControllerBase
 				TransferGroup = "COMMANDE_ID_789",
 			},
 
-            SuccessUrl = $"{baseUrl}/success?total={price}",
+            SuccessUrl = $"{baseUrl}/success",
             CancelUrl = $"{baseUrl}/denied",
 		};
 
@@ -210,8 +210,9 @@ public class PaymentsController : ControllerBase
 	[HttpPost("create-account-link")]
 	public IActionResult CreateAccountLink([FromBody] AccountLinkRequestDto request)
 	{
-		// Basic validation
-		if (string.IsNullOrWhiteSpace(request?.AccountId))
+        string baseUrl = $"{Request.Scheme}://{Request.Host}";
+        // Basic validation
+        if (string.IsNullOrWhiteSpace(request?.AccountId))
 		{
 			return BadRequest(new { error = "Account ID is required." });
 		}
@@ -232,8 +233,8 @@ public class PaymentsController : ControllerBase
 					{
 						Configurations = new List<string> { "recipient" },
 						// Note: You should replace these example URLs with your actual front-end URLs
-						RefreshUrl = "http://localhost:3001/home",
-						ReturnUrl = $"http://localhost:3001/home?accountId={request.AccountId}",
+						RefreshUrl = $"{baseUrl}/home",
+						ReturnUrl = $"{baseUrl}/home?accountId={request.AccountId}",
 					},
 				},
 			};
