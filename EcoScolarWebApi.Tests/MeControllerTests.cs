@@ -223,6 +223,7 @@ public class MeControllerTests : IDisposable
         {
             AdvertId = 1,
             Title = "Math Book",
+            Description = "Great book",
             Price = 15.50m,
             SellerId = seller.Id,
             Seller = seller,
@@ -286,6 +287,7 @@ public class MeControllerTests : IDisposable
         {
             AdvertId = 2,
             Title = "Sold Book",
+            Description = "Great book",
             Price = 10m,
             SellerId = sellerId,
             ISBN = "456",
