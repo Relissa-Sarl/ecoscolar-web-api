@@ -48,7 +48,8 @@ public static class ServiceCollectionExtensions
 	{
 		services.AddIdentityApiEndpoints<User>()
 				.AddRoles<IdentityRole>()
-				.AddEntityFrameworkStores<EcoscolarDbContext>();
+				.AddEntityFrameworkStores<EcoscolarDbContext>()
+				.AddDefaultTokenProviders();
 
 		services.ConfigureApplicationCookie(options =>
 		{
@@ -119,11 +120,11 @@ public static class ServiceCollectionExtensions
 			services.AddScoped<IAdvertSearchService, AdvertSearchService>();
 
 		services.AddScoped<IUserService, UserService>();
+		services.AddTransient<IEmailSender<User>, EmailSenderService>();
 		services.AddScoped<ICartService, CartService>();
 		services.AddScoped<IAdminService, AdminService>();
-		services.AddTransient<IEmailSender<User>, DevEmailSenderService>();
 		services.AddScoped<ISupportContactService, SupportContactService>();
 
-		return services;
+        return services;
 	}
 }
