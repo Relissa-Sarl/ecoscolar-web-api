@@ -1,4 +1,4 @@
-﻿using Asp.Versioning;
+using Asp.Versioning;
 using EcoScolarWebApi.DTOs.Stripe;
 using Microsoft.AspNetCore.Mvc;
 using Stripe;
@@ -38,8 +38,21 @@ public class PaymentsController : ControllerBase
 	public async Task<IActionResult> Checkout([FromBody] CheckoutRequestDto request)
 	{
 		double price = request.ProductPrice * 100;
+        string baseUrl = $"{Request.Scheme}://{Request.Host}";
+        if (Request.Headers.TryGetValue("Referer", out var refererHeader) && !string.IsNullOrEmpty(refererHeader))
+        {
+            try
+            {
+                var uri = new Uri(refererHeader.ToString());
+                baseUrl = $"{uri.Scheme}://{uri.Authority}";
+            }
+            catch
+            {
+                // Fallback in case of malformed Referer
+            }
+        }
 
-		var options = new SessionCreateOptions
+        var options = new SessionCreateOptions
 		{
 			PaymentMethodTypes = new List<string> { "card" },
 			LineItems = new List<SessionLineItemOptions>
@@ -53,9 +66,9 @@ public class PaymentsController : ControllerBase
 						Currency = "chf",
 						ProductData = new SessionLineItemPriceDataProductDataOptions
 						{
-							Name = $"Test Integration Purchase ({price} CHF)",
-							Description = "Fake purchase to validate the process for the prototype"
-						},
+							Name = "Amount due",
+							Description = "Thank you for choosing EcoScolar for your school supplies. Good luck with your studies!"
+                        },
 					},
 					Quantity = 1,
 				},
@@ -66,8 +79,8 @@ public class PaymentsController : ControllerBase
 				TransferGroup = "COMMANDE_ID_789",
 			},
 
-			SuccessUrl = "http://localhost:3000/success?total={totalAmount}&orderId={CHECKOUT_SESSION_ID}",
-			CancelUrl = "http://localhost:3001/denied",
+            SuccessUrl = $"{baseUrl}/success",
+            CancelUrl = $"{baseUrl}/denied",
 		};
 
 		var service = new SessionService();
@@ -197,8 +210,9 @@ public class PaymentsController : ControllerBase
 	[HttpPost("create-account-link")]
 	public IActionResult CreateAccountLink([FromBody] AccountLinkRequestDto request)
 	{
-		// Basic validation
-		if (string.IsNullOrWhiteSpace(request?.AccountId))
+        string baseUrl = $"{Request.Scheme}://{Request.Host}";
+        // Basic validation
+        if (string.IsNullOrWhiteSpace(request?.AccountId))
 		{
 			return BadRequest(new { error = "Account ID is required." });
 		}
@@ -219,8 +233,8 @@ public class PaymentsController : ControllerBase
 					{
 						Configurations = new List<string> { "recipient" },
 						// Note: You should replace these example URLs with your actual front-end URLs
-						RefreshUrl = "http://localhost:3001/home",
-						ReturnUrl = $"http://localhost:3001/home?accountId={request.AccountId}",
+						RefreshUrl = $"{baseUrl}/home",
+						ReturnUrl = $"{baseUrl}/home?accountId={request.AccountId}",
 					},
 				},
 			};
