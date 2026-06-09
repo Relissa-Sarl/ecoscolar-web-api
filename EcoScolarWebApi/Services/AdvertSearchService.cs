@@ -3,6 +3,7 @@ using EcoScolarWebApi.DTOs.Adverts;
 using EcoScolarWebApi.Models;
 using EcoScolarWebApi.Services.Contracts;
 using Microsoft.EntityFrameworkCore;
+using EcoScolarWebApi.Enums;
 
 namespace EcoScolarWebApi.Services;
 
@@ -24,7 +25,9 @@ public sealed class AdvertSearchService : IAdvertSearchService
 		AdvertSearchQuery? query,
 		CancellationToken cancellationToken = default)
 	{
-		IQueryable<Advert> advertsQuery = _context.Adverts.AsNoTracking();
+		IQueryable<Advert> advertsQuery = _context.Adverts
+			.AsNoTracking()
+			.Where(a => a.Status == AdvertStatus.ACTIVE);
 
 		if (query != null && !string.IsNullOrWhiteSpace(query.Isbn))
 		{
@@ -79,6 +82,13 @@ public sealed class AdvertSearchService : IAdvertSearchService
 
 	public async Task<AdvertDetailDto?> GetDetailAsync(long id, CancellationToken cancellationToken = default)
 	{
+		var advert = await _context.Adverts
+			.AsNoTracking()
+			.FirstOrDefaultAsync(a => a.AdvertId == id, cancellationToken);
+
+		if (advert is null)
+			return null;
+
 		var bookDetail = await _context.Books
 			.AsNoTracking()
 			.Include(b => b.BookCategory)
