@@ -36,6 +36,7 @@ services:
       ConnectionStrings__Default: "Server=ecoscolar-api-database,1433;Initial Catalog=ecoscolar;User ID=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;Encrypt=True"
       Stripe__SecretKey: ${STRIPE_SECRET_KEY}
     networks:
+      - dmz
       - ecoscolar
       - databases
     labels:

@@ -66,9 +66,9 @@ public class PaymentsController : ControllerBase
 						Currency = "chf",
 						ProductData = new SessionLineItemPriceDataProductDataOptions
 						{
-							Name = $"Test Integration Purchase ({price} CHF)",
-							Description = "Fake purchase to validate the process for the prototype"
-						},
+							Name = "Amount due",
+							Description = "Thank you for choosing EcoScolar for your school supplies. Good luck with your studies!"
+                        },
 					},
 					Quantity = 1,
 				},
