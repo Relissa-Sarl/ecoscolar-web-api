@@ -1,6 +1,8 @@
 using EcoScolarWebApi.Data;
 using EcoScolarWebApi.Extensions;
 using EcoScolarWebApi.Models;
+using EcoScolarWebApi.Services;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,6 +23,11 @@ builder.Services.AddCors(options => options.AddPolicy("AllowFrontend", policy =>
 
 // App creation
 var app = builder.Build();
+
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
 
 // Migrations and seeding
 app.ApplyDatabaseMigrations(app.Configuration);
