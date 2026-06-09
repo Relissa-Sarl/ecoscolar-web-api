@@ -33,7 +33,7 @@ public class BookCreateIntegrationTests : IDisposable
 			.Options;
 
 		_context = new EcoscolarDbContext(options);
-		_controller = new AdvertsController(_context, Substitute.For<IAdvertSearchService>());
+		_controller = new AdvertsController(_context, Substitute.For<IAdvertSearchService>(), Substitute.For<IEmailSenderService>());
 	}
 
 	[Fact]

@@ -1,11 +1,12 @@
-﻿using EcoScolarWebApi.Models;
+using EcoScolarWebApi.Models;
+using EcoScolarWebApi.Services.Contracts;
 using MailKit.Net.Smtp;
 using Microsoft.AspNetCore.Identity;
 using MimeKit;
 
 namespace EcoScolarWebApi.Services;
 
-public class EmailSenderService : IEmailSender<User>
+public class EmailSenderService : IEmailSenderService
 {
     private readonly IConfiguration _configuration;
 
@@ -62,6 +63,21 @@ public class EmailSenderService : IEmailSender<User>
         """;
 
         await SendEmailAsync(email, subject, body);
+    }
+
+    public async Task SendItemSoldEmailAsync(User seller, Advert advert)
+    {
+        var subject = "Votre article a été vendu ! - EcoScolar";
+        var body = $"""
+        <div style="font-family: sans-serif; line-height: 1.5; color: #333;">
+            <p>Bonjour {seller.Nickname},</p>
+            <p>Bonne nouvelle ! Votre annonce "<strong>{advert.Title}</strong>" a été achetée.</strong>.</p>
+            <p>Nous vous remercions pour votre confiance sur notre plateforme.</p>
+            <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
+        </div>
+        """;
+
+        await SendEmailAsync(seller.Email!, subject, body);
     }
 
     private async Task SendEmailAsync(string toEmail, string subject, string htmlMessage)

@@ -120,7 +120,8 @@ public static class ServiceCollectionExtensions
 			services.AddScoped<IAdvertSearchService, AdvertSearchService>();
 
 		services.AddScoped<IUserService, UserService>();
-		services.AddTransient<IEmailSender<User>, EmailSenderService>();
+		services.AddTransient<IEmailSenderService, EmailSenderService>();
+		services.AddTransient<IEmailSender<User>>(provider => provider.GetRequiredService<IEmailSenderService>());
 		services.AddScoped<ICartService, CartService>();
 		services.AddScoped<IAdminService, AdminService>();
 		services.AddScoped<ISupportContactService, SupportContactService>();
