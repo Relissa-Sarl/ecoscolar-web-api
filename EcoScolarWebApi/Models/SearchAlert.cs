@@ -20,6 +20,16 @@ public class SearchAlert
 
     public string? ISBN { get; set; }
 
+    public long? ProductCategoryId { get; set; }
+
+    public long? SchoolGradeId { get; set; }
+
+    [Column(TypeName = "decimal(18,2)")]
+    public decimal? MinPrice { get; set; }
+
+    [Required]
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
     // === Foreign Keys ===
 
     public long? SubjectId { get; set; } 
@@ -27,7 +37,7 @@ public class SearchAlert
     public long? BookCategoryId { get; set; }
 
     [Required]
-    public string UserId { get; set; }
+    public string UserId { get; set; } = string.Empty;
 
     // === Navigation Properties ===
 
@@ -39,4 +49,10 @@ public class SearchAlert
 
     [ForeignKey(nameof(UserId))]
     public virtual User? User { get; set; }
+
+    [ForeignKey(nameof(ProductCategoryId))]
+    public virtual ProductCategory? ProductCategory { get; set; }
+
+    [ForeignKey(nameof(SchoolGradeId))]
+    public virtual SchoolGrade? SchoolGrade { get; set; }
 }
