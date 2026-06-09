@@ -45,7 +45,7 @@ public class SupportContactHttpIntegrationTests : IClassFixture<AuthInMemoryWebA
         var response = await client.PostAsJsonAsync("/api/v1/tickets", new
         {
             email = "user@example.com",
-            subject = "Test",
+            subject = "te",
             message = "Message de test suffisamment long."
         });
 

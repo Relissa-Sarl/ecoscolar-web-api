@@ -41,16 +41,25 @@ public class MeController : ControllerBase
                 .ThenInclude(a => (a as PhysicalItem)!.Pictures)
             .ToListAsync();
 
-        var purchaseDtos = purchases.Select(t => new PurchaseReadDto(
-            t.TransactionId.ToString(),
-            t.AdvertId.ToString(),
-            t.Advert!.Title,
-            t.Advert.Price,
-            t.Date,
-            t.Status,
-            GetPrimaryImage(t.Advert),
-            t.Advert.Seller?.Nickname ?? t.Advert.Seller?.UserName ?? "Anonyme"
-        )).ToList();
+        var transactionIds = purchases.Select(t => t.TransactionId).ToList();
+        var reviews = await _context.Reviews
+            .Where(r => transactionIds.Contains(r.TransactionId) && r.ReviewedRole == ReviewedRole.SELLER)
+            .ToDictionaryAsync(r => r.TransactionId);
+
+        var purchaseDtos = purchases.Select(t => {
+            reviews.TryGetValue(t.TransactionId, out var review);
+            return new PurchaseReadDto(
+                t.TransactionId.ToString(),
+                t.AdvertId.ToString(),
+                t.Advert!.Title,
+                t.Advert.Price,
+                t.Date,
+                t.Status,
+                GetPrimaryImage(t.Advert),
+                t.Advert.Seller?.Nickname ?? t.Advert.Seller?.UserName ?? "Anonyme",
+                review != null ? new ReviewDto(review.Rating, review.Comment) : null
+            );
+        }).ToList();
 
         return Ok(purchaseDtos);
     }
@@ -84,9 +93,24 @@ public class MeController : ControllerBase
                 .LoadAsync();
         }
 
+        var transactionIds = sales
+            .Where(s => s.Transaction != null)
+            .Select(s => s.Transaction!.TransactionId)
+            .ToList();
+
+        var reviews = await _context.Reviews
+            .Where(r => transactionIds.Contains(r.TransactionId) && r.ReviewedRole == ReviewedRole.SELLER)
+            .ToDictionaryAsync(r => r.TransactionId);
+
         var dtos = sales.Select(s =>
         {
-            var dto = AdvertReadDto.FromEntity(s.Advert);
+            ReviewDto? reviewDto = null;
+            if (s.Transaction != null && reviews.TryGetValue(s.Transaction.TransactionId, out var review))
+            {
+                reviewDto = new ReviewDto(review.Rating, review.Comment);
+            }
+
+            var dto = AdvertReadDto.FromEntity(s.Advert, reviewDto);
             // If we have a transaction, we update the buyer name in the record
             if (s.Transaction?.Buyer != null)
             {
@@ -94,7 +118,7 @@ public class MeController : ControllerBase
                 dto = dto with { BuyerName = s.Transaction.Buyer.Nickname ?? s.Transaction.Buyer.UserName ?? "Anonyme" };
             }
             return dto;
-        });
+        }).ToList();
 
         return Ok(dtos);
     }
