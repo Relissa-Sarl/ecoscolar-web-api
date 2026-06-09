@@ -4,9 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using Stripe;
 using Stripe.Checkout;
 using Stripe.V2.Core;
-using EcoScolarWebApi.Data;
-using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
 
 namespace EcoScolarWebApi.Controllers;
 
@@ -15,13 +12,18 @@ namespace EcoScolarWebApi.Controllers;
 [ApiController]
 public class PaymentsController : ControllerBase
 {
-	private readonly IConfiguration _config;
-	private readonly EcoscolarDbContext _context;
+	private readonly IConfiguration _config;        // Configuration to access Stripe secret key
 
-	public PaymentsController(IConfiguration config, EcoscolarDbContext context)
+	/// <summary>
+	/// PaymentsController constructor
+	/// Takes the configuration as a parameter to access the Stripe secret key
+	/// 
+	/// Url: POST /api/v1/payments/checkout
+	/// </summary>
+	/// <param name="config">The configuration object containing the Stripe secret key</param>
+	public PaymentsController(IConfiguration config)
 	{
 		_config = config;
-		_context = context;
 	}
 
 	/// <summary>
@@ -33,79 +35,56 @@ public class PaymentsController : ControllerBase
 	/// <param name="request">The checkout request containing product information</param>
 	/// <returns>The session URL</returns>
 	[HttpPost("checkout")]
-	[Microsoft.AspNetCore.Authorization.Authorize]
 	public async Task<IActionResult> Checkout([FromBody] CheckoutRequestDto request)
 	{
-		var userId = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
-		if (string.IsNullOrEmpty(userId))
-			return Unauthorized();
+		double price = request.ProductPrice * 100;
+        string baseUrl = $"{Request.Scheme}://{Request.Host}";
+        if (Request.Headers.TryGetValue("Referer", out var refererHeader) && !string.IsNullOrEmpty(refererHeader))
+        {
+            try
+            {
+                var uri = new Uri(refererHeader.ToString());
+                baseUrl = $"{uri.Scheme}://{uri.Authority}";
+            }
+            catch
+            {
+                // Fallback in case of malformed Referer
+            }
+        }
 
-		var advert = await _context.Adverts.FindAsync(request.AdvertId);
-		if (advert == null || advert.Status != Enums.AdvertStatus.ACTIVE)
-			return NotFound(new { error = "L'annonce n'existe pas ou n'est plus disponible." });
-
-		if (advert.ReservedUntil > DateTime.UtcNow && advert.ReservedByUserId != userId)
-			return BadRequest(new { error = "L'annonce est réservée par un autre utilisateur." });
-
-		// Mettre à jour la réservation
-		advert.ReservedUntil = DateTime.UtcNow.AddMinutes(30); // Donne 30 min pour payer
-		advert.ReservedByUserId = userId;
-
-		// Créer la transaction PENDING
-		decimal shippingCost = 7.00m;
-		var transaction = new EcoScolarWebApi.Models.Transaction
-		{
-			AdvertId = advert.AdvertId,
-			BuyerId = userId,
-			Date = DateTime.UtcNow,
-			Status = Enums.TransactionStatus.PENDING_PAYMENT,
-			ShippingAddress = request.ShippingAddress,
-			ShippingCost = shippingCost,
-			PlatformFee = advert.Price * 0.10m // Exemple de frais de plateforme (10%)
-		};
-
-		_context.Transactions.Add(transaction);
-		await _context.SaveChangesAsync();
-
-		double priceTotalCents = (double)(advert.Price + shippingCost) * 100;
-
-		var options = new SessionCreateOptions
+        var options = new SessionCreateOptions
 		{
 			PaymentMethodTypes = new List<string> { "card" },
-			ClientReferenceId = transaction.TransactionId.ToString(), // Pour le webhook
 			LineItems = new List<SessionLineItemOptions>
 			{
 				new SessionLineItemOptions
 				{
 					PriceData = new SessionLineItemPriceDataOptions
 					{
-						UnitAmount = (long)priceTotalCents,
+                        // 1 franc = 100 cents
+                        UnitAmount = (long)price,
 						Currency = "chf",
 						ProductData = new SessionLineItemPriceDataProductDataOptions
 						{
-							Name = advert.Title,
-							Description = $"Achat de {advert.Title} incluant {shippingCost} CHF de frais de port."
-						},
+							Name = "Amount due",
+							Description = "Thank you for choosing EcoScolar for your school supplies. Good luck with your studies!"
+                        },
 					},
 					Quantity = 1,
 				},
 			},
 			Mode = "payment",
-			// PaymentIntentData pour lier au groupe de transfert (si on fait des transferts séparés)
 			PaymentIntentData = new SessionPaymentIntentDataOptions
 			{
-				TransferGroup = $"TRANS_{transaction.TransactionId}",
+				TransferGroup = "COMMANDE_ID_789",
 			},
-			SuccessUrl = "http://localhost:3000/success?orderId={CHECKOUT_SESSION_ID}",
-			CancelUrl = "http://localhost:3000/cart",
+
+            SuccessUrl = $"{baseUrl}/success",
+            CancelUrl = $"{baseUrl}/denied",
 		};
 
 		var service = new SessionService();
 		Session session = await service.CreateAsync(options);
-
-		// Sauvegarder l'ID de session Stripe
-		transaction.StripeSessionId = session.Id;
-		await _context.SaveChangesAsync();
 
 		return Ok(new { url = session.Url });
 	}
@@ -231,8 +210,9 @@ public class PaymentsController : ControllerBase
 	[HttpPost("create-account-link")]
 	public IActionResult CreateAccountLink([FromBody] AccountLinkRequestDto request)
 	{
-		// Basic validation
-		if (string.IsNullOrWhiteSpace(request?.AccountId))
+        string baseUrl = $"{Request.Scheme}://{Request.Host}";
+        // Basic validation
+        if (string.IsNullOrWhiteSpace(request?.AccountId))
 		{
 			return BadRequest(new { error = "Account ID is required." });
 		}
@@ -253,8 +233,8 @@ public class PaymentsController : ControllerBase
 					{
 						Configurations = new List<string> { "recipient" },
 						// Note: You should replace these example URLs with your actual front-end URLs
-						RefreshUrl = "http://localhost:3001/home",
-						ReturnUrl = $"http://localhost:3001/home?accountId={request.AccountId}",
+						RefreshUrl = $"{baseUrl}/home",
+						ReturnUrl = $"{baseUrl}/home?accountId={request.AccountId}",
 					},
 				},
 			};
@@ -271,53 +251,6 @@ public class PaymentsController : ControllerBase
 		catch (Exception e)
 		{
 			return StatusCode(500, new { error = e.Message });
-		}
-	}
-
-	/// <summary>
-	/// Webhook for Stripe events
-	/// </summary>
-	[HttpPost("webhook")]
-	public async Task<IActionResult> StripeWebhook()
-	{
-		var json = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
-		var stripeSignature = Request.Headers["Stripe-Signature"];
-		var webhookSecret = _config["Stripe:WebhookSecret"];
-
-		try
-		{
-			var stripeEvent = EventUtility.ConstructEvent(json, stripeSignature, webhookSecret);
-
-			if (stripeEvent.Type == "checkout.session.completed")
-			{
-				var session = stripeEvent.Data.Object as Session;
-
-				if (session != null && long.TryParse(session.ClientReferenceId, out var transactionId))
-				{
-					var transaction = await _context.Transactions
-						.Include(t => t.Advert)
-						.FirstOrDefaultAsync(t => t.TransactionId == transactionId);
-
-					if (transaction != null && transaction.Status == Enums.TransactionStatus.PENDING_PAYMENT)
-					{
-						transaction.Status = Enums.TransactionStatus.PAID_WAITING_SHIPPING;
-						transaction.StripePaymentIntentId = session.PaymentIntentId;
-						transaction.Advert.Status = Enums.AdvertStatus.SOLD;
-
-						// Remove sold item from all carts
-						var cartItems = await _context.CartItems.Where(c => c.AdvertId == transaction.AdvertId).ToListAsync();
-						_context.CartItems.RemoveRange(cartItems);
-
-						await _context.SaveChangesAsync();
-					}
-				}
-			}
-
-			return Ok();
-		}
-		catch (StripeException e)
-		{
-			return BadRequest(new { error = e.Message });
 		}
 	}
 }

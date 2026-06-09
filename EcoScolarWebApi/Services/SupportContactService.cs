@@ -31,7 +31,7 @@ public class SupportContactService(
                 "Veuillez saisir une adresse e-mail valide.",
                 ErrorType.Conflict);
 
-        if (string.IsNullOrWhiteSpace(subject) || subject.Length < 5)
+        if (string.IsNullOrWhiteSpace(subject) || subject.Length < 3)
             return Result<SupportContactResponseDto>.Failure(
                 "Veuillez saisir l'objet du message.",
                 ErrorType.Conflict);

@@ -18,7 +18,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<SubjectMapper>();
         services.AddSingleton<LanguageMapper>();
         services.AddSingleton<PublicCommentMapper>();
-		    services.AddSingleton<UserMapper>();
+		services.AddSingleton<UserMapper>();
         services.AddSingleton<ReviewMapper>();
         services.AddSingleton<LocationMapper>();
         return services;
@@ -54,7 +54,8 @@ public static class ServiceCollectionExtensions
 	{
 		services.AddIdentityApiEndpoints<User>()
 				.AddRoles<IdentityRole>()
-				.AddEntityFrameworkStores<EcoscolarDbContext>();
+				.AddEntityFrameworkStores<EcoscolarDbContext>()
+				.AddDefaultTokenProviders();
 
 		services.ConfigureApplicationCookie(options =>
 		{
@@ -125,10 +126,11 @@ public static class ServiceCollectionExtensions
 			services.AddScoped<IAdvertSearchService, AdvertSearchService>();
 
 		services.AddScoped<IUserService, UserService>();
+		services.AddTransient<IEmailSender<User>, EmailSenderService>();
 		services.AddScoped<ICartService, CartService>();
-		services.AddTransient<IEmailSender<User>, DevEmailSenderService>();
+		services.AddScoped<IAdminService, AdminService>();
 		services.AddScoped<ISupportContactService, SupportContactService>();
 
-		return services;
+        return services;
 	}
 }
