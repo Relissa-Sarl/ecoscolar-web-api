@@ -1,5 +1,7 @@
 namespace EcoScolarWebApi.DTOs;
 
+public record ReviewDto(int Rating, string? Comment);
+
 /// <summary>
 /// DTO for representing a user's purchase history.
 /// </summary>
@@ -11,6 +13,7 @@ namespace EcoScolarWebApi.DTOs;
 /// <param name="Status">The status of the purchase (e.g., "completed", "pending").</param>
 /// <param name="ImageUrl">An optional URL for the advert's thumbnail image.</param>
 /// <param name="SellerName">The name or pseudo of the seller.</param>
+/// <param name="Review">The review details of the purchase/transaction.</param>
 public record PurchaseReadDto(
     string Id,
     string AdvertId,
@@ -19,5 +22,6 @@ public record PurchaseReadDto(
     DateTime PurchaseDate,
     string Status,
     string? ImageUrl,
-    string SellerName
+    string SellerName,
+    ReviewDto? Review = null
 );

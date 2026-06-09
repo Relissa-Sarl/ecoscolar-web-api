@@ -20,7 +20,8 @@ namespace EcoScolarWebApi.DTOs.Adverts;
 /// <param name="SellerPseudo">The pseudo (username) of the seller</param>
 /// <param name="PrimaryImage">The URL of the primary image of the PhysicalItem</param>
 /// <param name="BuyerName">The nickname of the buyer once the advert has been sold. Empty string when the advert has not yet been sold.</param>
-public record AdvertReadDto(long Id, string Type, string Title, decimal Price, DateTime PublicationDate, DateTime NotificationDate, AdvertStatus Status, string UserId, string SellerPseudo, string? PrimaryImage, string BuyerName)
+/// <param name="Review">The review details of the advert/transaction if sold and reviewed.</param>
+public record AdvertReadDto(long Id, string Type, string Title, decimal Price, DateTime PublicationDate, DateTime NotificationDate, AdvertStatus Status, string UserId, string SellerPseudo, string? PrimaryImage, string BuyerName, ReviewDto? Review = null)
 {
 	/// <summary>
 	/// Factory method to create an AdvertReadDto from an PhysicalItem entity.
@@ -30,6 +31,19 @@ public record AdvertReadDto(long Id, string Type, string Title, decimal Price, D
 	/// <returns>The AdvertReadDto instance</returns>
 	/// <exception cref="InvalidOperationException"></exception>
 	public static AdvertReadDto FromEntity(Advert entity)
+	{
+		return FromEntity(entity, null);
+	}
+
+	/// <summary>
+	/// Factory method to create an AdvertReadDto from an PhysicalItem entity, with a review.
+	/// It determines the type of PhysicalItem based on the specific subclass of PhysicalItem (Books, PhysicalItems, AdvertServices) and extracts the primary image if available.
+	/// </summary>
+	/// <param name="entity">The PhysicalItem entity to convert</param>
+	/// <param name="review">Optional review to attach</param>
+	/// <returns>The AdvertReadDto instance</returns>
+	/// <exception cref="InvalidOperationException"></exception>
+	public static AdvertReadDto FromEntity(Advert entity, ReviewDto? review)
 	{
 		string type = entity switch
 		{
@@ -54,7 +68,8 @@ public record AdvertReadDto(long Id, string Type, string Title, decimal Price, D
 			UserId: entity.SellerId,
 			SellerPseudo: entity.Seller?.Nickname ?? entity.Seller?.UserName ?? "Anonyme",
 			PrimaryImage: primaryImage,
-			BuyerName: buyerName
+			BuyerName: buyerName,
+			Review: review
 		);
 	}
 }
