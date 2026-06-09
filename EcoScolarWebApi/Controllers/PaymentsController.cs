@@ -79,7 +79,7 @@ public class PaymentsController : ControllerBase
 				TransferGroup = "COMMANDE_ID_789",
 			},
 
-            SuccessUrl = $"{baseUrl}/success",
+            SuccessUrl = $"{baseUrl}/success?orderId={{CHECKOUT_SESSION_ID}}&productId={request.ProductId}",
             CancelUrl = $"{baseUrl}/denied",
 		};
 
