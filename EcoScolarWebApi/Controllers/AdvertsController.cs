@@ -16,6 +16,7 @@ public class AdvertsController : ControllerBase
 {
 	private readonly IAdvertSearchService _advertSearchService;
 	private readonly EcoscolarDbContext _context;                                           // Database context for accessing the database
+	private readonly IEmailSenderService _emailSenderService;
 	private bool AdvertExists(long id) => _context.Adverts.Any(e => e.AdvertId == id);      // Helper method to check if an PhysicalItem with the specified ID exists in the database
 
 	/// <summary>
@@ -23,10 +24,12 @@ public class AdvertsController : ControllerBase
 	/// </summary>
 	/// <param name="context">The database context</param>
 	/// <param name="advertSearchService">The PhysicalItem search service</param>
-	public AdvertsController(EcoscolarDbContext context, IAdvertSearchService advertSearchService)
+	/// <param name="emailSenderService">The email sender service</param>
+	public AdvertsController(EcoscolarDbContext context, IAdvertSearchService advertSearchService, IEmailSenderService emailSenderService)
 	{
 		_context = context;
 		_advertSearchService = advertSearchService;
+		_emailSenderService = emailSenderService;
 	}
 
 	#region GET METHODS
@@ -538,9 +541,31 @@ public class AdvertsController : ControllerBase
 		}
 		if (Adverts == null) return NotFound();
 
+		var oldStatus = Adverts.Status;
 		Adverts.Status = status;
 		_context.Entry(Adverts).State = EntityState.Modified;
 		await _context.SaveChangesAsync();
+
+		if (status == AdvertStatus.SOLD && oldStatus != AdvertStatus.SOLD)
+		{
+			if (Adverts.Seller == null)
+			{
+				await _context.Entry(Adverts).Reference(a => a.Seller).LoadAsync();
+			}
+
+			if (Adverts.Seller != null && !string.IsNullOrEmpty(Adverts.Seller.Email))
+			{
+				try
+				{
+					await _emailSenderService.SendItemSoldEmailAsync(Adverts.Seller, Adverts);
+				}
+				catch (Exception ex)
+				{
+					Console.WriteLine($"[Email Error] Failed to send sale notification email: {ex.Message}");
+				}
+			}
+		}
+
 		return NoContent();
 	}
 	#endregion

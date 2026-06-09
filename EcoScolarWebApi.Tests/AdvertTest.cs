@@ -21,6 +21,7 @@ public class AdvertsControllerTests : IDisposable
     private readonly EcoscolarDbContext _context;
     private readonly AdvertsController _controller;
     private readonly IAdvertSearchService _searchService; 
+    private readonly IEmailSenderService _emailSenderServiceMock;
     private readonly UserManager<User> _userManagerMock;
     private readonly UsersController _usersController;
     private readonly IUserService _userServiceMock;
@@ -30,6 +31,7 @@ public class AdvertsControllerTests : IDisposable
     public AdvertsControllerTests()
     {
         _searchService = Substitute.For<IAdvertSearchService>();
+        _emailSenderServiceMock = Substitute.For<IEmailSenderService>();
 
         var store = Substitute.For<IUserStore<User>>();
         _userManagerMock = Substitute.For<UserManager<User>>(store, null!, null!, null!, null!, null!, null!, null!, null!); // UserManager requires a lot of dependencies, we can mock them all with NSubstitute
@@ -44,7 +46,7 @@ public class AdvertsControllerTests : IDisposable
 
         // Simulate the dependency injection of context and store into the AdvertsController
         _usersController = new UsersController(_userServiceMock, _userManagerMock, _context, _reviewMapper);
-		_controller = new AdvertsController(_context, _searchService);
+		_controller = new AdvertsController(_context, _searchService, _emailSenderServiceMock);
     }
 
     public void Dispose()
@@ -2030,6 +2032,87 @@ public class AdvertsControllerTests : IDisposable
         var updatedBook = await _context.Books.FindAsync((long)1);
         updatedBook.Should().NotBeNull("The updated book should exist in the database");
         updatedBook.Status.Should().Be(AdvertStatus.SOLD);
+    }
+
+    [Fact]
+    public async Task UpdateAdvertStatus_SendsEmailToSeller_WhenStatusChangesToSold()
+    {
+        // Arrange
+        var sellerUser = new User { Id = "seller-123", UserName = "seller_bob", Email = "seller@example.com", Nickname = "Bob" };
+        var advert = new Book
+        {
+            AdvertId = 10,
+            Title = "Math Book",
+            Description = "A math book",
+            Price = 15,
+            SellerId = sellerUser.Id,
+            Seller = sellerUser,
+            Status = AdvertStatus.ACTIVE,
+            CreatedAt = DateTime.UtcNow,
+            NotificationDate = DateTime.UtcNow,
+            Condition = PhysicalItemCondition.NEW,
+            ISBN = "11111",
+            Author = "Author",
+            Publisher = "Pub",
+            Edition = "1st",
+            WrittenLanguage = LanguageEnum.FR,
+            BookCategoryId = 1
+        };
+        _context.Users.Add(sellerUser);
+        _context.Adverts.Add(advert);
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _controller.UpdateAdvertStatus(10, AdvertStatus.SOLD);
+
+        // Assert
+        var noContentResult = result as NoContentResult;
+        noContentResult.Should().NotBeNull();
+        
+        await _emailSenderServiceMock.Received(1).SendItemSoldEmailAsync(
+            Arg.Is<User>(u => u.Id == "seller-123" && u.Email == "seller@example.com"),
+            Arg.Is<Advert>(a => a.AdvertId == 10 && a.Title == "Math Book" && a.Price == 15)
+        );
+    }
+
+    [Fact]
+    public async Task UpdateAdvertStatus_DoesNotSendEmail_WhenStatusIsAlreadySold()
+    {
+        // Arrange
+        var sellerUser = new User { Id = "seller-456", UserName = "seller_alice", Email = "alice@example.com" };
+        var advert = new Book
+        {
+            AdvertId = 11,
+            Title = "Science Book",
+            Description = "A science book",
+            Price = 20,
+            SellerId = sellerUser.Id,
+            Seller = sellerUser,
+            Status = AdvertStatus.SOLD,
+            CreatedAt = DateTime.UtcNow,
+            NotificationDate = DateTime.UtcNow,
+            Condition = PhysicalItemCondition.NEW,
+            ISBN = "22222",
+            Author = "Author",
+            Publisher = "Pub",
+            Edition = "1st",
+            WrittenLanguage = LanguageEnum.FR,
+            BookCategoryId = 1
+        };
+        _context.Users.Add(sellerUser);
+        _context.Adverts.Add(advert);
+        await _context.SaveChangesAsync();
+
+        _emailSenderServiceMock.ClearReceivedCalls();
+
+        // Act
+        var result = await _controller.UpdateAdvertStatus(11, AdvertStatus.SOLD);
+
+        // Assert
+        var noContentResult = result as NoContentResult;
+        noContentResult.Should().NotBeNull();
+
+        await _emailSenderServiceMock.DidNotReceiveWithAnyArgs().SendItemSoldEmailAsync(default!, default!);
     }
 
     [Fact]
