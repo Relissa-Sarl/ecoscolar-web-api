@@ -753,11 +753,23 @@ namespace EcoScolarWebApi.Migrations
                     b.Property<long?>("BookCategoryId")
                         .HasColumnType("bigint");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("ISBN")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal?>("MaxPrice")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("MinPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<long?>("ProductCategoryId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("SchoolGradeId")
+                        .HasColumnType("bigint");
 
                     b.Property<long?>("SubjectId")
                         .HasColumnType("bigint");
@@ -769,6 +781,10 @@ namespace EcoScolarWebApi.Migrations
                     b.HasKey("ResearchId");
 
                     b.HasIndex("BookCategoryId");
+
+                    b.HasIndex("ProductCategoryId");
+
+                    b.HasIndex("SchoolGradeId");
 
                     b.HasIndex("SubjectId");
 
@@ -1529,6 +1545,14 @@ namespace EcoScolarWebApi.Migrations
                         .HasForeignKey("BookCategoryId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("EcoScolarWebApi.Models.ProductCategory", "ProductCategory")
+                        .WithMany()
+                        .HasForeignKey("ProductCategoryId");
+
+                    b.HasOne("EcoScolarWebApi.Models.SchoolGrade", "SchoolGrade")
+                        .WithMany()
+                        .HasForeignKey("SchoolGradeId");
+
                     b.HasOne("EcoScolarWebApi.Models.Subject", "Subject")
                         .WithMany()
                         .HasForeignKey("SubjectId")
@@ -1541,6 +1565,10 @@ namespace EcoScolarWebApi.Migrations
                         .IsRequired();
 
                     b.Navigation("BookCategory");
+
+                    b.Navigation("ProductCategory");
+
+                    b.Navigation("SchoolGrade");
 
                     b.Navigation("Subject");
 

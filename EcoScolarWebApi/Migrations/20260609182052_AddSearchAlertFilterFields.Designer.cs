@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EcoScolarWebApi.Migrations
 {
     [DbContext(typeof(EcoscolarDbContext))]
-    [Migration("20260604143755_create-all")]
-    partial class createall
+    [Migration("20260609182052_AddSearchAlertFilterFields")]
+    partial class AddSearchAlertFilterFields
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -198,6 +198,30 @@ namespace EcoScolarWebApi.Migrations
                         });
                 });
 
+            modelBuilder.Entity("EcoScolarWebApi.Models.CartItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<long>("AdvertId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AdvertId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("CartItems");
+                });
+
             modelBuilder.Entity("EcoScolarWebApi.Models.Dispute", b =>
                 {
                     b.Property<int>("DisputeId")
@@ -344,29 +368,6 @@ namespace EcoScolarWebApi.Migrations
                     b.HasKey("LocationId");
 
                     b.ToTable("Location");
-
-                    b.HasData(
-                        new
-                        {
-                            LocationId = 1,
-                            City = "Lausanne",
-                            PostalCode = "1000",
-                            Region = "Vaud"
-                        },
-                        new
-                        {
-                            LocationId = 2,
-                            City = "Montreux",
-                            PostalCode = "1820",
-                            Region = "Vaud"
-                        },
-                        new
-                        {
-                            LocationId = 3,
-                            City = "Martigny",
-                            PostalCode = "1920",
-                            Region = "Valais"
-                        });
                 });
 
             modelBuilder.Entity("EcoScolarWebApi.Models.Picture", b =>
@@ -607,6 +608,13 @@ namespace EcoScolarWebApi.Migrations
                     b.Property<int>("Rating")
                         .HasColumnType("int");
 
+                    b.Property<string>("ReviewedId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("ReviewedRole")
+                        .HasColumnType("int");
+
                     b.Property<string>("ReviewerId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
@@ -616,9 +624,12 @@ namespace EcoScolarWebApi.Migrations
 
                     b.HasKey("ReviewId");
 
+                    b.HasIndex("ReviewedId");
+
                     b.HasIndex("ReviewerId");
 
-                    b.HasIndex("TransactionId");
+                    b.HasIndex("TransactionId", "ReviewerId")
+                        .IsUnique();
 
                     b.ToTable("Reviews");
                 });
@@ -745,11 +756,23 @@ namespace EcoScolarWebApi.Migrations
                     b.Property<long?>("BookCategoryId")
                         .HasColumnType("bigint");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("ISBN")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal?>("MaxPrice")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("MinPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<long?>("ProductCategoryId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("SchoolGradeId")
+                        .HasColumnType("bigint");
 
                     b.Property<long?>("SubjectId")
                         .HasColumnType("bigint");
@@ -761,6 +784,10 @@ namespace EcoScolarWebApi.Migrations
                     b.HasKey("ResearchId");
 
                     b.HasIndex("BookCategoryId");
+
+                    b.HasIndex("ProductCategoryId");
+
+                    b.HasIndex("SchoolGradeId");
 
                     b.HasIndex("SubjectId");
 
@@ -917,6 +944,71 @@ namespace EcoScolarWebApi.Migrations
                         });
                 });
 
+            modelBuilder.Entity("EcoScolarWebApi.Models.SupportTicket", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("SupportTickets");
+                });
+
+            modelBuilder.Entity("EcoScolarWebApi.Models.SupportTicketMessage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsFromSupport")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("TicketId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TicketId");
+
+                    b.ToTable("SupportTicketMessages");
+                });
+
             modelBuilder.Entity("EcoScolarWebApi.Models.Transaction", b =>
                 {
                     b.Property<long>("TransactionId")
@@ -992,6 +1084,9 @@ namespace EcoScolarWebApi.Migrations
 
                     b.Property<string>("FirstName")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsBanned")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("IsOnboarded")
                         .HasColumnType("bit");
@@ -1321,6 +1416,25 @@ namespace EcoScolarWebApi.Migrations
                     b.Navigation("Seller");
                 });
 
+            modelBuilder.Entity("EcoScolarWebApi.Models.CartItem", b =>
+                {
+                    b.HasOne("EcoScolarWebApi.Models.Advert", "Advert")
+                        .WithMany()
+                        .HasForeignKey("AdvertId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EcoScolarWebApi.Models.User", "User")
+                        .WithMany("CartItems")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Advert");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("EcoScolarWebApi.Models.Dispute", b =>
                 {
                     b.HasOne("EcoScolarWebApi.Models.Transaction", "Transaction")
@@ -1402,8 +1516,14 @@ namespace EcoScolarWebApi.Migrations
 
             modelBuilder.Entity("EcoScolarWebApi.Models.Review", b =>
                 {
+                    b.HasOne("EcoScolarWebApi.Models.User", "Reviewed")
+                        .WithMany("ReviewsReceived")
+                        .HasForeignKey("ReviewedId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("EcoScolarWebApi.Models.User", "Reviewer")
-                        .WithMany()
+                        .WithMany("ReviewsGiven")
                         .HasForeignKey("ReviewerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -1413,6 +1533,8 @@ namespace EcoScolarWebApi.Migrations
                         .HasForeignKey("TransactionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Reviewed");
 
                     b.Navigation("Reviewer");
 
@@ -1425,6 +1547,14 @@ namespace EcoScolarWebApi.Migrations
                         .WithMany()
                         .HasForeignKey("BookCategoryId")
                         .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("EcoScolarWebApi.Models.ProductCategory", "ProductCategory")
+                        .WithMany()
+                        .HasForeignKey("ProductCategoryId");
+
+                    b.HasOne("EcoScolarWebApi.Models.SchoolGrade", "SchoolGrade")
+                        .WithMany()
+                        .HasForeignKey("SchoolGradeId");
 
                     b.HasOne("EcoScolarWebApi.Models.Subject", "Subject")
                         .WithMany()
@@ -1439,9 +1569,34 @@ namespace EcoScolarWebApi.Migrations
 
                     b.Navigation("BookCategory");
 
+                    b.Navigation("ProductCategory");
+
+                    b.Navigation("SchoolGrade");
+
                     b.Navigation("Subject");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("EcoScolarWebApi.Models.SupportTicket", b =>
+                {
+                    b.HasOne("EcoScolarWebApi.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("EcoScolarWebApi.Models.SupportTicketMessage", b =>
+                {
+                    b.HasOne("EcoScolarWebApi.Models.SupportTicket", "Ticket")
+                        .WithMany("Messages")
+                        .HasForeignKey("TicketId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Ticket");
                 });
 
             modelBuilder.Entity("EcoScolarWebApi.Models.Transaction", b =>
@@ -1629,11 +1784,22 @@ namespace EcoScolarWebApi.Migrations
                     b.Navigation("Users");
                 });
 
+            modelBuilder.Entity("EcoScolarWebApi.Models.SupportTicket", b =>
+                {
+                    b.Navigation("Messages");
+                });
+
             modelBuilder.Entity("EcoScolarWebApi.Models.User", b =>
                 {
+                    b.Navigation("CartItems");
+
                     b.Navigation("Favorites");
 
                     b.Navigation("Languages");
+
+                    b.Navigation("ReviewsGiven");
+
+                    b.Navigation("ReviewsReceived");
                 });
 
             modelBuilder.Entity("EcoScolarWebApi.Models.PhysicalItem", b =>
