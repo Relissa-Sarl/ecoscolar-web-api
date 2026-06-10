@@ -31,7 +31,6 @@ namespace EcoScolarWebApi.DTOs.Cart
         [Required]
         public string? PrimaryImage { get; set; }
 
-        public DateTime? ReservedUntil { get; set; }
 
         public decimal ShippingCost { get; set; }
     }

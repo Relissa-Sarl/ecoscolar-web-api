@@ -82,7 +82,6 @@ namespace EcoScolarWebApi.Services
                     SellerPseudo = c.Advert?.Seller?.Nickname ?? c.Advert?.Seller?.UserName ?? string.Empty,
                     Type = type,
                     PrimaryImage = primaryImage,
-                    ReservedUntil = c.Advert?.ReservedUntil,
                     ShippingCost = 7.00m
                 };
             });
@@ -130,9 +129,6 @@ namespace EcoScolarWebApi.Services
                 AdvertId = dto.AdvertId
             };
 
-            advert.ReservedUntil = DateTime.UtcNow.AddMinutes(15);
-            advert.ReservedByUserId = userId;
-
             _context.CartItems.Add(cartItem);
             await _context.SaveChangesAsync();
 
@@ -157,7 +153,6 @@ namespace EcoScolarWebApi.Services
                 SellerPseudo = advert.Seller?.Nickname ?? advert.Seller?.UserName ?? string.Empty,
                 Type = type,
                 PrimaryImage = primaryImage,
-                ReservedUntil = advert.ReservedUntil,
                 ShippingCost = 7.00m
             };
 
