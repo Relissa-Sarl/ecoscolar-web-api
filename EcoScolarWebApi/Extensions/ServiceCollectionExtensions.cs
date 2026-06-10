@@ -125,6 +125,7 @@ public static class ServiceCollectionExtensions
 		services.AddScoped<ICartService, CartService>();
 		services.AddScoped<IAdminService, AdminService>();
 		services.AddScoped<ISupportContactService, SupportContactService>();
+		services.AddScoped<IStripeConnectService, StripeConnectService>();
 
         return services;
 	}
