@@ -157,6 +157,8 @@ namespace EcoScolarWebApi.Migrations
                     DateOfBirth = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     IsOnboarded = table.Column<bool>(type: "bit", nullable: false),
                     IsBanned = table.Column<bool>(type: "bit", nullable: false),
+                    StripeAccountId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    IsStripeOnboarded = table.Column<bool>(type: "bit", nullable: false),
                     LocationId = table.Column<int>(type: "int", nullable: true),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -332,6 +334,10 @@ namespace EcoScolarWebApi.Migrations
                     AdvertType = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     MaxPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
                     ISBN = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ProductCategoryId = table.Column<long>(type: "bigint", nullable: true),
+                    SchoolGradeId = table.Column<long>(type: "bigint", nullable: true),
+                    MinPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     SubjectId = table.Column<long>(type: "bigint", nullable: true),
                     BookCategoryId = table.Column<long>(type: "bigint", nullable: true),
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
@@ -351,6 +357,16 @@ namespace EcoScolarWebApi.Migrations
                         principalTable: "BookCategories",
                         principalColumn: "BookCategoryId",
                         onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_SearchAlerts_ProductCategories_ProductCategoryId",
+                        column: x => x.ProductCategoryId,
+                        principalTable: "ProductCategories",
+                        principalColumn: "ProductCategoryId");
+                    table.ForeignKey(
+                        name: "FK_SearchAlerts_SchoolGrades_SchoolGradeId",
+                        column: x => x.SchoolGradeId,
+                        principalTable: "SchoolGrades",
+                        principalColumn: "SchoolGradeId");
                     table.ForeignKey(
                         name: "FK_SearchAlerts_Subjects_SubjectId",
                         column: x => x.SubjectId,
@@ -940,6 +956,16 @@ namespace EcoScolarWebApi.Migrations
                 name: "IX_SearchAlerts_BookCategoryId",
                 table: "SearchAlerts",
                 column: "BookCategoryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SearchAlerts_ProductCategoryId",
+                table: "SearchAlerts",
+                column: "ProductCategoryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SearchAlerts_SchoolGradeId",
+                table: "SearchAlerts",
+                column: "SchoolGradeId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_SearchAlerts_SubjectId",
