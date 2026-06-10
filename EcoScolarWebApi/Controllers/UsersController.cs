@@ -3,6 +3,7 @@ using EcoScolarWebApi.Commun;
 using EcoScolarWebApi.Data;
 using EcoScolarWebApi.DTOs.Adverts;
 using EcoScolarWebApi.DTOs.Reviews;
+using EcoScolarWebApi.DTOs.Stripe;
 using EcoScolarWebApi.DTOs.Users;
 using EcoScolarWebApi.Mappers;
 using EcoScolarWebApi.Models;
@@ -22,12 +23,13 @@ namespace EcoScolarWebApi.Controllers;
 [ApiController]
 [Route("api/v{version:apiVersion}/[controller]")]
 [Authorize]
-public class UsersController(IUserService userService, UserManager<User> userManager, EcoscolarDbContext context, ReviewMapper reviewMapper) : ControllerBase
+public class UsersController(IUserService userService, UserManager<User> userManager, EcoscolarDbContext context, ReviewMapper reviewMapper, IStripeConnectService stripeConnectService) : ControllerBase
 {
 	private readonly UserManager<User> _userManager = userManager;
 	private readonly IUserService _userService = userService;            // Seller service for handling user-related operations
 	private readonly EcoscolarDbContext _context = context;
 	private readonly ReviewMapper _reviewMapper = reviewMapper;
+	private readonly IStripeConnectService _stripeConnectService = stripeConnectService;
 
 	#region Current user
 
@@ -184,6 +186,78 @@ public class UsersController(IUserService userService, UserManager<User> userMan
 		await _context.SaveChangesAsync();
 
 		return NoContent();
+	}
+
+	#endregion ===
+
+	#region Stripe Connect
+
+	/// <summary>
+	/// Creates the Stripe Connect account of the authenticated user if needed,
+	/// then generates a Stripe-hosted onboarding link to redirect the seller to.
+	/// POST /api/v1/users/me/stripe/onboarding
+	/// </summary>
+	[HttpPost("me/stripe/onboarding")]
+	[ProducesResponseType(typeof(StripeOnboardingResponseDto), StatusCodes.Status200OK)]
+	public async Task<IActionResult> CreateStripeOnboardingLink()
+	{
+		var result = await _stripeConnectService.CreateOnboardingLinkAsync(User, GetFrontendBaseUrl());
+
+		if (result.IsSuccess)
+			return Ok(result.Data);
+
+		return result.ErrorType switch
+		{
+			ErrorType.NotFound => NotFound(new { result.Errors }),
+			ErrorType.InternalError => StatusCode(StatusCodes.Status500InternalServerError, new { result.Errors }),
+
+			_ => BadRequest(new { result.Errors })
+		};
+	}
+
+	/// <summary>
+	/// Returns the Stripe Connect status of the authenticated user.
+	/// GET /api/v1/users/me/stripe/status
+	/// </summary>
+	[HttpGet("me/stripe/status")]
+	[ProducesResponseType(typeof(StripeStatusDto), StatusCodes.Status200OK)]
+	public async Task<IActionResult> GetStripeStatus()
+	{
+		var result = await _stripeConnectService.GetStatusAsync(User);
+
+		if (result.IsSuccess)
+			return Ok(result.Data);
+
+		return result.ErrorType switch
+		{
+			ErrorType.NotFound => NotFound(new { result.Errors }),
+			ErrorType.InternalError => StatusCode(StatusCodes.Status500InternalServerError, new { result.Errors }),
+
+			_ => BadRequest(new { result.Errors })
+		};
+	}
+
+	/// <summary>
+	/// Resolves the frontend base URL from the Referer header (the SPA runs on a different
+	/// origin than the API), falling back to the API's own scheme/host.
+	/// Same approach as PaymentsController.Checkout.
+	/// </summary>
+	private string GetFrontendBaseUrl()
+	{
+		string baseUrl = $"{Request.Scheme}://{Request.Host}";
+		if (Request.Headers.TryGetValue("Referer", out var refererHeader) && !string.IsNullOrEmpty(refererHeader))
+		{
+			try
+			{
+				var uri = new Uri(refererHeader.ToString());
+				baseUrl = $"{uri.Scheme}://{uri.Authority}";
+			}
+			catch
+			{
+				// Fallback in case of malformed Referer
+			}
+		}
+		return baseUrl;
 	}
 
 	#endregion ===

@@ -45,7 +45,7 @@ public class AdvertsControllerTests : IDisposable
         _reviewMapper = Substitute.For<ReviewMapper>();
 
         // Simulate the dependency injection of context and store into the AdvertsController
-        _usersController = new UsersController(_userServiceMock, _userManagerMock, _context, _reviewMapper);
+        _usersController = new UsersController(_userServiceMock, _userManagerMock, _context, _reviewMapper, Substitute.For<IStripeConnectService>());
 		_controller = new AdvertsController(_context, _searchService, _emailSenderServiceMock);
     }
 

@@ -28,6 +28,7 @@ public class UsersControllerTests
 	private readonly UsersController _controller;
 	private readonly ReviewMapper _reviewMapper;
 	private readonly UserMapper _userMapper;
+	private readonly IStripeConnectService _stripeConnectServiceMock;
 
 	public UsersControllerTests()
 	{
@@ -45,8 +46,10 @@ public class UsersControllerTests
 
 		_userMapper = new UserMapper();
 
+		_stripeConnectServiceMock = Substitute.For<IStripeConnectService>();
+
         // Simulate the dependency injection of UserManager and DbContext into the UsersController
-        _controller = new UsersController(_userServiceMock, _userManagerMock, _context, _reviewMapper);
+        _controller = new UsersController(_userServiceMock, _userManagerMock, _context, _reviewMapper, _stripeConnectServiceMock);
 	}
 
 
