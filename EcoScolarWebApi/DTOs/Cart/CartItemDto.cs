@@ -1,4 +1,4 @@
-﻿using Microsoft.Identity.Client;
+using Microsoft.Identity.Client;
 using System.ComponentModel.DataAnnotations;
 namespace EcoScolarWebApi.DTOs.Cart
 {
@@ -30,5 +30,8 @@ namespace EcoScolarWebApi.DTOs.Cart
 
         [Required]
         public string? PrimaryImage { get; set; }
+
+        [Required]
+        public string Status { get; set; }
     }
 }   

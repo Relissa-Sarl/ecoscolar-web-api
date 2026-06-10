@@ -63,6 +63,20 @@ public class PaymentsController : ControllerBase
 			? request.ProductIds
 			: new List<long> { (long)request.ProductId };
 
+		// Check if any product is already sold or currently being paid for (status is SOLD or PAUSED)
+		foreach (var pid in productIds)
+		{
+			var advert = await _context.Adverts.FindAsync(pid);
+			if (advert == null)
+			{
+				return NotFound(new { error = $"L'annonce avec l'ID {pid} n'existe pas." });
+			}
+			if (advert.Status == AdvertStatus.PAUSED || advert.Status == AdvertStatus.SOLD)
+			{
+				return BadRequest(new { error = "Un des articles dans votre panier est en cours de paiement ou déjà vendu." });
+			}
+		}
+
 		// Update all products status to PAUSED during checkout
 		foreach (var pid in productIds)
 		{

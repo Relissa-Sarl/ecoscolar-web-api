@@ -544,6 +544,13 @@ public class AdvertsController : ControllerBase
 		var oldStatus = Adverts.Status;
 		Adverts.Status = status;
 		_context.Entry(Adverts).State = EntityState.Modified;
+
+		if (status == AdvertStatus.SOLD)
+		{
+			var cartItemsToRemove = _context.CartItems.Where(ci => ci.AdvertId == id);
+			_context.CartItems.RemoveRange(cartItemsToRemove);
+		}
+
 		await _context.SaveChangesAsync();
 
 		if (status == AdvertStatus.SOLD && oldStatus != AdvertStatus.SOLD)
