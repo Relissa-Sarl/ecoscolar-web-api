@@ -108,34 +108,29 @@ public class UsersController(IUserService userService, UserManager<User> userMan
 
 		if (!dto.HasAnyCriterion())
 			return BadRequest(new { message = "At least one search criterion is required." });
-
-		long? subjectId = null;
-		if (!string.IsNullOrWhiteSpace(dto.Subjects))
-		{
-			var subject = await _context.Subjects
-				.FirstOrDefaultAsync(s => s.Name == dto.Subjects.Trim());
-			subjectId = subject?.SubjectId;
-		}
-		long? bookCategoryId = null;
-		if (!string.IsNullOrWhiteSpace(dto.Category))
-		{
-			var category = await _context.BookCategories
-				.FirstOrDefaultAsync(c => c.Name == dto.Category.Trim());
-			bookCategoryId = category?.BookCategoryId;
-		}
 	
 		var alert = new SearchAlert
 		{
 			UserId = currentUser.Id,
 			AdvertSearch = dto.Q?.Trim() ?? string.Empty,
-			AdvertType = ResolveAdvertType(dto),
+			AdvertType = dto.AdvertType ?? ResolveAdvertType(dto),
 			ISBN = dto.Isbn?.Trim(),
+			BookCategoryId = dto.BookCategoryId,
+			ProductCategoryId = dto.ProductCategoryId,
+			SubjectId = dto.SubjectId,
+			SchoolGradeId = dto.SchoolGradeId,
+			MinPrice = dto.MinPrice,
 			MaxPrice = dto.MaxPrice,
-			SubjectId = subjectId,
-			BookCategoryId = bookCategoryId
+			CreatedAt = DateTime.UtcNow
 		};
 		_context.SearchAlerts.Add(alert);
 		await _context.SaveChangesAsync();
+
+		await _context.Entry(alert).Reference(a => a.BookCategory).LoadAsync();
+		await _context.Entry(alert).Reference(a => a.ProductCategory).LoadAsync();
+		await _context.Entry(alert).Reference(a => a.Subject).LoadAsync();
+		await _context.Entry(alert).Reference(a => a.SchoolGrade).LoadAsync();
+
 
 		return StatusCode(StatusCodes.Status201Created, SearchAlertReadDto.FromEntity(alert));
 	}
@@ -151,10 +146,21 @@ public class UsersController(IUserService userService, UserManager<User> userMan
 		if (currentUser == null)
 			return NotFound(new { message = "Seller not found." });
 		var alerts = await _context.SearchAlerts
+			.Include(a => a.BookCategory)
+			.Include(a => a.ProductCategory)
+			.Include(a => a.Subject)
+			.Include(a => a.SchoolGrade)
 			.Where(a => a.UserId == currentUser.Id)
 			.OrderByDescending(a => a.ResearchId)
 			.ToListAsync();
-		return Ok(alerts.Select(SearchAlertReadDto.FromEntity));
+
+		var result = alerts.Select(alert =>
+		{
+			var matchedCount = CountMatches(alert);
+			return SearchAlertReadDto.FromEntity(alert, matchedCount);
+		});
+
+		return Ok(result);
 	}
 
 	/// <summary>
@@ -240,7 +246,7 @@ public class UsersController(IUserService userService, UserManager<User> userMan
 		var favorites = await _context.UserFavorites
 			.Where(uf => uf.UserId == currentUser.Id)
 			.Include(uf => uf.Advert)
-			.ThenInclude(a => a.Seller)
+			.ThenInclude(a => a!.Seller)
 			.Select(uf => uf.Advert)
 			.ToListAsync();
 
@@ -253,7 +259,9 @@ public class UsersController(IUserService userService, UserManager<User> userMan
 				.LoadAsync();
 		}
 
-		return Ok(favorites.Select(AdvertReadDto.FromEntity));
+		return Ok(favorites
+			.Where(a => a != null)
+			.Select(a => AdvertReadDto.FromEntity(a!)));
 	}
 
 	/// <summary>
@@ -302,17 +310,155 @@ public class UsersController(IUserService userService, UserManager<User> userMan
 
 	private static string ResolveAdvertType(CreateSearchAlertDto dto)
 	{
-		if (!string.IsNullOrWhiteSpace(dto.Isbn))
+		if (!string.IsNullOrWhiteSpace(dto.Isbn) || dto.BookCategoryId.HasValue)
 			return CatalogAdvertTypeCodes.Books;
 
-		if (!string.IsNullOrWhiteSpace(dto.Subjects) || !string.IsNullOrWhiteSpace(dto.Grade))
+		if (dto.SubjectId.HasValue || dto.SchoolGradeId.HasValue)
 			return CatalogAdvertTypeCodes.Service;
 
-		if (!string.IsNullOrWhiteSpace(dto.Category))
+		if (dto.ProductCategoryId.HasValue)
 			return CatalogAdvertTypeCodes.Product;
 
 		return CatalogAdvertTypeCodes.Books;
 	}
+
+		private int CountMatches(SearchAlert alert)
+		{
+			return alert.AdvertType switch
+			{
+				CatalogAdvertTypeCodes.Books => CountBookMatches(alert),
+				CatalogAdvertTypeCodes.Product => CountProductMatches(alert),
+				CatalogAdvertTypeCodes.Service => CountServiceMatches(alert),
+				_ => CountAdvertMatches(alert)
+			};
+		}
+
+		private int CountAdvertMatches(SearchAlert alert)
+		{
+			var query = _context.Adverts.AsQueryable();
+
+			if (!string.IsNullOrWhiteSpace(alert.AdvertSearch))
+			{
+				var search = alert.AdvertSearch.Trim();
+				query = query.Where(a =>
+					EF.Functions.Like(a.Title, $"%{search}%")
+					|| EF.Functions.Like(a.Description, $"%{search}%"));
+			}
+
+			if (alert.MinPrice.HasValue)
+			{
+				query = query.Where(a => a.Price >= alert.MinPrice.Value);
+			}
+
+			if (alert.MaxPrice.HasValue)
+			{
+				query = query.Where(a => a.Price <= alert.MaxPrice.Value);
+			}
+
+			return query.Count();
+		}
+
+		private int CountBookMatches(SearchAlert alert)
+		{
+			var query = _context.Books.AsQueryable();
+
+			if (!string.IsNullOrWhiteSpace(alert.AdvertSearch))
+			{
+				var search = alert.AdvertSearch.Trim();
+				query = query.Where(b =>
+					EF.Functions.Like(b.Title, $"%{search}%")
+					|| EF.Functions.Like(b.Description, $"%{search}%"));
+			}
+
+			if (!string.IsNullOrWhiteSpace(alert.ISBN))
+			{
+				var isbn = alert.ISBN.Trim();
+				query = query.Where(b => EF.Functions.Like(b.ISBN, $"%{isbn}%"));
+			}
+
+			if (alert.BookCategoryId.HasValue)
+			{
+				query = query.Where(b => b.BookCategoryId == alert.BookCategoryId.Value);
+			}
+
+			if (alert.MinPrice.HasValue)
+			{
+				query = query.Where(b => b.Price >= alert.MinPrice.Value);
+			}
+
+			if (alert.MaxPrice.HasValue)
+			{
+				query = query.Where(b => b.Price <= alert.MaxPrice.Value);
+			}
+
+			return query.Count();
+		}
+		
+		private int CountProductMatches(SearchAlert alert)
+		{
+			var query = _context.Products
+				.Where(p => !_context.Books.Any(b => b.AdvertId == p.AdvertId));
+
+			if (!string.IsNullOrWhiteSpace(alert.AdvertSearch))
+			{
+				var search = alert.AdvertSearch.Trim();
+				query = query.Where(p =>
+					EF.Functions.Like(p.Title, $"%{search}%")
+					|| EF.Functions.Like(p.Description, $"%{search}%"));
+			}
+
+			if (alert.ProductCategoryId.HasValue)
+			{
+				query = query.Where(p => p.ProductCategoryId == alert.ProductCategoryId.Value);
+			}
+
+			if (alert.MinPrice.HasValue)
+			{
+				query = query.Where(p => p.Price >= alert.MinPrice.Value);
+			}
+
+			if (alert.MaxPrice.HasValue)
+			{
+				query = query.Where(p => p.Price <= alert.MaxPrice.Value);
+			}
+
+			return query.Count();
+		}
+
+		private int CountServiceMatches(SearchAlert alert)
+		{
+			var query = _context.Services.AsQueryable();
+
+			if (!string.IsNullOrWhiteSpace(alert.AdvertSearch))
+			{
+				var search = alert.AdvertSearch.Trim();
+				query = query.Where(s =>
+					EF.Functions.Like(s.Title, $"%{search}%")
+					|| EF.Functions.Like(s.Description, $"%{search}%"));
+			}
+
+			if (alert.SubjectId.HasValue)
+			{
+				query = query.Where(s => s.SubjectId == alert.SubjectId.Value);
+			}
+
+			if (alert.SchoolGradeId.HasValue)
+			{
+				query = query.Where(s => s.SchoolGradeId == alert.SchoolGradeId.Value);
+			}
+
+			if (alert.MinPrice.HasValue)
+			{
+				query = query.Where(s => s.Price >= alert.MinPrice.Value);
+			}
+
+			if (alert.MaxPrice.HasValue)
+			{
+				query = query.Where(s => s.Price <= alert.MaxPrice.Value);
+			}
+
+			return query.Count();
+		}
   #endregion
 
 	#region Reviews
