@@ -111,11 +111,13 @@ public class MeController : ControllerBase
             }
 
             var dto = AdvertReadDto.FromEntity(s.Advert, reviewDto);
-            // If we have a transaction, we update the buyer name in the record
-            if (s.Transaction?.Buyer != null)
+            if (s.Transaction != null)
             {
-                // Use the buyer's Nickname for anonymisation; fall back to UserName if Nickname is not yet set.
-                dto = dto with { BuyerName = s.Transaction.Buyer.Nickname ?? s.Transaction.Buyer.UserName ?? "Anonyme" };
+                dto = dto with { 
+                    BuyerName = s.Transaction.Buyer?.Nickname ?? s.Transaction.Buyer?.UserName ?? "Anonyme",
+                    TransactionId = s.Transaction.TransactionId,
+                    TransactionStatus = s.Transaction.Status.ToString()
+                };
             }
             return dto;
         }).ToList();
