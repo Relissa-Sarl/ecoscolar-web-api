@@ -1,16 +1,15 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
-using Microsoft.AspNetCore.Mvc.Testing;
 using Xunit;
 
 namespace EcoScolarWebApi.Tests.Integration;
 
-public class PasswordFlowIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
+public class PasswordFlowIntegrationTests : IClassFixture<AuthInMemoryWebApplicationFactory>
 {
     private readonly HttpClient _client;
 
-    public PasswordFlowIntegrationTests(WebApplicationFactory<Program> factory)
+    public PasswordFlowIntegrationTests(AuthInMemoryWebApplicationFactory factory)
     {
         _client = factory.CreateClient();
     }
