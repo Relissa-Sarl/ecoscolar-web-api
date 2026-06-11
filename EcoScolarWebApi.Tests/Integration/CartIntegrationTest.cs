@@ -127,7 +127,7 @@ public class CartIntegrationTest : IClassFixture<AuthInMemoryWebApplicationFacto
         createdDto.Title.Should().Be("Vidéoprojecteur");
         createdDto.Price.Should().Be(150m);
         createdDto.SellerPseudo.Should().Be("SellerNick");
-        createdDto.Type.Should().Be("PhysicalItem");
+        createdDto.Type.Should().Be("PRODUCT");
 
         // Verify it is in the cart
         var getResponse = await client.GetAsync("/api/v1/cart");
