@@ -14,7 +14,7 @@ namespace EcoScolarWebApi.Services;
 /// Adapted from the purchasing process prototype: the account creation is now tied to the
 /// authenticated user and the resulting account ID is persisted on the User entity.
 /// </summary>
-public class StripeConnectService(UserManager<User> userManager, IConfiguration config) : IStripeConnectService
+public class StripeConnectService(UserManager<User> userManager, IConfiguration config, IStripeClientWrapper? stripeClientWrapper = null) : IStripeConnectService
 {
 	public async Task<Result<StripeOnboardingResponseDto>> CreateOnboardingLinkAsync(ClaimsPrincipal principal, string frontendBaseUrl)
 	{
@@ -32,7 +32,7 @@ public class StripeConnectService(UserManager<User> userManager, IConfiguration 
 			// Create the v2 Connect account once, then reuse it for subsequent onboarding attempts
 			if (string.IsNullOrEmpty(user.StripeAccountId))
 			{
-				var account = await client.V2.Core.Accounts.CreateAsync(BuildAccountCreateOptions(user));
+				var account = await client.CreateAccountAsync(BuildAccountCreateOptions(user));
 
 				user.StripeAccountId = account.Id;
 				var updateResult = await userManager.UpdateAsync(user);
@@ -56,7 +56,7 @@ public class StripeConnectService(UserManager<User> userManager, IConfiguration 
 				},
 			};
 
-			var accountLink = await client.V2.Core.AccountLinks.CreateAsync(linkOptions);
+			var accountLink = await client.CreateAccountLinkAsync(linkOptions);
 
 			return Result<StripeOnboardingResponseDto>.Success(new StripeOnboardingResponseDto(accountLink.Url));
 		}
@@ -84,7 +84,7 @@ public class StripeConnectService(UserManager<User> userManager, IConfiguration 
 		try
 		{
 			var client = CreateClient();
-			var account = await client.V2.Core.Accounts.GetAsync(user.StripeAccountId, new Stripe.V2.Core.AccountGetOptions
+			var account = await client.GetAccountAsync(user.StripeAccountId, new Stripe.V2.Core.AccountGetOptions
 			{
 				Include = ["configuration.recipient"],
 			});
@@ -108,7 +108,7 @@ public class StripeConnectService(UserManager<User> userManager, IConfiguration 
 		}
 	}
 
-	private StripeClient CreateClient() => new StripeClient(config["Stripe:SecretKey"]);
+	private IStripeClientWrapper CreateClient() => stripeClientWrapper ?? new StripeClientWrapper(new StripeClient(config["Stripe:SecretKey"]));
 
 	/// <summary>
 	/// Builds the creation options of a v2 Connect account for an individual seller in Switzerland,
