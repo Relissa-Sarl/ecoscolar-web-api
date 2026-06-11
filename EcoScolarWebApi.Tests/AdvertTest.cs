@@ -201,7 +201,7 @@ public class AdvertsControllerTests : IDisposable
             BuyerId = buyer.Id,
             Buyer = buyer,
             Date = DateTime.UtcNow,
-            Status = "Completed"
+            Status = TransactionStatus.COMPLETED,
         };
 
         var review = new Review

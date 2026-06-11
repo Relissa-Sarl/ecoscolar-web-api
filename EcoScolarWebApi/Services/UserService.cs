@@ -82,7 +82,7 @@ public class UserService : IUserService
 
 		var location = await _context.Locations.FirstOrDefaultAsync(l => l.PostalCode == dto.PostalCode);
 		if (location == null)
-			return Result<UserResponse>.Failure("Invalid postal code");
+			return Result<UserResponse>.Failure("InvalidPostalCode");
 
 		currentUser.Nickname = dto.Nickname;
 		currentUser.FirstName = dto.FirstName;
