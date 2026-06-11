@@ -1,6 +1,7 @@
 using EcoScolarWebApi.Controllers;
 using EcoScolarWebApi.Data;
 using EcoScolarWebApi.DTOs.Reviews;
+using EcoScolarWebApi.DTOs.Transactions;
 using EcoScolarWebApi.Enums;
 using EcoScolarWebApi.Mappers;
 using EcoScolarWebApi.Models;
@@ -305,5 +306,144 @@ public class TransactionsControllerTests : IDisposable
 		reviewInDb!.Comment.Should().Be("Polite buyer!");
 		reviewInDb!.ReviewedId.Should().Be("buyer-2");
 		reviewInDb!.ReviewedRole.Should().Be(ReviewedRole.BUYER);
+	}
+
+	[Fact]
+	public async Task CreateTransactions_ShouldReturnUnauthorized_WhenUserNotAuthenticated()
+	{
+		// Arrange
+		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns((User?)null);
+		var request = new CreateTransactionRequestDto { AdvertIds = new List<long> { 1L } };
+
+		// Act
+		var result = await _controller.CreateTransactions(request);
+
+		// Assert
+		result.Should().BeOfType<UnauthorizedResult>();
+	}
+
+	[Fact]
+	public async Task CreateTransactions_ShouldReturnBadRequest_WhenAdvertIdsEmpty()
+	{
+		// Arrange
+		var currentUser = new User { Id = "buyer-1" };
+		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(currentUser);
+		var request = new CreateTransactionRequestDto { AdvertIds = new List<long>() };
+
+		// Act
+		var result = await _controller.CreateTransactions(request);
+
+		// Assert
+		result.Should().BeOfType<BadRequestObjectResult>();
+	}
+
+	[Fact]
+	public async Task CreateTransactions_ShouldReturnNotFound_WhenAdvertDoesNotExist()
+	{
+		// Arrange
+		var currentUser = new User { Id = "buyer-1" };
+		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(currentUser);
+		var request = new CreateTransactionRequestDto { AdvertIds = new List<long> { 999L } };
+
+		// Act
+		var result = await _controller.CreateTransactions(request);
+
+		// Assert
+		result.Should().BeOfType<NotFoundObjectResult>();
+	}
+
+	[Fact]
+	public async Task CreateTransactions_ShouldCreateTransactionsAndSetStatusToSold_WhenValid()
+	{
+		// Arrange
+		var currentUser = new User { Id = "buyer-1" };
+		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(currentUser);
+
+		var book = new Book
+		{
+			AdvertId = 20,
+			Title = "Test Book",
+			Description = "Test Book Desc",
+			Price = 50m,
+			SellerId = "seller-1",
+			ISBN = "12345",
+			Author = "Author",
+			Publisher = "Pub",
+			Edition = "1st",
+			WrittenLanguage = LanguageEnum.FR,
+			Status = AdvertStatus.ACTIVE
+		};
+		_context.Products.Add(book);
+		await _context.SaveChangesAsync();
+
+		var request = new CreateTransactionRequestDto 
+		{ 
+			AdvertIds = new List<long> { 20L },
+			StripeSessionId = "session-123"
+		};
+
+		// Act
+		var result = await _controller.CreateTransactions(request);
+
+		// Assert
+		var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+		var transactions = okResult.Value.Should().BeAssignableTo<IEnumerable<object>>().Subject.ToList();
+		transactions.Should().HaveCount(1);
+
+		// Verify database
+		var transactionInDb = await _context.Transactions.FirstOrDefaultAsync(t => t.AdvertId == 20L);
+		transactionInDb.Should().NotBeNull();
+		transactionInDb!.BuyerId.Should().Be("buyer-1");
+		transactionInDb.Status.Should().Be(TransactionStatus.PAID_WAITING_SHIPPING);
+		transactionInDb.PlatformFee.Should().Be(2.50m); // 5% of 50
+		transactionInDb.StripeSessionId.Should().Be("session-123");
+
+		var advertInDb = await _context.Adverts.FindAsync(20L);
+		advertInDb.Should().NotBeNull();
+		advertInDb!.Status.Should().Be(AdvertStatus.SOLD);
+	}
+
+	[Fact]
+	public async Task CreateTransactions_ShouldBeIdempotent_WhenCalledMultipleTimes()
+	{
+		// Arrange
+		var currentUser = new User { Id = "buyer-1" };
+		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(currentUser);
+
+		var book = new Book
+		{
+			AdvertId = 30,
+			Title = "Test Book 2",
+			Description = "Test Book Desc 2",
+			Price = 100m,
+			SellerId = "seller-1",
+			ISBN = "123456",
+			Author = "Author",
+			Publisher = "Pub",
+			Edition = "1st",
+			WrittenLanguage = LanguageEnum.FR,
+			Status = AdvertStatus.ACTIVE
+		};
+		_context.Products.Add(book);
+		await _context.SaveChangesAsync();
+
+		var request = new CreateTransactionRequestDto 
+		{ 
+			AdvertIds = new List<long> { 30L },
+			StripeSessionId = "session-456"
+		};
+
+		// Act (First Call)
+		var result1 = await _controller.CreateTransactions(request);
+
+		// Act (Second Call)
+		var result2 = await _controller.CreateTransactions(request);
+
+		// Assert
+		result1.Should().BeOfType<OkObjectResult>();
+		result2.Should().BeOfType<OkObjectResult>();
+
+		var transactionsInDb = await _context.Transactions.Where(t => t.AdvertId == 30L).ToListAsync();
+		transactionsInDb.Should().HaveCount(1); // Only 1 transaction created
 	}
 }
