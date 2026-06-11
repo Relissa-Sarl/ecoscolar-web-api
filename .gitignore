@@ -30,6 +30,8 @@ ScaffoldingReadMe.txt
 
 # dotenv environment variables file
 .env
+docker-compose.override.yaml
+docker-compose.override.yml
 
 # Others
 ~$*

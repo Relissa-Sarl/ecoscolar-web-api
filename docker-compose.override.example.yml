@@ -1,0 +1,15 @@
+# Example local override for the EcoScolar Pi deployment.
+#
+# Usage on the "ecole" machine only:
+# 1. Copy this file to docker-compose.override.yml
+# 2. Run: docker compose up -d ecoscolar-api-database
+#
+# Do not use this override for the whole team: it exposes SQL Server on the
+# host so the Raspberry Pi can reach the database through Tailscale.
+services:
+  ecoscolar-api-database:
+    ports:
+      - "0.0.0.0:1433:1433"
+    networks:
+      - databases
+      - dmz
