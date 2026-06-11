@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EcoScolarWebApi.Migrations
 {
     [DbContext(typeof(EcoscolarDbContext))]
-    [Migration("20260609182052_AddSearchAlertFilterFields")]
-    partial class AddSearchAlertFilterFields
+    [Migration("20260610190755_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -1091,6 +1091,9 @@ namespace EcoScolarWebApi.Migrations
                     b.Property<bool>("IsOnboarded")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsStripeOnboarded")
+                        .HasColumnType("bit");
+
                     b.Property<string>("LastName")
                         .HasColumnType("nvarchar(max)");
 
@@ -1124,6 +1127,9 @@ namespace EcoScolarWebApi.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("SecurityStamp")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("StripeAccountId")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("TwoFactorEnabled")

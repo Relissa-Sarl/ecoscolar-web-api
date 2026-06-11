@@ -1088,6 +1088,9 @@ namespace EcoScolarWebApi.Migrations
                     b.Property<bool>("IsOnboarded")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsStripeOnboarded")
+                        .HasColumnType("bit");
+
                     b.Property<string>("LastName")
                         .HasColumnType("nvarchar(max)");
 
@@ -1121,6 +1124,9 @@ namespace EcoScolarWebApi.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("SecurityStamp")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("StripeAccountId")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("TwoFactorEnabled")
