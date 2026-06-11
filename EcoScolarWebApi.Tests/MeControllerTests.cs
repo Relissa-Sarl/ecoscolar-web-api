@@ -100,7 +100,7 @@ public class MeControllerTests : IDisposable
             AdvertId = advert.AdvertId,
             Advert = advert,
             Date = DateTime.UtcNow,
-            Status = "COMPLETED"
+            Status = TransactionStatus.COMPLETED
         };
 
         _context.Users.Add(seller);
@@ -186,7 +186,7 @@ public class MeControllerTests : IDisposable
             AdvertId = soldAdvert.AdvertId,
             Advert = soldAdvert,
             Date = DateTime.UtcNow,
-            Status = "COMPLETED"
+            Status = TransactionStatus.COMPLETED
         };
 
         _context.Adverts.AddRange(activeAdvert, soldAdvert);
@@ -240,7 +240,7 @@ public class MeControllerTests : IDisposable
             AdvertId = advert.AdvertId,
             Advert = advert,
             Date = DateTime.UtcNow,
-            Status = "COMPLETED"
+            Status = TransactionStatus.COMPLETED
         };
         var review = new Review
         {
@@ -306,7 +306,7 @@ public class MeControllerTests : IDisposable
             AdvertId = soldAdvert.AdvertId,
             Advert = soldAdvert,
             Date = DateTime.UtcNow,
-            Status = "COMPLETED"
+            Status = TransactionStatus.COMPLETED
         };
         
         var review = new Review

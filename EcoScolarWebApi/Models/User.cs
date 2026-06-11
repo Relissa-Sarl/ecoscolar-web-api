@@ -22,7 +22,11 @@ public class User : IdentityUser
 
 	public bool IsBanned { get; set; } = false;
 
+	// Stripe Connect (Express) recipient account used to pay out the seller
 	public string? StripeAccountId { get; set; }
+
+	[Required]
+	public bool IsStripeOnboarded { get; set; } = false;
 
 	// === Foreign keys ===
 

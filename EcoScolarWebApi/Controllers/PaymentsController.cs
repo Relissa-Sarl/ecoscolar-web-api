@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using EcoScolarWebApi.Data;
 using EcoScolarWebApi.DTOs.Stripe;
 using Microsoft.AspNetCore.Mvc;
 using Stripe;
@@ -13,6 +14,7 @@ namespace EcoScolarWebApi.Controllers;
 public class PaymentsController : ControllerBase
 {
 	private readonly IConfiguration _config;        // Configuration to access Stripe secret key
+	private readonly EcoscolarDbContext _context;
 
 	/// <summary>
 	/// PaymentsController constructor
@@ -21,9 +23,10 @@ public class PaymentsController : ControllerBase
 	/// Url: POST /api/v1/payments/checkout
 	/// </summary>
 	/// <param name="config">The configuration object containing the Stripe secret key</param>
-	public PaymentsController(IConfiguration config)
+	public PaymentsController(IConfiguration config, EcoscolarDbContext context)
 	{
 		_config = config;
+		_context = context;
 	}
 
 	/// <summary>
@@ -37,7 +40,10 @@ public class PaymentsController : ControllerBase
 	[HttpPost("checkout")]
 	public async Task<IActionResult> Checkout([FromBody] CheckoutRequestDto request)
 	{
-		double price = request.ProductPrice * 100;
+		var advert = await _context.Adverts.FindAsync(request.AdvertId);
+		if (advert == null) return NotFound(new { error = "Advert not found" });
+
+		double price = (double)advert.Price * 100;
         string baseUrl = $"{Request.Scheme}://{Request.Host}";
         if (Request.Headers.TryGetValue("Referer", out var refererHeader) && !string.IsNullOrEmpty(refererHeader))
         {
