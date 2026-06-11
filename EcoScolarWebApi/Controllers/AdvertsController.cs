@@ -6,6 +6,7 @@ using EcoScolarWebApi.Models;
 using EcoScolarWebApi.Services.Contracts;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Stripe.Billing;
 
 namespace EcoScolarWebApi.Controllers;
 
@@ -583,18 +584,17 @@ public class AdvertsController : ControllerBase
 	[HttpDelete("{id}")]
 	public async Task<IActionResult> DeleteAdvert(long id)
 	{
-		Advert? Adverts;
-		try
-		{
-			Adverts = await _context.Adverts.FindAsync(id);
-		}
-		catch (Exception e)
-		{
-			return BadRequest(new { error = e.Message });
-		}
-		if (Adverts == null) return NotFound();
+		var hasTransactions = await _context.Transactions
+			.AnyAsync(t => t.AdvertId == id);
 
-		_context.Adverts.Remove(Adverts);
+		if (hasTransactions)
+            return BadRequest("Can't delete an advert with transactions");
+
+        Advert? advert = await _context.Adverts.FindAsync(id);
+		if (advert == null)
+			return NotFound();
+
+        _context.Adverts.Remove(advert);
 		await _context.SaveChangesAsync();
 		return NoContent();
 	}

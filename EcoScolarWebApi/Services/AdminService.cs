@@ -1,7 +1,9 @@
 ﻿using EcoScolarWebApi.Commun;
 using EcoScolarWebApi.Data;
+using EcoScolarWebApi.DTOs.Adverts;
 using EcoScolarWebApi.DTOs.Support;
 using EcoScolarWebApi.DTOs.Users;
+using EcoScolarWebApi.Enums;
 using EcoScolarWebApi.Mappers;
 using EcoScolarWebApi.Models;
 using EcoScolarWebApi.Services.Contracts;
@@ -145,6 +147,27 @@ namespace EcoScolarWebApi.Services
             var roles = await _userManager.GetRolesAsync(currentUser);
 
             return Result<UserResponse>.Success(_userMapper.ToResponse(currentUser) with { Roles = roles.ToArray() });
+        }
+
+        public async Task<Result<AdvertReadDto>> BlockAdvert(ClaimsPrincipal user, long advertId)
+        {
+            if (!user.IsInRole("Admin"))
+                return Result<AdvertReadDto>.Failure("Unauthorized access.", ErrorType.Unauthorized);
+
+            var currentAdvert = _context.Adverts.FirstOrDefault(a => a.AdvertId == advertId);
+
+            if (currentAdvert == null)
+                return Result<AdvertReadDto>.Failure("Advert not found.", ErrorType.NotFound);
+
+            if(currentAdvert.Status == AdvertStatus.BLOCKED)
+                return Result<AdvertReadDto>.Failure("Advert is already blocked.", ErrorType.Conflict);
+
+            currentAdvert.Status = AdvertStatus.BLOCKED;
+
+            await _context.SaveChangesAsync();
+
+            AdvertReadDto advertReadDto = AdvertReadDto.FromEntity(currentAdvert);
+            return Result<AdvertReadDto>.Success(advertReadDto);
         }
     }
 }

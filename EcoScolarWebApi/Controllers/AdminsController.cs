@@ -127,6 +127,29 @@ namespace EcoScolarWebApi.Controllers
             };
         }
 
+        [HttpPatch("{advertId}/block")]
+        public async Task<IActionResult> BlockAdvert(long advertId)
+        {
+            var result = await _adminService.BlockAdvert(User, advertId);
+
+            // If successful, return 200 OK along with the user's data
+            if (result.IsSuccess)
+                return Ok(result.Data);
+
+            // Dispatch the response depending on the error code
+            return result.ErrorType switch
+            {
+                // 401 Unauthorized if the user isn't connected
+                ErrorType.Unauthorized => Unauthorized(new { result.Errors }),
+
+                // 404 Not Found if the user was deleted
+                ErrorType.NotFound => NotFound(new { result.Errors }),
+
+                // 400 Bad Request fallback
+                _ => BadRequest(new { result.Errors })
+            };
+        }
+
         #endregion
     }
 }
