@@ -1,6 +1,9 @@
 using Asp.Versioning;
+using EcoScolarWebApi.Data;
 using EcoScolarWebApi.DTOs.Stripe;
+using EcoScolarWebApi.Enums;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Stripe;
 using Stripe.Checkout;
 
@@ -12,17 +15,20 @@ namespace EcoScolarWebApi.Controllers;
 public class PaymentsController : ControllerBase
 {
 	private readonly IConfiguration _config;        // Configuration to access Stripe secret key
+	private readonly EcoscolarDbContext _context;    // Database context
 
 	/// <summary>
 	/// PaymentsController constructor
-	/// Takes the configuration as a parameter to access the Stripe secret key
+	/// Takes the configuration and database context as parameters
 	/// 
 	/// Url: POST /api/v1/payments/checkout
 	/// </summary>
 	/// <param name="config">The configuration object containing the Stripe secret key</param>
-	public PaymentsController(IConfiguration config)
+	/// <param name="context">The database context</param>
+	public PaymentsController(IConfiguration config, EcoscolarDbContext context)
 	{
 		_config = config;
+		_context = context;
 	}
 
 	/// <summary>
@@ -51,6 +57,39 @@ public class PaymentsController : ControllerBase
             }
         }
 
+		// Handle both single item (for fallback) and list of items
+		var productIds = request.ProductIds != null && request.ProductIds.Count > 0
+			? request.ProductIds
+			: new List<long> { (long)request.ProductId };
+
+		// Check if any product is already sold or currently being paid for (status is SOLD or PAUSED)
+		foreach (var pid in productIds)
+		{
+			var advert = await _context.Adverts.FindAsync(pid);
+			if (advert == null)
+			{
+				return NotFound(new { error = $"L'annonce avec l'ID {pid} n'existe pas." });
+			}
+			if (advert.Status == AdvertStatus.PAUSED || advert.Status == AdvertStatus.SOLD)
+			{
+				return BadRequest(new { error = "Un des articles dans votre panier est en cours de paiement ou déjà vendu." });
+			}
+		}
+
+		// Update all products status to PAUSED during checkout
+		foreach (var pid in productIds)
+		{
+			var advert = await _context.Adverts.FindAsync(pid);
+			if (advert != null)
+			{
+				advert.Status = AdvertStatus.PAUSED;
+				_context.Entry(advert).State = EntityState.Modified;
+			}
+		}
+		await _context.SaveChangesAsync();
+
+		string productIdsQuery = string.Join(",", productIds);
+
         var options = new SessionCreateOptions
 		{
 			PaymentMethodTypes = new List<string> { "card" },
@@ -78,8 +117,8 @@ public class PaymentsController : ControllerBase
 				TransferGroup = "COMMANDE_ID_789",
 			},
 
-            SuccessUrl = $"{baseUrl}/success?orderId={{CHECKOUT_SESSION_ID}}&productId={request.ProductId}",
-            CancelUrl = $"{baseUrl}/denied",
+            SuccessUrl = $"{baseUrl}/success?orderId={{CHECKOUT_SESSION_ID}}&productIds={productIdsQuery}&productId={productIds[0]}",
+            CancelUrl = $"{baseUrl}/denied?productIds={productIdsQuery}",
 		};
 
 		var service = new SessionService();

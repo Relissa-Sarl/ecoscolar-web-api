@@ -3,6 +3,7 @@ using EcoScolarWebApi.Data;
 using EcoScolarWebApi.DTOs.Cart;
 using EcoScolarWebApi.Models;
 using EcoScolarWebApi.Services.Contracts;
+using EcoScolarWebApi.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace EcoScolarWebApi.Services
@@ -24,6 +25,14 @@ namespace EcoScolarWebApi.Services
                 .Where(c => c.UserId == userId)
                 .ToListAsync();
 
+            var invalidItems = cartItems.Where(c => c.Advert == null || c.Advert.Status == AdvertStatus.SOLD).ToList();
+            if (invalidItems.Any())
+            {
+                _context.CartItems.RemoveRange(invalidItems);
+                await _context.SaveChangesAsync();
+                cartItems = cartItems.Except(invalidItems).ToList();
+            }
+
             var dtos = cartItems.Select(c =>
             {
                 var primaryImage = _context.Pictures.FirstOrDefault(p => p.PhysicalItemId == c.AdvertId)?.Label;
@@ -42,9 +51,10 @@ namespace EcoScolarWebApi.Services
                     Price = c.Advert?.Price ?? 0,
                     SellerPseudo = c.Advert?.Seller?.Nickname ?? c.Advert?.Seller?.UserName ?? string.Empty,
                     Type = type,
-                    PrimaryImage = primaryImage
+                    PrimaryImage = primaryImage,
+                    Status = c.Advert?.Status.ToString() ?? string.Empty
                 };
-            });
+            }).ToList();
 
             return Result<IEnumerable<CartItemDto>>.Success(dtos);
         }
@@ -59,6 +69,11 @@ namespace EcoScolarWebApi.Services
             if (advert == null)
             {
                 return Result<CartItemDto>.Failure("L'annonce spécifiée n'existe pas.", ErrorType.NotFound);
+            }
+
+            if (advert.Status == AdvertStatus.SOLD)
+            {
+                return Result<CartItemDto>.Failure("Cet article a déjà été vendu.", ErrorType.Conflict);
             }
 
             // Veryfa if user try to add it own advert
@@ -106,7 +121,8 @@ namespace EcoScolarWebApi.Services
                 Price = advert.Price,
                 SellerPseudo = advert.Seller?.Nickname ?? advert.Seller?.UserName ?? string.Empty,
                 Type = type,
-                PrimaryImage = primaryImage
+                PrimaryImage = primaryImage,
+                Status = advert.Status.ToString()
             };
 
             return Result<CartItemDto>.Success(resultDto);
