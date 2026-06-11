@@ -43,7 +43,7 @@ public record AdvertReadDto(long Id, string Type, string Title, decimal Price, D
 	/// <param name="review">Optional review to attach</param>
 	/// <returns>The AdvertReadDto instance</returns>
 	/// <exception cref="InvalidOperationException"></exception>
-	public static AdvertReadDto FromEntity(Advert entity, ReviewDto? review)
+	public static AdvertReadDto FromEntity(Advert entity, ReviewDto? review, string buyerName = "")
 	{
 		string type = entity switch
 		{
@@ -55,7 +55,6 @@ public record AdvertReadDto(long Id, string Type, string Title, decimal Price, D
 
 		string? primaryImage = (entity as Models.PhysicalItem)?.Pictures?.FirstOrDefault()?.Label;
         // BuyerName is populated by the controller after joining with the Transaction table.
-        string buyerName = string.Empty;
 
 		return new AdvertReadDto(
 			Id: entity.AdvertId,
@@ -68,7 +67,7 @@ public record AdvertReadDto(long Id, string Type, string Title, decimal Price, D
 			UserId: entity.SellerId,
 			SellerPseudo: entity.Seller?.Nickname ?? entity.Seller?.UserName ?? "Anonyme",
 			PrimaryImage: primaryImage,
-			BuyerName: buyerName,
+			BuyerName: buyerName ?? string.Empty,
 			Review: review
 		);
 	}
