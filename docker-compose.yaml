@@ -37,7 +37,6 @@ services:
       Stripe__SecretKey: ${STRIPE_SECRET_KEY}
       Smtp__Host: ecoscolar-mailpit
       Smtp__Port: 1025
-      Frontend__BaseUrl: ${FRONTEND_URL:-http://localhost:3000}
     networks:
       - dmz
       - ecoscolar

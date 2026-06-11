@@ -18,15 +18,8 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 	options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
 
 builder.Services.AddHealthChecks();
-builder.Services.AddCors(options =>
-{
-	var frontendUrl = builder.Configuration["Frontend:BaseUrl"] ?? "http://localhost:3000";
-	options.AddPolicy("AllowFrontend", policy =>
-		policy.WithOrigins(frontendUrl.TrimEnd('/'))
-			.AllowAnyHeader()
-			.AllowAnyMethod()
-			.AllowCredentials());
-});
+builder.Services.AddCors(options => options.AddPolicy("AllowFrontend", policy =>
+	policy.WithOrigins("http://localhost:3000").AllowAnyHeader().AllowAnyMethod().AllowCredentials()));
 
 // App creation
 var app = builder.Build();
