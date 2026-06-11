@@ -4,6 +4,7 @@ using EcoScolarWebApi.DTOs;
 using EcoScolarWebApi.DTOs.Adverts;
 using EcoScolarWebApi.Enums;
 using EcoScolarWebApi.Models;
+using EcoScolarWebApi.Enums;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -100,7 +101,7 @@ public class MeControllerTests : IDisposable
             AdvertId = advert.AdvertId,
             Advert = advert,
             Date = DateTime.UtcNow,
-            Status = "COMPLETED"
+            Status = TransactionStatus.COMPLETED
         };
 
         _context.Users.Add(seller);
@@ -119,7 +120,7 @@ public class MeControllerTests : IDisposable
         purchases[0].AdvertTitle.Should().Be("Math Book");
         purchases[0].Price.Should().Be(15.50m);
         purchases[0].SellerName.Should().Be("CoolSeller");
-        purchases[0].Status.Should().Be("COMPLETED");
+        purchases[0].Status.Should().Be(TransactionStatus.COMPLETED.ToString());
     }
 
     [Fact]
@@ -186,7 +187,7 @@ public class MeControllerTests : IDisposable
             AdvertId = soldAdvert.AdvertId,
             Advert = soldAdvert,
             Date = DateTime.UtcNow,
-            Status = "COMPLETED"
+            Status = TransactionStatus.COMPLETED
         };
 
         _context.Adverts.AddRange(activeAdvert, soldAdvert);
@@ -240,7 +241,7 @@ public class MeControllerTests : IDisposable
             AdvertId = advert.AdvertId,
             Advert = advert,
             Date = DateTime.UtcNow,
-            Status = "COMPLETED"
+            Status = TransactionStatus.COMPLETED
         };
         var review = new Review
         {
@@ -306,7 +307,7 @@ public class MeControllerTests : IDisposable
             AdvertId = soldAdvert.AdvertId,
             Advert = soldAdvert,
             Date = DateTime.UtcNow,
-            Status = "COMPLETED"
+            Status = TransactionStatus.COMPLETED
         };
         
         var review = new Review

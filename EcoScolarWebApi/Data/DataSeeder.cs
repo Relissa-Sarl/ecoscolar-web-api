@@ -6,6 +6,7 @@ using CsvHelper.Configuration;
 using CsvHelper.Configuration.Attributes;
 using EcoScolarWebApi.Enums;
 using EcoScolarWebApi.Models;
+using EcoScolarWebApi.Enums;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -198,7 +199,7 @@ public class DataSeeder
 				AdvertId = albertItemSold.AdvertId,
 				BuyerId = marie.Id,
 				Date = DateTime.UtcNow.AddDays(-5),
-				Status = "COMPLETED",
+				Status = TransactionStatus.COMPLETED,
 				PlatformFee = 2.50m,
 				BuyerConsent = true,
 				SellerConsent = true
@@ -208,7 +209,7 @@ public class DataSeeder
 				AdvertId = albertBookSold.AdvertId,
 				BuyerId = marie.Id,
 				Date = DateTime.UtcNow.AddDays(-3),
-				Status = "COMPLETED",
+				Status = TransactionStatus.COMPLETED,
 				PlatformFee = 1.50m,
 				BuyerConsent = true,
 				SellerConsent = true
@@ -218,7 +219,7 @@ public class DataSeeder
 				AdvertId = marieItemSold.AdvertId,
 				BuyerId = albert.Id,
 				Date = DateTime.UtcNow.AddDays(-2),
-				Status = "COMPLETED",
+				Status = TransactionStatus.COMPLETED,
 				PlatformFee = 2.50m,
 				BuyerConsent = true,
 				SellerConsent = true
