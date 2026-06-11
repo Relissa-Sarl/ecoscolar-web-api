@@ -141,6 +141,73 @@ public class AdvertsControllerTests : IDisposable
     }
 
     [Fact]
+    public async Task Index_ReturnsAdvertsWithBuyerAndReview_WhenTransactionExists()
+    {
+        // Arrange
+        var seller = new User { Id = "seller-id", UserName = "seller", Nickname = "SellerNick" };
+        var buyer = new User { Id = "buyer-id", UserName = "buyer", Nickname = "BuyerNick" };
+
+        var advert = new Book
+        {
+            AdvertId = 10,
+            Title = "Sold Book",
+            SellerId = seller.Id,
+            Seller = seller,
+            Status = AdvertStatus.SOLD,
+            Price = 20,
+            Description = "Description",
+            CreatedAt = DateTime.UtcNow,
+            NotificationDate = DateTime.UtcNow,
+            Condition = PhysicalItemCondition.NEW,
+            ISBN = "12345",
+            Author = "Author",
+            Publisher = "Publisher",
+            Edition = "1st",
+            WrittenLanguage = LanguageEnum.FR
+        };
+
+        var transaction = new Transaction
+        {
+            TransactionId = 1,
+            AdvertId = advert.AdvertId,
+            BuyerId = buyer.Id,
+            Buyer = buyer,
+            Date = DateTime.UtcNow,
+            Status = "Completed"
+        };
+
+        var review = new Review
+        {
+            ReviewId = 1,
+            TransactionId = transaction.TransactionId,
+            Rating = 5,
+            Comment = "Great seller!",
+            ReviewedRole = ReviewedRole.SELLER,
+            ReviewerId = buyer.Id,
+            ReviewedId = seller.Id
+        };
+
+        _context.Users.AddRange(seller, buyer);
+        _context.Adverts.Add(advert);
+        _context.Transactions.Add(transaction);
+        _context.Reviews.Add(review);
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _controller.Index();
+
+        // Assert
+        var okResult = result.Result as OkObjectResult;
+        var value = okResult!.Value as IEnumerable<AdvertReadDto>;
+        var advertDto = value!.First(a => a.Id == 10);
+
+        advertDto.BuyerName.Should().Be("BuyerNick");
+        advertDto.Review.Should().NotBeNull();
+        advertDto.Review!.Rating.Should().Be(5);
+        advertDto.Review!.Comment.Should().Be("Great seller!");
+    }
+
+    [Fact]
     public async Task Index_ReturnsEmptyList_WhenNoAdverts()
     {
         // Arrange

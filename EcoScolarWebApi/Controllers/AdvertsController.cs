@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using EcoScolarWebApi.Data;
+using EcoScolarWebApi.DTOs;
 using EcoScolarWebApi.DTOs.Adverts;
 using EcoScolarWebApi.Enums;
 using EcoScolarWebApi.Models;
@@ -43,30 +44,61 @@ public class AdvertsController : ControllerBase
 	/// </summary>
 	/// <returns>List of all formatted adverts</returns>
 	[HttpGet]
-	public async Task<ActionResult<IEnumerable<AdvertDetailDto>>> Index()
+	public async Task<ActionResult<IEnumerable<AdvertReadDto>>> Index()
 	{
-		IEnumerable<Advert> adverts;
 		try
 		{
-			adverts = await _context.Adverts
+			var adverts = await _context.Adverts
 				.Include(a => a.Seller)
 				.ToListAsync();
-			List<long> physicalItemIds = adverts.OfType<PhysicalItem>()
+
+			var physicalItemIds = adverts.OfType<PhysicalItem>()
 				.Select(item => item.AdvertId)
 				.ToList();
+
 			if (physicalItemIds.Any())
 			{
 				await _context.Pictures
-					.Where(Pictures => physicalItemIds.Contains(Pictures.PhysicalItemId))
+					.Where(p => physicalItemIds.Contains(p.PhysicalItemId))
 					.LoadAsync();
 			}
 
+			var advertIds = adverts.Select(a => a.AdvertId).ToList();
+
+			// Join with Transactions to get Buyer info, and then Reviews
+			var transactions = await _context.Transactions
+				.Include(t => t.Buyer)
+				.Where(t => advertIds.Contains(t.AdvertId))
+				.ToListAsync();
+
+			var transactionIds = transactions.Select(t => t.TransactionId).ToList();
+
+			var reviews = await _context.Reviews
+				.Where(r => transactionIds.Contains(r.TransactionId) && r.ReviewedRole == ReviewedRole.SELLER)
+				.ToListAsync();
+
+			var result = adverts.Select(a =>
+			{
+				var transaction = transactions.FirstOrDefault(t => t.AdvertId == a.AdvertId);
+				var buyerName = transaction?.Buyer?.Nickname ?? transaction?.Buyer?.UserName ?? string.Empty;
+
+				var review = transaction != null
+					? reviews.FirstOrDefault(r => r.TransactionId == transaction.TransactionId)
+					: null;
+
+				ReviewDto? reviewDto = review != null
+					? new ReviewDto(review.Rating, review.Comment)
+					: null;
+
+				return AdvertReadDto.FromEntity(a, reviewDto, buyerName);
+			});
+
+			return Ok(result);
 		}
 		catch (Exception e)
 		{
 			return BadRequest(new { error = e.Message });
 		}
-		return Ok(adverts.Select(AdvertReadDto.FromEntity));
 	}
 
 	/// <summary>
