@@ -132,6 +132,39 @@ public class MeController : ControllerBase
         return null;
     }
 
+    [HttpPost("purchases/{transactionId}/cancel")]
+    public async Task<IActionResult> CancelPurchase(long transactionId)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized(new { message = "Invalid session." });
+
+        var transaction = await _context.Transactions
+            .Include(t => t.Advert)
+            .FirstOrDefaultAsync(t => t.TransactionId == transactionId);
+
+        if (transaction == null)
+            return NotFound();
+
+        if (transaction.BuyerId != userId)
+            return Forbid();
+
+        if (transaction.Status != TransactionStatus.PAID_WAITING_SHIPPING)
+            return BadRequest(new { message = "La transaction ne peut être annulée que si elle est en attente d'expédition." });
+
+        transaction.Status = TransactionStatus.CANCELLED;
+        
+        if (transaction.Advert != null)
+        {
+            transaction.Advert.Status = AdvertStatus.ACTIVE;
+        }
+
+        await _context.SaveChangesAsync();
+
+        return Ok();
+    }
+
     [HttpPost("sales/{transactionId}/confirm-shipping")]
     public async Task<IActionResult> ConfirmShipping(long transactionId)
     {
