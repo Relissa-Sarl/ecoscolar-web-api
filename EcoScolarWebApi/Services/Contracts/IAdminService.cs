@@ -1,4 +1,5 @@
 ﻿using EcoScolarWebApi.Commun;
+using EcoScolarWebApi.DTOs.Adverts;
 using EcoScolarWebApi.DTOs.Support;
 using EcoScolarWebApi.DTOs.Users;
 using EcoScolarWebApi.Models;
@@ -13,5 +14,6 @@ namespace EcoScolarWebApi.Services.Contracts
         Task<Result<UserResponse>> BanUserToggle(ClaimsPrincipal user, string userId);
         Task<Result<List<SupportTicketAdminDto>>> GetAllSupports(ClaimsPrincipal user);
         Task<Result<SupportTicketMessageAdminDto>> AddTicketMessage(ClaimsPrincipal user, int ticketId, SupportTicketMessageRequestDto request);
+        Task<Result<AdvertReadDto>> BlockAdvert(ClaimsPrincipal user, long advertId);
     }
 }
