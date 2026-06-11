@@ -1,4 +1,5 @@
 using EcoScolarWebApi.Data;
+using EcoScolarWebApi.Mappers;
 using EcoScolarWebApi.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -22,16 +23,19 @@ internal static class IntegrationTestIdentityHelper
 		services.AddAuthorization();
 
 		services.AddIdentityApiEndpoints<User>()
-			.AddEntityFrameworkStores<EcoscolarDbContext>();
+			.AddRoles<IdentityRole>()
+			.AddEntityFrameworkStores<EcoscolarDbContext>()
+			.AddDefaultTokenProviders();
 
-		services.ConfigureApplicationCookie(options =>
+        services.ConfigureApplicationCookie(options =>
 		{
 			options.Cookie.Name = "Ecoscolar.Auth.Session";
 			options.Cookie.HttpOnly = true;
 			options.Cookie.SecurePolicy = CookieSecurePolicy.None;
 		});
 
-		services.AddLogging();
+        services.AddScoped<UserMapper>();
+        services.AddLogging();
 
 		var provider = services.BuildServiceProvider();
 		context = provider.GetRequiredService<EcoscolarDbContext>();
@@ -42,12 +46,19 @@ internal static class IntegrationTestIdentityHelper
 
 	internal static void SeedLocations(EcoscolarDbContext context)
 	{
-		if (context.Locations.Any())
-			return;
+		try
+		{
+			if (context.Locations.Any())
+				return;
 
-		context.Locations.AddRange(
-			new Location { LocationId = 1, PostalCode = "1000", City = "Lausanne", Region = "Vaud" },
-			new Location { LocationId = 2, PostalCode = "1820", City = "Montreux", Region = "Vaud" });
-		context.SaveChanges();
+			context.Locations.AddRange(
+				new Location { LocationId = 1, PostalCode = "1000", City = "Lausanne", Region = "Vaud" },
+				new Location { LocationId = 2, PostalCode = "1820", City = "Montreux", Region = "Vaud" });
+			context.SaveChanges();
+		}
+		catch (Exception)
+		{
+			// Ignore concurrency/duplicate key seeding conflicts in parallel test environments
+		}
 	}
 }

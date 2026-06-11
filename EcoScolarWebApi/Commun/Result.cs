@@ -19,7 +19,7 @@ public class Result<T>
 	/// </summary>
 	/// <param name="errors">A collection of error messages that describe the reasons for the failure. Cannot be null or empty.</param>
 	/// <returns>instance representing a failed operation, with the provided error messages.</returns>
-	public static Result<T> Failure(IEnumerable<string> errors, ErrorType errorType = ErrorType.Invalid) => new Result<T>
+	public static Result<T> Failure(IEnumerable<string> errors, ErrorType errorType = ErrorType.BadRequest) => new Result<T>
 	{
 		IsSuccess = false,
 		Errors = errors,
@@ -32,7 +32,7 @@ public class Result<T>
 	/// <param name="error">The error message that describes the reason for the failure. Cannot be null.</param>
 	/// <param name="errorType">The type of error. Defaults to Invalid.</param>
 	/// <returns>instance representing a failed operation, containing the provided error message.</returns>
-	public static Result<T> Failure(string error, ErrorType errorType = ErrorType.Invalid) => new Result<T>
+	public static Result<T> Failure(string error, ErrorType errorType = ErrorType.BadRequest) => new Result<T>
 	{
 		IsSuccess = false,
 		Errors = new[] { error },
@@ -58,7 +58,7 @@ public class Result
 	/// <param name="errors">A collection of error messages that describe the reasons for the failure. Cannot be null.</param>
 	/// <param name="errorType">The type of error. Defaults to Invalid.</param>
 	/// <returns>instance representing a failure, containing the provided error messages.</returns>
-	public static Result Failure(IEnumerable<string> errors, ErrorType errorType = ErrorType.Invalid) => new Result
+	public static Result Failure(IEnumerable<string> errors, ErrorType errorType = ErrorType.BadRequest) => new Result
 	{
 		IsSuccess = false,
 		Errors = errors,
@@ -71,7 +71,7 @@ public class Result
 	/// <param name="error">The error message that describes the reason for the failure. Cannot be null or empty.</param>
 	/// <param name="errorType">The type of error. Defaults to Invalid.</param>
 	/// <returns>instance representing a failure, containing the provided error message.</returns>
-	public static Result Failure(string error, ErrorType errorType = ErrorType.Invalid) => new Result
+	public static Result Failure(string error, ErrorType errorType = ErrorType.BadRequest) => new Result
 	{
 		IsSuccess = false,
 		Errors = new[] { error },

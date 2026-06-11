@@ -1,11 +1,15 @@
 using Asp.Versioning;
 using EcoScolarWebApi.Data;
+using EcoScolarWebApi.DTOs;
 using EcoScolarWebApi.DTOs.Adverts;
 using EcoScolarWebApi.Enums;
 using EcoScolarWebApi.Models;
 using EcoScolarWebApi.Services.Contracts;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Stripe.Billing;
+using System.Security.Claims;
 
 namespace EcoScolarWebApi.Controllers;
 
@@ -16,17 +20,35 @@ public class AdvertsController : ControllerBase
 {
 	private readonly IAdvertSearchService _advertSearchService;
 	private readonly EcoscolarDbContext _context;                                           // Database context for accessing the database
-	private bool AdvertExists(long id) => _context.Adverts.Any(e => e.AdvertId == id);      // Helper method to check if an Adverts with the specified ID exists in the database
+	private readonly IEmailSenderService _emailSenderService;
+	private bool AdvertExists(long id) => _context.Adverts.Any(e => e.AdvertId == id);      // Helper method to check if an PhysicalItem with the specified ID exists in the database
+
+    private async Task<bool?> IsOwnerOrAdmin(long advertId)
+    {
+        var advert = await _context.Adverts.AsNoTracking().FirstOrDefaultAsync(a => a.AdvertId == advertId);
+        if (advert == null) return null;
+
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        return advert.SellerId == currentUserId || User.IsInRole("Admin");
+    }
+
+    private bool IsCurrentUser(string userId)
+    {
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        return userId == currentUserId || User.IsInRole("Admin");
+    }
 
 	/// <summary>
 	/// AdvertsController constructor
 	/// </summary>
 	/// <param name="context">The database context</param>
-	/// <param name="advertSearchService">The Adverts search service</param>
-	public AdvertsController(EcoscolarDbContext context, IAdvertSearchService advertSearchService)
+	/// <param name="advertSearchService">The PhysicalItem search service</param>
+	/// <param name="emailSenderService">The email sender service</param>
+	public AdvertsController(EcoscolarDbContext context, IAdvertSearchService advertSearchService, IEmailSenderService emailSenderService)
 	{
 		_context = context;
 		_advertSearchService = advertSearchService;
+		_emailSenderService = emailSenderService;
 	}
 
 	#region GET METHODS
@@ -39,30 +61,61 @@ public class AdvertsController : ControllerBase
 	/// </summary>
 	/// <returns>List of all formatted adverts</returns>
 	[HttpGet]
-	public async Task<ActionResult<IEnumerable<AdvertDetailDto>>> Index()
+	public async Task<ActionResult<IEnumerable<AdvertReadDto>>> Index()
 	{
-		IEnumerable<Advert> adverts;
 		try
 		{
-			adverts = await _context.Adverts
-				.Include(a => a.User)
+			var adverts = await _context.Adverts
+				.Include(a => a.Seller)
 				.ToListAsync();
-			List<long> physicalItemIds = adverts.OfType<PhysicalItem>()
+
+			var physicalItemIds = adverts.OfType<PhysicalItem>()
 				.Select(item => item.AdvertId)
 				.ToList();
+
 			if (physicalItemIds.Any())
 			{
 				await _context.Pictures
-					.Where(Pictures => physicalItemIds.Contains(Pictures.AdvertId))
+					.Where(p => physicalItemIds.Contains(p.PhysicalItemId))
 					.LoadAsync();
 			}
 
+			var advertIds = adverts.Select(a => a.AdvertId).ToList();
+
+			// Join with Transactions to get Buyer info, and then Reviews
+			var transactions = await _context.Transactions
+				.Include(t => t.Buyer)
+				.Where(t => advertIds.Contains(t.AdvertId))
+				.ToListAsync();
+
+			var transactionIds = transactions.Select(t => t.TransactionId).ToList();
+
+			var reviews = await _context.Reviews
+				.Where(r => transactionIds.Contains(r.TransactionId) && r.ReviewedRole == ReviewedRole.SELLER)
+				.ToListAsync();
+
+			var result = adverts.Select(a =>
+			{
+				var transaction = transactions.FirstOrDefault(t => t.AdvertId == a.AdvertId);
+				var buyerName = transaction?.Buyer?.Nickname ?? transaction?.Buyer?.UserName ?? string.Empty;
+
+				var review = transaction != null
+					? reviews.FirstOrDefault(r => r.TransactionId == transaction.TransactionId)
+					: null;
+
+				ReviewDto? reviewDto = review != null
+					? new ReviewDto(review.Rating, review.Comment)
+					: null;
+
+				return AdvertReadDto.FromEntity(a, reviewDto, buyerName);
+			});
+
+			return Ok(result);
 		}
 		catch (Exception e)
 		{
 			return BadRequest(new { error = e.Message });
 		}
-		return Ok(adverts.Select(AdvertReadDto.FromEntity));
 	}
 
 	/// <summary>
@@ -79,7 +132,7 @@ public class AdvertsController : ControllerBase
 		try
 		{
 			books = await _context.Books
-				.Include(p => p.User)
+				.Include(p => p.Seller)
 				.Include(p => p.Pictures)
 				.ToListAsync();
 
@@ -109,7 +162,7 @@ public class AdvertsController : ControllerBase
 		try
 		{
 			var query = _context.Products
-				.Include(p => p.User)
+				.Include(p => p.Seller)
 				.Include(p => p.Pictures)
 				.Where(p => !_context.Set<Book>().Any(b => b.AdvertId == p.AdvertId));
 			if (categoryId.HasValue)
@@ -145,7 +198,7 @@ public class AdvertsController : ControllerBase
 		try
 		{
 			var query = _context.Services
-				.Include(s => s.User)
+				.Include(s => s.Seller)
 				.AsQueryable();
 
 			if (!string.IsNullOrWhiteSpace(q))
@@ -167,14 +220,14 @@ public class AdvertsController : ControllerBase
 	}
 
 	/// <summary>
-	/// Get the details of a specific Adverts by its ID, 
+	/// Get the details of a specific PhysicalItem by its ID, 
 	/// regardless of its type (Books, product or service).
 	/// 
 	/// GET: AdvertsController/Details/5
 	/// Url: /api/v1/adverts/5
 	/// </summary>
-	/// <param name="id">The ID of the Adverts to retrieve</param>
-	/// <returns>The formatted Adverts details</returns>
+	/// <param name="id">The ID of the PhysicalItem to retrieve</param>
+	/// <returns>The formatted PhysicalItem details</returns>
 	[HttpGet("{id}")]
 	public async Task<ActionResult<AdvertReadDto>> Details(long id)
 	{
@@ -182,7 +235,7 @@ public class AdvertsController : ControllerBase
 		try
 		{
 			adverts = await _context.Adverts
-				.Include(a => a.User)
+				.Include(a => a.Seller)
 				.FirstOrDefaultAsync(a => a.AdvertId == id);
 			if (adverts is PhysicalItem physicalItems)
 			{
@@ -215,7 +268,7 @@ public class AdvertsController : ControllerBase
 		try
 		{
 			books = await _context.Books
-				.Include(b => b.User)
+				.Include(b => b.Seller)
 				.Include(b => b.Pictures)
 				.Include(b => b.BookCategory)
 				.FirstOrDefaultAsync(b => b.AdvertId == id);
@@ -243,7 +296,7 @@ public class AdvertsController : ControllerBase
 		try
 		{
 			product = await _context.Products
-				.Include(p => p.User)
+				.Include(p => p.Seller)
 				.Include(p => p.Pictures)
 				.Where(p => !_context.Set<Book>().Any(b => b.AdvertId == p.AdvertId))
 				.FirstOrDefaultAsync(p => p.AdvertId == id);
@@ -271,7 +324,7 @@ public class AdvertsController : ControllerBase
 		try
 		{
 			service = await _context.Services
-				.Include(s => s.User)
+				.Include(s => s.Seller)
 				.Include(s => s.Subject)
 				.Include(s => s.SchoolGrade)
 				.FirstOrDefaultAsync(s => s.AdvertId == id);
@@ -297,10 +350,10 @@ public class AdvertsController : ControllerBase
 	}
 
 	/// <summary>
-	/// Mock catalogue detail by GUID (same dataset as /summary). GET api/v1/adverts/summary/{id}
+	/// Mock catalogue detail by id (same dataset as /summary). GET api/v1/adverts/summary/{id}
 	/// </summary>
-	[HttpGet("summary/{id:guid}")]
-	public async Task<IActionResult> GetSummaryDetail(Guid id, CancellationToken cancellationToken = default)
+	[HttpGet("summary/{id:long}")]
+	public async Task<IActionResult> GetSummaryDetail(long id, CancellationToken cancellationToken = default)
 	{
 		var detail = await _advertSearchService.GetDetailAsync(id, cancellationToken);
 		if (detail is null)
@@ -315,14 +368,15 @@ public class AdvertsController : ControllerBase
 	#region POST METHODS
 
 	/// <summary>
-	/// Create a new Books Adverts with the provided details in the request body.
-	/// The Adverts will be added to the database and the created Adverts details will be returned in the response.
+	/// Create a new Books PhysicalItem with the provided details in the request body.
+	/// The PhysicalItem will be added to the database and the created PhysicalItem details will be returned in the response.
 	/// 
 	/// POST: AdvertsController/CreateBook
 	/// Url: /api/v1/adverts/books
 	/// </summary>
-	/// <param name="bookDto">The DTO containing the Books Adverts details</param>
-	/// <returns>The created Adverts details</returns>
+	/// <param name="bookDto">The DTO containing the Books PhysicalItem details</param>
+	/// <returns>The created PhysicalItem details</returns>
+	[Authorize]
 	[HttpPost("books")]
 	public async Task<ActionResult<AdvertReadDto>> CreateBook([FromBody] BookCreateDto bookDto)
 	{
@@ -332,6 +386,8 @@ public class AdvertsController : ControllerBase
 		{
 			return BadRequest(ModelState);
 		}
+
+        if (!IsCurrentUser(bookDto.UserId)) return Forbid();
 
 		Book book = bookDto.ToEntity();
 
@@ -343,13 +399,14 @@ public class AdvertsController : ControllerBase
 	}
 
 	/// <summary>
-	/// Create a new product Adverts with the provided details in the request body.
+	/// Create a new product PhysicalItem with the provided details in the request body.
 	/// 
 	/// POST: AdvertsController/CreateProduct
 	/// Url: /api/v1/adverts/products
 	/// </summary>
-	/// <param name="productDto">The DTO containing the product Adverts details</param>
-	/// <returns>The created Adverts details</returns>
+	/// <param name="productDto">The DTO containing the product PhysicalItem details</param>
+	/// <returns>The created PhysicalItem details</returns>
+	[Authorize]
 	[HttpPost("products")]
 	public async Task<ActionResult<AdvertReadDto>> CreateProduct([FromBody] ProductCreateDto productDto)
 	{
@@ -359,6 +416,8 @@ public class AdvertsController : ControllerBase
 		{
 			return BadRequest(ModelState);
 		}
+
+        if (!IsCurrentUser(productDto.UserId)) return Forbid();
 
 		PhysicalItem product = productDto.ToEntity();
 
@@ -370,13 +429,14 @@ public class AdvertsController : ControllerBase
 	}
 
 	/// <summary>
-	/// Create a new service Adverts with the provided details in the request body.
+	/// Create a new service PhysicalItem with the provided details in the request body.
 	/// 
 	/// POST: AdvertsController/CreateService
 	/// Url: /api/v1/adverts/services
 	/// </summary>
-	/// <param name="serviceDto">The DTO containing the service Adverts details</param>
-	/// <returns>The created Adverts details</returns>
+	/// <param name="serviceDto">The DTO containing the service PhysicalItem details</param>
+	/// <returns>The created PhysicalItem details</returns>
+	[Authorize]
 	[HttpPost("services")]
 	public async Task<ActionResult<AdvertReadDto>> CreateService([FromBody] ServiceCreateDto serviceDto)
 	{
@@ -386,6 +446,8 @@ public class AdvertsController : ControllerBase
 		{
 			return BadRequest(ModelState);
 		}
+
+        if (!IsCurrentUser(serviceDto.UserId)) return Forbid();
 
 		TutoringAdvert service = serviceDto.ToEntity();
 
@@ -400,14 +462,15 @@ public class AdvertsController : ControllerBase
 	#region PUT METHODS
 
 	/// <summary>
-	/// Edit an existing Books Adverts with the provided details in the request body.
+	/// Edit an existing Books PhysicalItem with the provided details in the request body.
 	/// 
 	/// PUT: AdvertsController/EditBook/5
 	/// Url: /api/v1/adverts/books/{id}
 	/// </summary>
-	/// <param name="id">The ID of the Books Adverts to edit</param>
-	/// <param name="bookDto">The DTO containing the updated Books Adverts details</param>
-	/// <returns>The updated Adverts details</returns>
+	/// <param name="id">The ID of the Books PhysicalItem to edit</param>
+	/// <param name="bookDto">The DTO containing the updated Books PhysicalItem details</param>
+	/// <returns>The updated PhysicalItem details</returns>
+	[Authorize]
 	[HttpPut("books/{id}")]
 	public async Task<IActionResult> EditBook(long id, [FromBody] BookCreateDto bookDto)
 	{
@@ -415,6 +478,10 @@ public class AdvertsController : ControllerBase
 		{
 			return BadRequest(ModelState);
 		}
+
+        var isOwner = await IsOwnerOrAdmin(id);
+        if (isOwner == null) return NotFound();
+        if (isOwner == false) return Forbid();
 
 		Book? existingBook = await _context.Books
 			.Include(b => b.Pictures)
@@ -438,14 +505,15 @@ public class AdvertsController : ControllerBase
 	}
 
 	/// <summary>
-	/// Edit an existing product Adverts with the provided details in the request body.
+	/// Edit an existing product PhysicalItem with the provided details in the request body.
 	/// 
 	/// PUT: AdvertsController/EditProduct/5
 	/// Url: /api/v1/adverts/products/{id}
 	/// </summary>
-	/// <param name="id">The ID of the product Adverts to edit</param>
-	/// <param name="productDto">The DTO containing the updated product Adverts details</param>
-	/// <returns>The updated Adverts details</returns>
+	/// <param name="id">The ID of the product PhysicalItem to edit</param>
+	/// <param name="productDto">The DTO containing the updated product PhysicalItem details</param>
+	/// <returns>The updated PhysicalItem details</returns>
+	[Authorize]
 	[HttpPut("products/{id}")]
 	public async Task<IActionResult> EditProduct(long id, [FromBody] ProductCreateDto productDto)
 	{
@@ -453,6 +521,10 @@ public class AdvertsController : ControllerBase
 		{
 			return BadRequest(ModelState);
 		}
+
+        var isOwner = await IsOwnerOrAdmin(id);
+        if (isOwner == null) return NotFound();
+        if (isOwner == false) return Forbid();
 
 		PhysicalItem? existingProduct = await _context.Products
 			.Include(p => p.Pictures)
@@ -476,14 +548,15 @@ public class AdvertsController : ControllerBase
 	}
 
 	/// <summary>
-	/// Edit an existing service Adverts with the provided details in the request body.
+	/// Edit an existing service PhysicalItem with the provided details in the request body.
 	/// 
 	/// PUT: AdvertsController/EditService/5
 	/// Url: /api/v1/adverts/services/{id}
 	/// </summary>
-	/// <param name="id">The ID of the service Adverts to edit</param>
-	/// <param name="serviceDto">The DTO containing the updated service Adverts details</param>
-	/// <returns>The updated Adverts details</returns>
+	/// <param name="id">The ID of the service PhysicalItem to edit</param>
+	/// <param name="serviceDto">The DTO containing the updated service PhysicalItem details</param>
+	/// <returns>The updated PhysicalItem details</returns>
+	[Authorize]
 	[HttpPut("services/{id}")]
 	public async Task<IActionResult> EditService(long id, [FromBody] ServiceCreateDto serviceDto)
 	{
@@ -491,6 +564,10 @@ public class AdvertsController : ControllerBase
 		{
 			return BadRequest(ModelState);
 		}
+
+        var isOwner = await IsOwnerOrAdmin(id);
+        if (isOwner == null) return NotFound();
+        if (isOwner == false) return Forbid();
 
 		TutoringAdvert? existingService = await _context.Services
 			.FirstOrDefaultAsync(s => s.AdvertId == id);
@@ -516,17 +593,22 @@ public class AdvertsController : ControllerBase
 	#region PATCH METHODS
 
 	/// <summary>
-	/// Update the status of an existing Adverts.
+	/// Update the status of an existing PhysicalItem.
 	/// 
 	/// PATCH: AdvertsController/UpdateAdvertStatus/5
 	/// Url: /api/v1/adverts/{id}/status
 	/// </summary>
-	/// <param name="id">The ID of the Adverts to update</param>
-	/// <param name="status">The new status for the Adverts</param>
-	/// <returns>The updated Adverts details</returns>
+	/// <param name="id">The ID of the PhysicalItem to update</param>
+	/// <param name="status">The new status for the PhysicalItem</param>
+	/// <returns>The updated PhysicalItem details</returns>
+	[Authorize]
 	[HttpPatch("{id}/status")]
 	public async Task<IActionResult> UpdateAdvertStatus(long id, [FromBody] AdvertStatus status)
 	{
+        var isOwner = await IsOwnerOrAdmin(id);
+        if (isOwner == null) return NotFound();
+        if (isOwner == false) return Forbid();
+
 		Advert? Adverts;
 		try
 		{
@@ -538,9 +620,38 @@ public class AdvertsController : ControllerBase
 		}
 		if (Adverts == null) return NotFound();
 
+		var oldStatus = Adverts.Status;
 		Adverts.Status = status;
 		_context.Entry(Adverts).State = EntityState.Modified;
+
+		if (status == AdvertStatus.SOLD)
+		{
+			var cartItemsToRemove = _context.CartItems.Where(ci => ci.AdvertId == id);
+			_context.CartItems.RemoveRange(cartItemsToRemove);
+		}
+
 		await _context.SaveChangesAsync();
+
+		if (status == AdvertStatus.SOLD && oldStatus != AdvertStatus.SOLD)
+		{
+			if (Adverts.Seller == null)
+			{
+				await _context.Entry(Adverts).Reference(a => a.Seller).LoadAsync();
+			}
+
+			if (Adverts.Seller != null && !string.IsNullOrEmpty(Adverts.Seller.Email))
+			{
+				try
+				{
+					await _emailSenderService.SendItemSoldEmailAsync(Adverts.Seller, Adverts);
+				}
+				catch (Exception ex)
+				{
+					Console.WriteLine($"[Email Error] Failed to send sale notification email: {ex.Message}");
+				}
+			}
+		}
+
 		return NoContent();
 	}
 	#endregion
@@ -548,44 +659,53 @@ public class AdvertsController : ControllerBase
 	#region DELETE METHODS
 
 	/// <summary>
-	/// Delete an existing Adverts.
+	/// Delete an existing PhysicalItem.
 	/// 
 	/// DELETE: AdvertsController/Delete/5
 	/// Url: /api/v1/adverts/{id}
 	/// </summary>
-	/// <param name="id">The ID of the Adverts to delete</param>
-	/// <returns>The deleted Adverts details</returns>
+	/// <param name="id">The ID of the PhysicalItem to delete</param>
+	/// <returns>The deleted PhysicalItem details</returns>
+	[Authorize]
 	[HttpDelete("{id}")]
 	public async Task<IActionResult> DeleteAdvert(long id)
 	{
-		Advert? Adverts;
-		try
-		{
-			Adverts = await _context.Adverts.FindAsync(id);
-		}
-		catch (Exception e)
-		{
-			return BadRequest(new { error = e.Message });
-		}
-		if (Adverts == null) return NotFound();
+		var hasTransactions = await _context.Transactions
+			.AnyAsync(t => t.AdvertId == id);
 
-		_context.Adverts.Remove(Adverts);
+		if (hasTransactions)
+            return BadRequest("Can't delete an advert with transactions");
+
+        var isOwner = await IsOwnerOrAdmin(id);
+        if (isOwner == null) return NotFound();
+        if (isOwner == false) return Forbid();
+
+        Advert? advert = await _context.Adverts.FindAsync(id);
+		if (advert == null)
+			return NotFound();
+
+        _context.Adverts.Remove(advert);
 		await _context.SaveChangesAsync();
 		return NoContent();
 	}
 
 	/// <summary>
-	/// Remove images from an existing Adverts.
+	/// Remove images from an existing PhysicalItem.
 	/// 
 	/// DELETE: AdvertsController/RemoveImages
 	/// Url: /api/v1/adverts/{id}/images
 	/// </summary>
-	/// <param name="id">The ID of the Adverts from which to remove images</param>
+	/// <param name="id">The ID of the PhysicalItem from which to remove images</param>
 	/// <param name="imageUrls">The list of image URLs to remove</param>
-	/// <returns>The updated Adverts details</returns>
+	/// <returns>The updated PhysicalItem details</returns>
+	[Authorize]
 	[HttpDelete("{id}/images")]
 	public async Task<IActionResult> RemoveAdvertImages(long id, [FromBody] List<string> imageUrls)
 	{
+        var isOwner = await IsOwnerOrAdmin(id);
+        if (isOwner == null) return NotFound();
+        if (isOwner == false) return Forbid();
+
 		PhysicalItem? product;
 		try
 		{

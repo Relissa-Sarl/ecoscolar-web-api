@@ -35,7 +35,10 @@ services:
       ApplyDatabaseMigrations: "true"
       ConnectionStrings__Default: "Server=ecoscolar-api-database,1433;Initial Catalog=ecoscolar;User ID=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;Encrypt=True"
       Stripe__SecretKey: ${STRIPE_SECRET_KEY}
+      Smtp__Host: ecoscolar-mailpit
+      Smtp__Port: 1025
     networks:
+      - dmz
       - ecoscolar
       - databases
     labels:
@@ -68,6 +71,22 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  # -----------------------------
+  # Mailpit - SMTP Server and Web UI for Testing Emails
+  # -----------------------------
+  ecoscolar-mailpit:
+    image: axllent/mailpit:latest
+    container_name: ecoscolar-mailpit
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    environment:
+      - MP_WEBROOT=/
+    networks:
+      - ecoscolar 
+      - dmz  
 
 networks:
   dmz:

@@ -15,5 +15,17 @@ public class SchoolGrade
 
     [Required]
     [StringLength(100)]
-    public string Code { get; set; }
+    public string NameFr { get; set; }
+
+    [Required]
+    [StringLength(100)]
+    public string NameDe { get; set; }
+
+    [Required]
+    [StringLength(100)]
+    public string NameIt { get; set; }
+
+    [Required]
+    [StringLength(100)]
+    public string Code { get; set; } // Rename in MCD SchoolGrade -> Code
 }

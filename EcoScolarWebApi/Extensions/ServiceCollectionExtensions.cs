@@ -1,5 +1,6 @@
-﻿using Asp.Versioning;
+using Asp.Versioning;
 using EcoScolarWebApi.Data;
+using EcoScolarWebApi.Mappers;
 using EcoScolarWebApi.Models;
 using EcoScolarWebApi.Services;
 using EcoScolarWebApi.Services.Contracts;
@@ -12,7 +13,18 @@ namespace EcoScolarWebApi.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-	public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration config)
+    public static IServiceCollection AddMappersServices(this IServiceCollection services, IConfiguration config)
+    {
+        services.AddSingleton<SubjectMapper>();
+        services.AddSingleton<LanguageMapper>();
+        services.AddSingleton<PublicCommentMapper>();
+		services.AddSingleton<UserMapper>();
+        services.AddSingleton<ReviewMapper>();
+        services.AddSingleton<LocationMapper>();
+        return services;
+    }
+
+    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration config)
 	{
 		if (config.GetValue("UseInMemoryDatabase", defaultValue: false))
 		{
@@ -35,7 +47,9 @@ public static class ServiceCollectionExtensions
 	public static IServiceCollection AddAuthAndIdentity(this IServiceCollection services)
 	{
 		services.AddIdentityApiEndpoints<User>()
-				.AddEntityFrameworkStores<EcoscolarDbContext>();
+				.AddRoles<IdentityRole>()
+				.AddEntityFrameworkStores<EcoscolarDbContext>()
+				.AddDefaultTokenProviders();
 
 		services.ConfigureApplicationCookie(options =>
 		{
@@ -106,8 +120,13 @@ public static class ServiceCollectionExtensions
 			services.AddScoped<IAdvertSearchService, AdvertSearchService>();
 
 		services.AddScoped<IUserService, UserService>();
-		services.AddTransient<IEmailSender<User>, DevEmailSenderService>();
+		services.AddTransient<IEmailSenderService, EmailSenderService>();
+		services.AddTransient<IEmailSender<User>>(provider => provider.GetRequiredService<IEmailSenderService>());
+		services.AddScoped<ICartService, CartService>();
+		services.AddScoped<IAdminService, AdminService>();
+		services.AddScoped<ISupportContactService, SupportContactService>();
+		services.AddScoped<IStripeConnectService, StripeConnectService>();
 
-		return services;
+        return services;
 	}
 }

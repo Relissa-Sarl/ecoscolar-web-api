@@ -1,10 +1,11 @@
-﻿using System.Runtime.Serialization;
+﻿using Newtonsoft.Json;
+using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 
 namespace EcoScolarWebApi.Enums;
 
 /// <summary>
-/// Enumeration that represents the status of an Adverts.
+/// Enumeration that represents the status of an PhysicalItem.
 /// It can be ACTIVE, EXPIRED, SOLD or PAUSED.
 /// </summary>
 public enum AdvertStatus
@@ -20,5 +21,8 @@ public enum AdvertStatus
     SOLD,
     [EnumMember(Value = "PAUSED")]
     [JsonPropertyName("PAUSED")]
-    PAUSED
+    PAUSED,
+    [EnumMember(Value = "BLOCKED")]
+    [JsonPropertyName("BOCKED")]
+    BLOCKED
 }

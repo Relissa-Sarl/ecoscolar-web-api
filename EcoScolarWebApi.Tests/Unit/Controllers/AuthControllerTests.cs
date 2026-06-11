@@ -11,7 +11,7 @@ using Microsoft.Extensions.Options;
 using NSubstitute;
 using Xunit;
 
-namespace EcoScolarWebApi.Tests.Controllers;
+namespace EcoScolarWebApi.Tests.Unit.Controllers;
 
 public class AuthControllerTests
 {

@@ -1,5 +1,8 @@
 using EcoScolarWebApi.Controllers;
 using EcoScolarWebApi.Data;
+using EcoScolarWebApi.DTOs.Adverts;
+using EcoScolarWebApi.Enums;
+using EcoScolarWebApi.Mappers;
 using EcoScolarWebApi.Models;
 using EcoScolarWebApi.Services.Contracts;
 using FluentAssertions;
@@ -10,8 +13,6 @@ using NSubstitute;
 using System.Security.Claims;
 using Xunit;
 using LanguageEnum = EcoScolarWebApi.Enums.LanguageEnum;
-using EcoScolarWebApi.Enums;
-using EcoScolarWebApi.DTOs.Adverts;
 
 namespace EcoScolarWebApi.Tests.Controllers;
 
@@ -20,13 +21,34 @@ public class AdvertsControllerTests : IDisposable
     private readonly EcoscolarDbContext _context;
     private readonly AdvertsController _controller;
     private readonly IAdvertSearchService _searchService; 
+    private readonly IEmailSenderService _emailSenderServiceMock;
     private readonly UserManager<User> _userManagerMock;
     private readonly UsersController _usersController;
     private readonly IUserService _userServiceMock;
+    private readonly ReviewMapper _reviewMapper;
 
-	public AdvertsControllerTests()
+    private void MockUser(string userId, string role = "User")
+    {
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.NameIdentifier, userId),
+            new Claim(ClaimTypes.Name, "testuser"),
+            new Claim(ClaimTypes.Role, role)
+        };
+        var identity = new ClaimsIdentity(claims, "TestAuthType");
+        var claimsPrincipal = new ClaimsPrincipal(identity);
+
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new Microsoft.AspNetCore.Http.DefaultHttpContext { User = claimsPrincipal }
+        };
+    }
+
+
+    public AdvertsControllerTests()
     {
         _searchService = Substitute.For<IAdvertSearchService>();
+        _emailSenderServiceMock = Substitute.For<IEmailSenderService>();
 
         var store = Substitute.For<IUserStore<User>>();
         _userManagerMock = Substitute.For<UserManager<User>>(store, null!, null!, null!, null!, null!, null!, null!, null!); // UserManager requires a lot of dependencies, we can mock them all with NSubstitute
@@ -37,10 +59,22 @@ public class AdvertsControllerTests : IDisposable
             .Options;
         _context = new EcoscolarDbContext(options);
 		_userServiceMock = Substitute.For<IUserService>();
+        _reviewMapper = Substitute.For<ReviewMapper>();
 
-		// Simulate the dependency injection of context and store into the AdvertsController
-		_usersController = new UsersController(_userServiceMock, _userManagerMock, _context);
-		_controller = new AdvertsController(_context, _searchService);
+        // Simulate the dependency injection of context and store into the AdvertsController
+        _usersController = new UsersController(_userServiceMock, _userManagerMock, _context, _reviewMapper, Substitute.For<IStripeConnectService>());
+		_controller = new AdvertsController(_context, _searchService, _emailSenderServiceMock);
+
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.NameIdentifier, "guid-123"),
+            new Claim(ClaimTypes.Name, "john_doe")
+        };
+        var identity = new ClaimsIdentity(claims, "TestAuthType");
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new Microsoft.AspNetCore.Http.DefaultHttpContext { User = new ClaimsPrincipal(identity) }
+        };
     }
 
     public void Dispose()
@@ -59,13 +93,13 @@ public class AdvertsControllerTests : IDisposable
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
         List<Picture> pictures = new List<Picture>
         {
-            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
-            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", PhysicalItemId = 1 },
+            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", PhysicalItemId = 1 }
         };
         List<Picture> pictures2 = new List<Picture>
         {
-            new Picture { PictureId = 3, Label = "http://example.com/pic1.jpg", AdvertId = 2 },
-            new Picture { PictureId = 4, Label = "http://example.com/pic2.jpg", AdvertId = 2 }
+            new Picture { PictureId = 3, Label = "http://example.com/pic1.jpg", PhysicalItemId = 2 },
+            new Picture { PictureId = 4, Label = "http://example.com/pic2.jpg", PhysicalItemId = 2 }
         };
 
         var adverts = new List<Advert>
@@ -76,8 +110,8 @@ public class AdvertsControllerTests : IDisposable
                 Title = "Book Title",
                 Description = "Book Descr",
                 Price = 10,
-                UserId = existingUser.Id,
-                User = existingUser,
+                SellerId = existingUser.Id,
+                Seller = existingUser,
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
@@ -95,8 +129,8 @@ public class AdvertsControllerTests : IDisposable
                 Title = "Guitar",
                 Description = "Acoustic",
                 Price = 120,
-                UserId = existingUser.Id,
-                User = existingUser,
+                SellerId = existingUser.Id,
+                Seller = existingUser,
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
@@ -109,8 +143,8 @@ public class AdvertsControllerTests : IDisposable
                 Title = "Lesson de math",
                 Description = "Cours de math pour lycéens",
                 Price = 30,
-                UserId = existingUser.Id,
-                User = existingUser,
+                SellerId = existingUser.Id,
+                Seller = existingUser,
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
@@ -132,6 +166,73 @@ public class AdvertsControllerTests : IDisposable
         var value = okResult!.Value as IEnumerable<AdvertReadDto>;
         value.Should().NotBeNull("The controller did not return an AdvertReadDto");
         value.Should().HaveCount(3);
+    }
+
+    [Fact]
+    public async Task Index_ReturnsAdvertsWithBuyerAndReview_WhenTransactionExists()
+    {
+        // Arrange
+        var seller = new User { Id = "seller-id", UserName = "seller", Nickname = "SellerNick" };
+        var buyer = new User { Id = "buyer-id", UserName = "buyer", Nickname = "BuyerNick" };
+
+        var advert = new Book
+        {
+            AdvertId = 10,
+            Title = "Sold Book",
+            SellerId = seller.Id,
+            Seller = seller,
+            Status = AdvertStatus.SOLD,
+            Price = 20,
+            Description = "Description",
+            CreatedAt = DateTime.UtcNow,
+            NotificationDate = DateTime.UtcNow,
+            Condition = PhysicalItemCondition.NEW,
+            ISBN = "12345",
+            Author = "Author",
+            Publisher = "Publisher",
+            Edition = "1st",
+            WrittenLanguage = LanguageEnum.FR
+        };
+
+        var transaction = new Transaction
+        {
+            TransactionId = 1,
+            AdvertId = advert.AdvertId,
+            BuyerId = buyer.Id,
+            Buyer = buyer,
+            Date = DateTime.UtcNow,
+            Status = TransactionStatus.COMPLETED,
+        };
+
+        var review = new Review
+        {
+            ReviewId = 1,
+            TransactionId = transaction.TransactionId,
+            Rating = 5,
+            Comment = "Great seller!",
+            ReviewedRole = ReviewedRole.SELLER,
+            ReviewerId = buyer.Id,
+            ReviewedId = seller.Id
+        };
+
+        _context.Users.AddRange(seller, buyer);
+        _context.Adverts.Add(advert);
+        _context.Transactions.Add(transaction);
+        _context.Reviews.Add(review);
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _controller.Index();
+
+        // Assert
+        var okResult = result.Result as OkObjectResult;
+        var value = okResult!.Value as IEnumerable<AdvertReadDto>;
+        var advertDto = value!.First(a => a.Id == 10);
+
+        advertDto.BuyerName.Should().Be("BuyerNick");
+        advertDto.Review.Should().NotBeNull();
+        advertDto.Review!.Rating.Should().Be(5);
+        advertDto.Review!.Comment.Should().Be("Great seller!");
     }
 
     [Fact]
@@ -162,12 +263,12 @@ public class AdvertsControllerTests : IDisposable
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
         List<Picture> pictures = new List<Picture>
         {
-            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
-            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", PhysicalItemId = 1 },
+            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", PhysicalItemId = 1 }
         };
         List<Picture> pictures2 = new List<Picture>
         {
-            new Picture { PictureId = 3, Label = "http://example.com/pic1.jpg", AdvertId = 2 }
+            new Picture { PictureId = 3, Label = "http://example.com/pic1.jpg", PhysicalItemId = 2 }
         };
         var adverts = new List<Advert>
         {
@@ -177,8 +278,8 @@ public class AdvertsControllerTests : IDisposable
                 Title = "Book Title",
                 Description = "Book Descr",
                 Price = 10,
-                UserId = existingUser.Id,
-                User = existingUser,
+                SellerId = existingUser.Id,
+                Seller = existingUser,
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
@@ -196,8 +297,8 @@ public class AdvertsControllerTests : IDisposable
                 Title = "Book Title 2",
                 Description = "Book Descr 2",
                 Price = 15.3m,
-                UserId = existingUser.Id,
-                User = existingUser,
+                SellerId = existingUser.Id,
+                Seller = existingUser,
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
@@ -215,8 +316,8 @@ public class AdvertsControllerTests : IDisposable
                 Title = "Lesson de math",
                 Description = "Cours de math pour lycéens",
                 Price = 30,
-                UserId = existingUser.Id,
-                User = existingUser,
+                SellerId = existingUser.Id,
+                Seller = existingUser,
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
@@ -269,12 +370,12 @@ public class AdvertsControllerTests : IDisposable
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
         List<Picture> pictures = new List<Picture>
         {
-            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
-            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", PhysicalItemId = 1 },
+            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", PhysicalItemId = 1 }
         };
         List<Picture> pictures2 = new List<Picture>
         {
-            new Picture { PictureId = 3, Label = "http://example.com/pic1.jpg", AdvertId = 2 }
+            new Picture { PictureId = 3, Label = "http://example.com/pic1.jpg", PhysicalItemId = 2 }
         };
         var adverts = new List<Advert>
         {
@@ -284,8 +385,8 @@ public class AdvertsControllerTests : IDisposable
                 Title = "Guitar",
                 Description = "Guitar for sale",
                 Price = 10,
-                UserId = existingUser.Id,
-                User = existingUser,
+                SellerId = existingUser.Id,
+                Seller = existingUser,
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
@@ -298,8 +399,8 @@ public class AdvertsControllerTests : IDisposable
                 Title = "Guitar 2",
                 Description = "Guitar for sale 2",
                 Price = 15.3m,
-                UserId = existingUser.Id,
-                User = existingUser,
+                SellerId = existingUser.Id,
+                Seller = existingUser,
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
@@ -312,8 +413,8 @@ public class AdvertsControllerTests : IDisposable
                 Title = "Lesson de math",
                 Description = "Cours de math pour lycéens",
                 Price = 30,
-                UserId = existingUser.Id,
-                User = existingUser,
+                SellerId = existingUser.Id,
+                Seller = existingUser,
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
@@ -350,18 +451,18 @@ public class AdvertsControllerTests : IDisposable
         var productCategory2 = new ProductCategory { ProductCategoryId = 2, Name = "Books" };
         List<Picture> pictures = new List<Picture>
         {
-            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
-            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", PhysicalItemId = 1 },
+            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", PhysicalItemId = 1 }
         };
         List<Picture> pictures2 = new List<Picture>
         {
-            new Picture { PictureId = 3, Label = "http://example.com/pic1.jpg", AdvertId = 2 }
+            new Picture { PictureId = 3, Label = "http://example.com/pic1.jpg", PhysicalItemId = 2 }
         };
         List<Picture> pictures3 = new List<Picture>
         {
-            new Picture { PictureId = 4, Label = "http://example.com/pic1.jpg", AdvertId = 3 },
-            new Picture { PictureId = 5, Label = "http://example.com/pic2.jpg", AdvertId = 3 },
-            new Picture { PictureId = 6, Label = "http://example.com/pic3.jpg", AdvertId = 3 }
+            new Picture { PictureId = 4, Label = "http://example.com/pic1.jpg", PhysicalItemId = 3 },
+            new Picture { PictureId = 5, Label = "http://example.com/pic2.jpg", PhysicalItemId = 3 },
+            new Picture { PictureId = 6, Label = "http://example.com/pic3.jpg", PhysicalItemId = 3 }
         };
         var adverts = new List<Advert>
         {
@@ -371,8 +472,8 @@ public class AdvertsControllerTests : IDisposable
                 Title = "Guitar",
                 Description = "Guitar for sale",
                 Price = 10,
-                UserId = existingUser.Id,
-                User = existingUser,
+                SellerId = existingUser.Id,
+                Seller = existingUser,
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
@@ -386,8 +487,8 @@ public class AdvertsControllerTests : IDisposable
                 Title = "Guitar 2",
                 Description = "Guitar for sale 2",
                 Price = 15.3m,
-                UserId = existingUser.Id,
-                User = existingUser,
+                SellerId = existingUser.Id,
+                Seller = existingUser,
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
@@ -401,8 +502,8 @@ public class AdvertsControllerTests : IDisposable
                 Title = "Guitar 3",
                 Description = "Guitar for sale 3",
                 Price = 40,
-                UserId = existingUser.Id,
-                User = existingUser,
+                SellerId = existingUser.Id,
+                Seller = existingUser,
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
@@ -437,18 +538,18 @@ public class AdvertsControllerTests : IDisposable
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
         List<Picture> pictures = new List<Picture>
         {
-            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
-            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", PhysicalItemId = 1 },
+            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", PhysicalItemId = 1 }
         };
         List<Picture> pictures2 = new List<Picture>
         {
-            new Picture { PictureId = 3, Label = "http://example.com/pic1.jpg", AdvertId = 2 }
+            new Picture { PictureId = 3, Label = "http://example.com/pic1.jpg", PhysicalItemId = 2 }
         };
         List<Picture> pictures3 = new List<Picture>
         {
-            new Picture { PictureId = 4, Label = "http://example.com/pic1.jpg", AdvertId = 3 },
-            new Picture { PictureId = 5, Label = "http://example.com/pic2.jpg", AdvertId = 3 },
-            new Picture { PictureId = 6, Label = "http://example.com/pic3.jpg", AdvertId = 3 }
+            new Picture { PictureId = 4, Label = "http://example.com/pic1.jpg", PhysicalItemId = 3 },
+            new Picture { PictureId = 5, Label = "http://example.com/pic2.jpg", PhysicalItemId = 3 },
+            new Picture { PictureId = 6, Label = "http://example.com/pic3.jpg", PhysicalItemId = 3 }
         };
         var adverts = new List<Advert>
         {
@@ -458,8 +559,8 @@ public class AdvertsControllerTests : IDisposable
                 Title = "Guitar",
                 Description = "Guitar for sale",
                 Price = 10,
-                UserId = existingUser.Id,
-                User = existingUser,
+                SellerId = existingUser.Id,
+                Seller = existingUser,
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
@@ -472,8 +573,8 @@ public class AdvertsControllerTests : IDisposable
                 Title = "Guitar 2",
                 Description = "Guitar for sale 2",
                 Price = 15.3m,
-                UserId = existingUser.Id,
-                User = existingUser,
+                SellerId = existingUser.Id,
+                Seller = existingUser,
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
@@ -486,8 +587,8 @@ public class AdvertsControllerTests : IDisposable
                 Title = "Guitar 3",
                 Description = "Guitar for sale 3",
                 Price = 40,
-                UserId = existingUser.Id,
-                User = existingUser,
+                SellerId = existingUser.Id,
+                Seller = existingUser,
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
@@ -523,18 +624,18 @@ public class AdvertsControllerTests : IDisposable
         var productCategory2 = new ProductCategory { ProductCategoryId = 2, Name = "Books" };
         List<Picture> pictures = new List<Picture>
         {
-            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
-            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", PhysicalItemId = 1 },
+            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", PhysicalItemId = 1 }
         };
         List<Picture> pictures2 = new List<Picture>
         {
-            new Picture { PictureId = 3, Label = "http://example.com/pic1.jpg", AdvertId = 2 }
+            new Picture { PictureId = 3, Label = "http://example.com/pic1.jpg", PhysicalItemId = 2 }
         };
         List<Picture> pictures3 = new List<Picture>
         {
-            new Picture { PictureId = 4, Label = "http://example.com/pic1.jpg", AdvertId = 3 },
-            new Picture { PictureId = 5, Label = "http://example.com/pic2.jpg", AdvertId = 3 },
-            new Picture { PictureId = 6, Label = "http://example.com/pic3.jpg", AdvertId = 3 }
+            new Picture { PictureId = 4, Label = "http://example.com/pic1.jpg", PhysicalItemId = 3 },
+            new Picture { PictureId = 5, Label = "http://example.com/pic2.jpg", PhysicalItemId = 3 },
+            new Picture { PictureId = 6, Label = "http://example.com/pic3.jpg", PhysicalItemId = 3 }
         };
         var adverts = new List<Advert>
         {
@@ -544,8 +645,8 @@ public class AdvertsControllerTests : IDisposable
                 Title = "Guitar",
                 Description = "Guitar for sale",
                 Price = 10,
-                UserId = existingUser.Id,
-                User = existingUser,
+                SellerId = existingUser.Id,
+                Seller = existingUser,
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
@@ -559,8 +660,8 @@ public class AdvertsControllerTests : IDisposable
                 Title = "Guitar 2",
                 Description = "Guitar for sale 2",
                 Price = 15.3m,
-                UserId = existingUser.Id,
-                User = existingUser,
+                SellerId = existingUser.Id,
+                Seller = existingUser,
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
@@ -574,8 +675,8 @@ public class AdvertsControllerTests : IDisposable
                 Title = "Guitar 3",
                 Description = "Guitar for sale 3",
                 Price = 40,
-                UserId = existingUser.Id,
-                User = existingUser,
+                SellerId = existingUser.Id,
+                Seller = existingUser,
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
@@ -629,8 +730,8 @@ public class AdvertsControllerTests : IDisposable
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
         List<Picture> pictures = new List<Picture>
         {
-            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
-            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", PhysicalItemId = 1 },
+            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", PhysicalItemId = 1 }
         };
         var adverts = new List<Advert>
         {
@@ -640,8 +741,8 @@ public class AdvertsControllerTests : IDisposable
                 Title = "Guitar",
                 Description = "Guitar for sale",
                 Price = 10,
-                UserId = existingUser.Id,
-                User = existingUser,
+                SellerId = existingUser.Id,
+                Seller = existingUser,
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
@@ -654,8 +755,8 @@ public class AdvertsControllerTests : IDisposable
                 Title = "Lesson de français",
                 Description = "Cours de français pour lycéens",
                 Price = 15.3m,
-                UserId = existingUser.Id,
-                User = existingUser,
+                SellerId = existingUser.Id,
+                Seller = existingUser,
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
@@ -669,8 +770,8 @@ public class AdvertsControllerTests : IDisposable
                 Title = "Lesson de math",
                 Description = "Cours de math pour lycéens",
                 Price = 30,
-                UserId = existingUser.Id,
-                User = existingUser,
+                SellerId = existingUser.Id,
+                Seller = existingUser,
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
@@ -705,8 +806,8 @@ public class AdvertsControllerTests : IDisposable
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
         List<Picture> pictures = new List<Picture>
         {
-            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
-            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", PhysicalItemId = 1 },
+            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", PhysicalItemId = 1 }
         };
         var adverts = new List<Advert>
         {
@@ -716,8 +817,8 @@ public class AdvertsControllerTests : IDisposable
                 Title = "Guitar",
                 Description = "Guitar for sale",
                 Price = 10,
-                UserId = existingUser.Id,
-                User = existingUser,
+                SellerId = existingUser.Id,
+                Seller = existingUser,
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
@@ -730,8 +831,8 @@ public class AdvertsControllerTests : IDisposable
                 Title = "Lesson de français",
                 Description = "Cours de français pour lycéens",
                 Price = 15.3m,
-                UserId = existingUser.Id,
-                User = existingUser,
+                SellerId = existingUser.Id,
+                Seller = existingUser,
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
@@ -745,8 +846,8 @@ public class AdvertsControllerTests : IDisposable
                 Title = "Lesson de math",
                 Description = "Cours de math pour lycéens",
                 Price = 30,
-                UserId = existingUser.Id,
-                User = existingUser,
+                SellerId = existingUser.Id,
+                Seller = existingUser,
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
@@ -780,8 +881,8 @@ public class AdvertsControllerTests : IDisposable
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
         List<Picture> pictures = new List<Picture>
         {
-            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
-            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", PhysicalItemId = 1 },
+            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", PhysicalItemId = 1 }
         };
         var adverts = new List<Advert>
         {
@@ -791,8 +892,8 @@ public class AdvertsControllerTests : IDisposable
                 Title = "Guitar",
                 Description = "Guitar for sale",
                 Price = 10,
-                UserId = existingUser.Id,
-                User = existingUser,
+                SellerId = existingUser.Id,
+                Seller = existingUser,
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
@@ -805,8 +906,8 @@ public class AdvertsControllerTests : IDisposable
                 Title = "Lesson de français",
                 Description = "Cours de français pour lycéens",
                 Price = 15.3m,
-                UserId = existingUser.Id,
-                User = existingUser,
+                SellerId = existingUser.Id,
+                Seller = existingUser,
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
@@ -820,8 +921,8 @@ public class AdvertsControllerTests : IDisposable
                 Title = "Lesson de math",
                 Description = "Cours de math pour lycéens",
                 Price = 30,
-                UserId = existingUser.Id,
-                User = existingUser,
+                SellerId = existingUser.Id,
+                Seller = existingUser,
                 Status = AdvertStatus.ACTIVE,
                 CreatedAt = DateTime.UtcNow,
                 NotificationDate = DateTime.UtcNow,
@@ -873,8 +974,8 @@ public class AdvertsControllerTests : IDisposable
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
         List<Picture> pictures = new List<Picture>
         {
-            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
-            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", PhysicalItemId = 1 },
+            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", PhysicalItemId = 1 }
         };
         var advert = new Book
         {
@@ -882,8 +983,8 @@ public class AdvertsControllerTests : IDisposable
             Title = "Book Title",
             Description = "Book Descr",
             Price = 10,
-            UserId = existingUser.Id,
-            User = existingUser,
+            SellerId = existingUser.Id,
+            Seller = existingUser,
             Status = AdvertStatus.ACTIVE,
             CreatedAt = DateTime.UtcNow,
             NotificationDate = DateTime.UtcNow,
@@ -934,13 +1035,13 @@ public class AdvertsControllerTests : IDisposable
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-        var grade = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
+        var grade = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", NameFr = "Mathématiques", NameDe = "Mathematik", NameIt = "Matematica", Description = "Livres de mathématiques" };
         _context.Set<BookCategory>().Add(grade);
 
         List<Picture> pictures = new List<Picture>
         {
-            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
-            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", PhysicalItemId = 1 },
+            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", PhysicalItemId = 1 }
         };
         var advert = new Book
         {
@@ -948,8 +1049,8 @@ public class AdvertsControllerTests : IDisposable
             Title = "Book Title",
             Description = "Book Descr",
             Price = 10,
-            UserId = existingUser.Id,
-            User = existingUser,
+            SellerId = existingUser.Id,
+            Seller = existingUser,
             Status = AdvertStatus.ACTIVE,
             CreatedAt = DateTime.UtcNow,
             NotificationDate = DateTime.UtcNow,
@@ -1000,8 +1101,8 @@ public class AdvertsControllerTests : IDisposable
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
         List<Picture> pictures = new List<Picture>
         {
-            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
-            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", PhysicalItemId = 1 },
+            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", PhysicalItemId = 1 }
         };
         var advert = new TutoringAdvert
         {
@@ -1009,8 +1110,8 @@ public class AdvertsControllerTests : IDisposable
             Title = "Lesson de math",
             Description = "Cours de math pour lycéens",
             Price = 30,
-            UserId = existingUser.Id,
-            User = existingUser,
+            SellerId = existingUser.Id,
+            Seller = existingUser,
             Status = AdvertStatus.ACTIVE,
             CreatedAt = DateTime.UtcNow,
             NotificationDate = DateTime.UtcNow,
@@ -1039,8 +1140,8 @@ public class AdvertsControllerTests : IDisposable
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
         List<Picture> pictures = new List<Picture>
         {
-            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
-            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", PhysicalItemId = 1 },
+            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", PhysicalItemId = 1 }
         };
         var advert = new PhysicalItem
         {
@@ -1048,8 +1149,8 @@ public class AdvertsControllerTests : IDisposable
             Title = "Guitar",
             Description = "Guitar for sale",
             Price = 40,
-            UserId = existingUser.Id,
-            User = existingUser,
+            SellerId = existingUser.Id,
+            Seller = existingUser,
             Status = AdvertStatus.ACTIVE,
             CreatedAt = DateTime.UtcNow,
             NotificationDate = DateTime.UtcNow,
@@ -1099,8 +1200,8 @@ public class AdvertsControllerTests : IDisposable
             Title = "Lesson de math",
             Description = "Cours de math pour lycéens",
             Price = 30,
-            UserId = existingUser.Id,
-            User = existingUser,
+            SellerId = existingUser.Id,
+            Seller = existingUser,
             Status = AdvertStatus.ACTIVE,
             CreatedAt = DateTime.UtcNow,
             NotificationDate = DateTime.UtcNow,
@@ -1127,8 +1228,8 @@ public class AdvertsControllerTests : IDisposable
         // Arrange
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
-        var subject = new Subject { SubjectId = 1, Name = "Mathématiques", Code = "Maths" };
-        var grade = new SchoolGrade { SchoolGradeId = 1, Name = "Terminale", Code = "Lycée" };
+        var subject = new Subject { SubjectId = 1, Name = "Mathématiques", NameFr = "Mathématiques", NameDe = "Mathematik", NameIt = "Matematica", Code = "Maths" };
+        var grade = new SchoolGrade { SchoolGradeId = 1, Name = "Terminale", NameFr = "Terminale", NameDe = "Abitur", NameIt = "Maturità", Code = "Lycée" };
 
         _context.Set<Subject>().Add(subject);
         _context.Set<SchoolGrade>().Add(grade);
@@ -1138,8 +1239,8 @@ public class AdvertsControllerTests : IDisposable
             Title = "Lesson de math",
             Description = "Cours de math pour lycéens",
             Price = 30,
-            UserId = existingUser.Id,
-            User = existingUser,
+            SellerId = existingUser.Id,
+            Seller = existingUser,
             Status = AdvertStatus.ACTIVE,
             CreatedAt = DateTime.UtcNow,
             NotificationDate = DateTime.UtcNow,
@@ -1185,8 +1286,8 @@ public class AdvertsControllerTests : IDisposable
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
         List<Picture> pictures = new List<Picture>
         {
-            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
-            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", PhysicalItemId = 1 },
+            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", PhysicalItemId = 1 }
         };
         var advert = new PhysicalItem
         {
@@ -1194,8 +1295,8 @@ public class AdvertsControllerTests : IDisposable
             Title = "Book Title",
             Description = "Book Descr",
             Price = 10,
-            UserId = existingUser.Id,
-            User = existingUser,
+            SellerId = existingUser.Id,
+            Seller = existingUser,
             Status = AdvertStatus.ACTIVE,
             CreatedAt = DateTime.UtcNow,
             NotificationDate = DateTime.UtcNow,
@@ -1220,7 +1321,7 @@ public class AdvertsControllerTests : IDisposable
     {
         // Arrange
         var query = new AdvertSearchQuery { Q = "Math" };
-        var expectedSummaries = new List<AdvertSummaryDto> { new AdvertSummaryDto { Id = Guid.NewGuid() } };
+        var expectedSummaries = new List<AdvertSummaryDto> { new AdvertSummaryDto { Id = 1 } };
 
         _searchService.SearchSummariesAsync(query, Arg.Any<CancellationToken>())
             .Returns(expectedSummaries);
@@ -1239,7 +1340,7 @@ public class AdvertsControllerTests : IDisposable
     public async Task GetSummaryDetail_ReturnsOk_WhenItemExists()
     {
         // Arrange
-        var id = Guid.NewGuid();
+        var id = 42L;
         var expectedDetail = new AdvertDetailDto { Id = id };
 
         _searchService.GetDetailAsync(id, Arg.Any<CancellationToken>())
@@ -1257,7 +1358,7 @@ public class AdvertsControllerTests : IDisposable
     public async Task GetSummaryDetail_ReturnsNotFound_WhenItemDoesNotExist()
     {
         // Arrange
-        var id = Guid.NewGuid();
+        var id = 42L;
         _searchService.GetDetailAsync(id, Arg.Any<CancellationToken>())
             .Returns((AdvertDetailDto?)null);
 
@@ -1277,7 +1378,7 @@ public class AdvertsControllerTests : IDisposable
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-        var bookCategory = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
+        var bookCategory = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", NameFr = "Mathématiques", NameDe = "Mathematik", NameIt = "Matematica", Description = "Livres de mathématiques" };
         _context.Set<BookCategory>().Add(bookCategory);
         await _context.SaveChangesAsync();
 
@@ -1319,7 +1420,7 @@ public class AdvertsControllerTests : IDisposable
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-        var bookCategory = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
+        var bookCategory = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", NameFr = "Mathématiques", NameDe = "Mathematik", NameIt = "Matematica", Description = "Livres de mathématiques" };
         _context.Set<BookCategory>().Add(bookCategory);
         await _context.SaveChangesAsync();
 
@@ -1364,7 +1465,7 @@ public class AdvertsControllerTests : IDisposable
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-        var Category = new ProductCategory{ ProductCategoryId = 1, Name = "Guitare", Description = "Guitares" };
+        var Category = new ProductCategory{ ProductCategoryId = 1, Name = "Guitare", NameFr = "Guitare", NameDe = "Gitarre", NameIt = "Chitarra", Description = "Guitares" };
         _context.Set<ProductCategory>().Add(Category);
         await _context.SaveChangesAsync();
 
@@ -1401,7 +1502,7 @@ public class AdvertsControllerTests : IDisposable
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-        var productCategory = new ProductCategory { ProductCategoryId = 1, Name = "Guitare", Description = "Guitares" };
+        var productCategory = new ProductCategory { ProductCategoryId = 1, Name = "Guitare", NameFr = "Guitare", NameDe = "Gitarre", NameIt = "Chitarra", Description = "Guitares" };
         _context.Set<ProductCategory>().Add(productCategory);
         await _context.SaveChangesAsync();
 
@@ -1441,10 +1542,10 @@ public class AdvertsControllerTests : IDisposable
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-        var subject = new Subject { SubjectId = 1, Name = "Math", Code = "Mathématiques" };
+        var subject = new Subject { SubjectId = 1, Name = "Math", NameFr = "Math", NameDe = "Mathematik", NameIt = "Matematica", Code = "Mathématiques" };
         _context.Set<Subject>().Add(subject);
 
-        var grade = new SchoolGrade { SchoolGradeId = 1, Name = "Terminale", Code = "Lycée" };
+        var grade = new SchoolGrade { SchoolGradeId = 1, Name = "Terminale", NameFr = "Terminale", NameDe = "Abitur", NameIt = "Maturità", Code = "Lycée" };
         _context.Set<SchoolGrade>().Add(grade);
         await _context.SaveChangesAsync();
 
@@ -1454,9 +1555,9 @@ public class AdvertsControllerTests : IDisposable
             Price: 20m,
             UserId: existingUser.Id,
             SubjectId: 1,
-            SchoolLevelId: 1,
+            SchoolGradeId: 1,
             TeachingLanguage: LanguageEnum.FR,
-            SpecificStudyLevel: "Diplôme en Mathématiques"
+            StudyLevel: "Diplôme en Mathématiques"
         );
 
         // Act
@@ -1479,10 +1580,10 @@ public class AdvertsControllerTests : IDisposable
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-        var subject = new Subject { SubjectId = 1, Name = "Math", Code = "Mathématiques" };
+        var subject = new Subject { SubjectId = 1, Name = "Math", NameFr = "Math", NameDe = "Mathematik", NameIt = "Matematica", Code = "Mathématiques" };
         _context.Set<Subject>().Add(subject);
 
-        var grade = new SchoolGrade { SchoolGradeId = 1, Name = "Terminale", Code = "Lycée" };
+        var grade = new SchoolGrade { SchoolGradeId = 1, Name = "Terminale", NameFr = "Terminale", NameDe = "Abitur", NameIt = "Maturità", Code = "Lycée" };
         _context.Set<SchoolGrade>().Add(grade);
         await _context.SaveChangesAsync();
 
@@ -1492,9 +1593,9 @@ public class AdvertsControllerTests : IDisposable
             Price: 20m,
             UserId: existingUser.Id,
             SubjectId: 1,
-            SchoolLevelId: 1,
+            SchoolGradeId: 1,
             TeachingLanguage: LanguageEnum.FR,
-            SpecificStudyLevel: "Diplôme en Mathématiques"
+            StudyLevel: "Diplôme en Mathématiques"
         );
 
         // FORCE VALIDATION ERROR
@@ -1519,14 +1620,14 @@ public class AdvertsControllerTests : IDisposable
         // Arrange
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
-        var bookCategory = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
+        var bookCategory = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", NameFr = "Mathématiques", NameDe = "Mathematik", NameIt = "Matematica", Description = "Livres de mathématiques" };
         _context.Set<BookCategory>().Add(bookCategory);
         await _context.SaveChangesAsync();
 
         List<Picture> pictures = new List<Picture>
         {
-            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
-            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", PhysicalItemId = 1 },
+            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", PhysicalItemId = 1 }
         };
 
         var advert = new Book
@@ -1535,8 +1636,8 @@ public class AdvertsControllerTests : IDisposable
             Title = "Book Title",
             Description = "Book Descr",
             Price = 10,
-            UserId = existingUser.Id,
-            User = existingUser,
+            SellerId = existingUser.Id,
+            Seller = existingUser,
             Status = AdvertStatus.ACTIVE,
             CreatedAt = DateTime.UtcNow,
             NotificationDate = DateTime.UtcNow,
@@ -1594,14 +1695,14 @@ public class AdvertsControllerTests : IDisposable
         // Arrange
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
-        var bookCategory = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
+        var bookCategory = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", NameFr = "Mathématiques", NameDe = "Mathematik", NameIt = "Matematica", Description = "Livres de mathématiques" };
         _context.Set<BookCategory>().Add(bookCategory);
         await _context.SaveChangesAsync();
 
         List<Picture> pictures = new List<Picture>
         {
-            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
-            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", PhysicalItemId = 1 },
+            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", PhysicalItemId = 1 }
         };
 
         var advert = new Book
@@ -1610,8 +1711,8 @@ public class AdvertsControllerTests : IDisposable
             Title = "Book Title",
             Description = "Book Descr",
             Price = 10,
-            UserId = existingUser.Id,
-            User = existingUser,
+            SellerId = existingUser.Id,
+            Seller = existingUser,
             Status = AdvertStatus.ACTIVE,
             CreatedAt = DateTime.UtcNow,
             NotificationDate = DateTime.UtcNow,
@@ -1702,8 +1803,8 @@ public class AdvertsControllerTests : IDisposable
 
         List<Picture> pictures = new List<Picture>
         {
-            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
-            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", PhysicalItemId = 1 },
+            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", PhysicalItemId = 1 }
         };
 
         var advert = new PhysicalItem
@@ -1712,8 +1813,8 @@ public class AdvertsControllerTests : IDisposable
             Title = "Guitare",
             Description = "Guitare",
             Price = 10,
-            UserId = existingUser.Id,
-            User = existingUser,
+            SellerId = existingUser.Id,
+            Seller = existingUser,
             Status = AdvertStatus.ACTIVE,
             CreatedAt = DateTime.UtcNow,
             NotificationDate = DateTime.UtcNow,
@@ -1760,8 +1861,8 @@ public class AdvertsControllerTests : IDisposable
 
         List<Picture> pictures = new List<Picture>
         {
-            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
-            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", PhysicalItemId = 1 },
+            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", PhysicalItemId = 1 }
         };
 
         var advert = new PhysicalItem
@@ -1770,8 +1871,8 @@ public class AdvertsControllerTests : IDisposable
             Title = "Product Title",
             Description = "Product Description",
             Price = 10,
-            UserId = existingUser.Id,
-            User = existingUser,
+            SellerId = existingUser.Id,
+            Seller = existingUser,
             Status = AdvertStatus.ACTIVE,
             CreatedAt = DateTime.UtcNow,
             NotificationDate = DateTime.UtcNow,
@@ -1841,9 +1942,9 @@ public class AdvertsControllerTests : IDisposable
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-        var subject = new Subject { SubjectId = 1, Name = "Mathématiques", Code = "Maths" };
-        var subject2 = new Subject { SubjectId = 2, Name = "Français", Code = "Français" };
-        var grade = new SchoolGrade { SchoolGradeId = 1, Name = "Terminale", Code = "Lycée" };
+        var subject = new Subject { SubjectId = 1, Name = "Mathématiques", NameFr = "Mathématiques", NameDe = "Mathematik", NameIt = "Matematica", Code = "Maths" };
+        var subject2 = new Subject { SubjectId = 2, Name = "Français", NameFr = "Français", NameDe = "Französisch", NameIt = "Francese", Code = "Français" };
+        var grade = new SchoolGrade { SchoolGradeId = 1, Name = "Terminale", NameFr = "Terminale", NameDe = "Abitur", NameIt = "Maturità", Code = "Lycée" };
 
         _context.Set<Subject>().Add(subject);
         _context.Set<SchoolGrade>().Add(grade);
@@ -1855,8 +1956,8 @@ public class AdvertsControllerTests : IDisposable
             Title = "Lesson de math",
             Description = "Cours de math pour lycéens",
             Price = 30,
-            UserId = existingUser.Id,
-            User = existingUser,
+            SellerId = existingUser.Id,
+            Seller = existingUser,
             Status = AdvertStatus.ACTIVE,
             CreatedAt = DateTime.UtcNow,
             NotificationDate = DateTime.UtcNow,
@@ -1873,9 +1974,9 @@ public class AdvertsControllerTests : IDisposable
             Price: 40m,
             UserId: existingUser.Id,
             SubjectId: 2,
-            SchoolLevelId: 1,
+            SchoolGradeId: 1,
             TeachingLanguage: LanguageEnum.FR,
-            SpecificStudyLevel: "Diplôme en Langue Française"
+            StudyLevel: "Diplôme en Langue Française"
 
         );
 
@@ -1902,8 +2003,8 @@ public class AdvertsControllerTests : IDisposable
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-        var subject = new Subject { SubjectId = 1, Name = "Mathématiques", Code = "Maths" };
-        var grade = new SchoolGrade { SchoolGradeId = 1, Name = "Terminale", Code = "Lycée" };
+        var subject = new Subject { SubjectId = 1, Name = "Mathématiques", NameFr = "Mathématiques", NameDe = "Mathematik", NameIt = "Matematica", Code = "Maths" };
+        var grade = new SchoolGrade { SchoolGradeId = 1, Name = "Terminale", NameFr = "Terminale", NameDe = "Abitur", NameIt = "Maturità", Code = "Lycée" };
 
         _context.Set<Subject>().Add(subject);
         _context.Set<SchoolGrade>().Add(grade);
@@ -1913,8 +2014,8 @@ public class AdvertsControllerTests : IDisposable
             Title = "Lesson de math",
             Description = "Cours de math pour lycéens",
             Price = 30,
-            UserId = existingUser.Id,
-            User = existingUser,
+            SellerId = existingUser.Id,
+            Seller = existingUser,
             Status = AdvertStatus.ACTIVE,
             CreatedAt = DateTime.UtcNow,
             NotificationDate = DateTime.UtcNow,
@@ -1931,9 +2032,9 @@ public class AdvertsControllerTests : IDisposable
             Price: 40m,
             UserId: existingUser.Id,
             SubjectId: 1,
-            SchoolLevelId: 1,
+            SchoolGradeId: 1,
             TeachingLanguage: LanguageEnum.FR,
-            SpecificStudyLevel: "Diplôme en Langue Française"
+            StudyLevel: "Diplôme en Langue Française"
 
         );
 
@@ -1962,9 +2063,9 @@ public class AdvertsControllerTests : IDisposable
             Price: 40m,
             UserId: existingUser.Id,
             SubjectId: 1,
-            SchoolLevelId: 1,
+            SchoolGradeId: 1,
             TeachingLanguage: LanguageEnum.FR,
-            SpecificStudyLevel: "Diplôme en Langue Française"
+            StudyLevel: "Diplôme en Langue Française"
 
         );
 
@@ -1985,13 +2086,13 @@ public class AdvertsControllerTests : IDisposable
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-        var grade = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
+        var grade = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", NameFr = "Mathématiques", NameDe = "Mathematik", NameIt = "Matematica", Description = "Livres de mathématiques" };
         _context.Set<BookCategory>().Add(grade);
 
         List<Picture> pictures = new List<Picture>
         {
-            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
-            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", PhysicalItemId = 1 },
+            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", PhysicalItemId = 1 }
         };
         var advert = new Book
         {
@@ -1999,8 +2100,8 @@ public class AdvertsControllerTests : IDisposable
             Title = "Book Title",
             Description = "Book Descr",
             Price = 10,
-            UserId = existingUser.Id,
-            User = existingUser,
+            SellerId = existingUser.Id,
+            Seller = existingUser,
             Status = AdvertStatus.ACTIVE,
             CreatedAt = DateTime.UtcNow,
             NotificationDate = DateTime.UtcNow,
@@ -2029,6 +2130,89 @@ public class AdvertsControllerTests : IDisposable
     }
 
     [Fact]
+    public async Task UpdateAdvertStatus_SendsEmailToSeller_WhenStatusChangesToSold()
+    {
+        // Arrange
+        var sellerUser = new User { Id = "seller-123", UserName = "seller_bob", Email = "seller@example.com", Nickname = "Bob" };
+        MockUser(sellerUser.Id);
+        var advert = new Book
+        {
+            AdvertId = 10,
+            Title = "Math Book",
+            Description = "A math book",
+            Price = 15,
+            SellerId = sellerUser.Id,
+            Seller = sellerUser,
+            Status = AdvertStatus.ACTIVE,
+            CreatedAt = DateTime.UtcNow,
+            NotificationDate = DateTime.UtcNow,
+            Condition = PhysicalItemCondition.NEW,
+            ISBN = "11111",
+            Author = "Author",
+            Publisher = "Pub",
+            Edition = "1st",
+            WrittenLanguage = LanguageEnum.FR,
+            BookCategoryId = 1
+        };
+        _context.Users.Add(sellerUser);
+        _context.Adverts.Add(advert);
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _controller.UpdateAdvertStatus(10, AdvertStatus.SOLD);
+
+        // Assert
+        var noContentResult = result as NoContentResult;
+        noContentResult.Should().NotBeNull();
+        
+        await _emailSenderServiceMock.Received(1).SendItemSoldEmailAsync(
+            Arg.Is<User>(u => u.Id == "seller-123" && u.Email == "seller@example.com"),
+            Arg.Is<Advert>(a => a.AdvertId == 10 && a.Title == "Math Book" && a.Price == 15)
+        );
+    }
+
+    [Fact]
+    public async Task UpdateAdvertStatus_DoesNotSendEmail_WhenStatusIsAlreadySold()
+    {
+        // Arrange
+        var sellerUser = new User { Id = "seller-456", UserName = "seller_alice", Email = "alice@example.com" };
+        MockUser(sellerUser.Id);
+        var advert = new Book
+        {
+            AdvertId = 11,
+            Title = "Science Book",
+            Description = "A science book",
+            Price = 20,
+            SellerId = sellerUser.Id,
+            Seller = sellerUser,
+            Status = AdvertStatus.SOLD,
+            CreatedAt = DateTime.UtcNow,
+            NotificationDate = DateTime.UtcNow,
+            Condition = PhysicalItemCondition.NEW,
+            ISBN = "22222",
+            Author = "Author",
+            Publisher = "Pub",
+            Edition = "1st",
+            WrittenLanguage = LanguageEnum.FR,
+            BookCategoryId = 1
+        };
+        _context.Users.Add(sellerUser);
+        _context.Adverts.Add(advert);
+        await _context.SaveChangesAsync();
+
+        _emailSenderServiceMock.ClearReceivedCalls();
+
+        // Act
+        var result = await _controller.UpdateAdvertStatus(11, AdvertStatus.SOLD);
+
+        // Assert
+        var noContentResult = result as NoContentResult;
+        noContentResult.Should().NotBeNull();
+
+        await _emailSenderServiceMock.DidNotReceiveWithAnyArgs().SendItemSoldEmailAsync(default!, default!);
+    }
+
+    [Fact]
     public async Task UpdateAdvertStatus_ReturnsNotFound_WhenAdvertDoesNotExist()
     {
         // Arrange
@@ -2050,13 +2234,13 @@ public class AdvertsControllerTests : IDisposable
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-        var grade = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
+        var grade = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", NameFr = "Mathématiques", NameDe = "Mathematik", NameIt = "Matematica", Description = "Livres de mathématiques" };
         _context.Set<BookCategory>().Add(grade);
 
         List<Picture> pictures = new List<Picture>
         {
-            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
-            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", PhysicalItemId = 1 },
+            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", PhysicalItemId = 1 }
         };
         var advert = new Book
         {
@@ -2064,8 +2248,8 @@ public class AdvertsControllerTests : IDisposable
             Title = "Book Title",
             Description = "Book Descr",
             Price = 10,
-            UserId = existingUser.Id,
-            User = existingUser,
+            SellerId = existingUser.Id,
+            Seller = existingUser,
             Status = AdvertStatus.ACTIVE,
             CreatedAt = DateTime.UtcNow,
             NotificationDate = DateTime.UtcNow,
@@ -2114,12 +2298,12 @@ public class AdvertsControllerTests : IDisposable
         // Arrange
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
-        var grade = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
+        var grade = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", NameFr = "Mathématiques", NameDe = "Mathematik", NameIt = "Matematica", Description = "Livres de mathématiques" };
         _context.Set<BookCategory>().Add(grade);
         List<Picture> pictures = new List<Picture>
         {
-            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
-            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", PhysicalItemId = 1 },
+            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", PhysicalItemId = 1 }
         };
         var advert = new Book
         {
@@ -2127,8 +2311,8 @@ public class AdvertsControllerTests : IDisposable
             Title = "Book Title",
             Description = "Book Descr",
             Price = 10,
-            UserId = existingUser.Id,
-            User = existingUser,
+            SellerId = existingUser.Id,
+            Seller = existingUser,
             Status = AdvertStatus.ACTIVE,
             CreatedAt = DateTime.UtcNow,
             NotificationDate = DateTime.UtcNow,
@@ -2176,12 +2360,12 @@ public class AdvertsControllerTests : IDisposable
         // Arrange
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
-        var grade = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", Description = "Livres de mathématiques" };
+        var grade = new BookCategory { BookCategoryId = 1, Name = "Mathématiques", NameFr = "Mathématiques", NameDe = "Mathematik", NameIt = "Matematica", Description = "Livres de mathématiques" };
         _context.Set<BookCategory>().Add(grade);
         List<Picture> pictures = new List<Picture>
         {
-            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", AdvertId = 1 },
-            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", AdvertId = 1 }
+            new Picture { PictureId = 1, Label = "http://example.com/pic1.jpg", PhysicalItemId = 1 },
+            new Picture { PictureId = 2, Label = "http://example.com/pic2.jpg", PhysicalItemId = 1 }
         };
         var advert = new Book
         {
@@ -2189,8 +2373,8 @@ public class AdvertsControllerTests : IDisposable
             Title = "Book Title",
             Description = "Book Descr",
             Price = 10,
-            UserId = existingUser.Id,
-            User = existingUser,
+            SellerId = existingUser.Id,
+            Seller = existingUser,
             Status = AdvertStatus.ACTIVE,
             CreatedAt = DateTime.UtcNow,
             NotificationDate = DateTime.UtcNow,

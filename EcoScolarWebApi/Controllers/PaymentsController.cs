@@ -1,9 +1,11 @@
-﻿using Asp.Versioning;
+using Asp.Versioning;
+using EcoScolarWebApi.Data;
 using EcoScolarWebApi.DTOs.Stripe;
+using EcoScolarWebApi.Enums;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Stripe;
 using Stripe.Checkout;
-using Stripe.V2.Core;
 
 namespace EcoScolarWebApi.Controllers;
 
@@ -13,17 +15,20 @@ namespace EcoScolarWebApi.Controllers;
 public class PaymentsController : ControllerBase
 {
 	private readonly IConfiguration _config;        // Configuration to access Stripe secret key
+	private readonly EcoscolarDbContext _context;    // Database context
 
 	/// <summary>
 	/// PaymentsController constructor
-	/// Takes the configuration as a parameter to access the Stripe secret key
+	/// Takes the configuration and database context as parameters
 	/// 
 	/// Url: POST /api/v1/payments/checkout
 	/// </summary>
 	/// <param name="config">The configuration object containing the Stripe secret key</param>
-	public PaymentsController(IConfiguration config)
+	/// <param name="context">The database context</param>
+	public PaymentsController(IConfiguration config, EcoscolarDbContext context)
 	{
 		_config = config;
+		_context = context;
 	}
 
 	/// <summary>
@@ -38,8 +43,54 @@ public class PaymentsController : ControllerBase
 	public async Task<IActionResult> Checkout([FromBody] CheckoutRequestDto request)
 	{
 		double price = request.ProductPrice * 100;
+        string baseUrl = $"{Request.Scheme}://{Request.Host}";
+        if (Request.Headers.TryGetValue("Referer", out var refererHeader) && !string.IsNullOrEmpty(refererHeader))
+        {
+            try
+            {
+                var uri = new Uri(refererHeader.ToString());
+                baseUrl = $"{uri.Scheme}://{uri.Authority}";
+            }
+            catch
+            {
+                // Fallback in case of malformed Referer
+            }
+        }
 
-		var options = new SessionCreateOptions
+		// Handle both single item (for fallback) and list of items
+		var productIds = request.ProductIds != null && request.ProductIds.Count > 0
+			? request.ProductIds
+			: new List<long> { (long)request.ProductId };
+
+		// Check if any product is already sold or currently being paid for (status is SOLD or PAUSED)
+		foreach (var pid in productIds)
+		{
+			var advert = await _context.Adverts.FindAsync(pid);
+			if (advert == null)
+			{
+				return NotFound(new { error = $"L'annonce avec l'ID {pid} n'existe pas." });
+			}
+			if (advert.Status == AdvertStatus.PAUSED || advert.Status == AdvertStatus.SOLD)
+			{
+                return BadRequest(new { code = "ITEM_UNAVAILABLE", error = "Un des articles dans votre panier est en cours de paiement ou déjà vendu." });
+            }
+		}
+
+		// Update all products status to PAUSED during checkout
+		foreach (var pid in productIds)
+		{
+			var advert = await _context.Adverts.FindAsync(pid);
+			if (advert != null)
+			{
+				advert.Status = AdvertStatus.PAUSED;
+				_context.Entry(advert).State = EntityState.Modified;
+			}
+		}
+		await _context.SaveChangesAsync();
+
+		string productIdsQuery = string.Join(",", productIds);
+
+        var options = new SessionCreateOptions
 		{
 			PaymentMethodTypes = new List<string> { "card" },
 			LineItems = new List<SessionLineItemOptions>
@@ -53,9 +104,9 @@ public class PaymentsController : ControllerBase
 						Currency = "chf",
 						ProductData = new SessionLineItemPriceDataProductDataOptions
 						{
-							Name = $"Test Integration Purchase ({price} CHF)",
-							Description = "Fake purchase to validate the process for the prototype"
-						},
+							Name = "Amount due",
+							Description = "Thank you for choosing EcoScolar for your school supplies. Good luck with your studies!"
+                        },
 					},
 					Quantity = 1,
 				},
@@ -66,8 +117,8 @@ public class PaymentsController : ControllerBase
 				TransferGroup = "COMMANDE_ID_789",
 			},
 
-			SuccessUrl = "http://localhost:3001/success",
-			CancelUrl = "http://localhost:3001/denied",
+            SuccessUrl = $"{baseUrl}/success?orderId={{CHECKOUT_SESSION_ID}}&productIds={productIdsQuery}&productId={productIds[0]}",
+            CancelUrl = $"{baseUrl}/denied?productIds={productIdsQuery}",
 		};
 
 		var service = new SessionService();
@@ -104,139 +155,6 @@ public class PaymentsController : ControllerBase
 		catch (StripeException e)
 		{
 			return BadRequest(new { error = e.StripeError.Message });
-		}
-	}
-
-	/// <summary>
-	/// Creates a Stripe Connect account for an individual in Switzerland using the Stripe API v2
-	///     
-	/// Url: POST /api/v1/payments/create-connect-account
-	/// </summary>
-	/// <param name="request">The request containing account information</param>
-	/// <returns>The created account ID</returns>
-	[HttpPost("create-connect-account")]
-	public IActionResult CreateConnectAccount([FromBody] ConnectAccountRequestDto request)
-	{
-		// Basic validation
-		if (string.IsNullOrWhiteSpace(request?.Email))
-		{
-			Console.WriteLine("Email is required");
-			return BadRequest(new { error = "Email is required." });
-		}
-
-		try
-		{
-			// Create v2 Connect account for an individual in Switzerland
-			var options = new Stripe.V2.Core.AccountCreateOptions
-			{
-				ContactEmail = request.Email,
-				DisplayName = request.Email,
-				Identity = new AccountCreateIdentityOptions
-				{
-					Country = "CH", // Changed to Switzerland
-					EntityType = "individual", // Changed to individual (particular)
-				},
-				Configuration = new AccountCreateConfigurationOptions
-				{
-					Recipient = new AccountCreateConfigurationRecipientOptions
-					{
-						Capabilities = new AccountCreateConfigurationRecipientCapabilitiesOptions
-						{
-							StripeBalance = new AccountCreateConfigurationRecipientCapabilitiesStripeBalanceOptions
-							{
-								StripeTransfers = new AccountCreateConfigurationRecipientCapabilitiesStripeBalanceStripeTransfersOptions
-								{
-									Requested = true,
-								},
-							},
-						},
-					},
-				},
-				Defaults = new AccountCreateDefaultsOptions
-				{
-					Responsibilities = new AccountCreateDefaultsResponsibilitiesOptions
-					{
-						FeesCollector = "application",
-						LossesCollector = "application",
-					},
-				},
-				Dashboard = "express",
-				Include = new List<string>
-				{
-					"configuration.recipient",
-					"requirements",
-				},
-			};
-
-			var secretKey = _config["Stripe:SecretKey"];
-			var client = new StripeClient(secretKey);
-
-			var service = client.V2.Core.Accounts;
-			Stripe.V2.Core.Account account = service.Create(options);
-
-			return Ok(new { accountId = account.Id });
-		}
-		catch (StripeException e)
-		{
-			// Catching StripeException specifically can be useful for debugging
-			return StatusCode(500, new { error = e.StripeError.Message });
-		}
-		catch (Exception e)
-		{
-			return StatusCode(500, new { error = e.Message });
-		}
-	}
-
-	/// <summary>
-	/// Creates an account link for onboarding a connected account using the Stripe API v2
-	/// 
-	/// Url: POST /api/v1/payments/create-account-link
-	/// </summary>
-	/// <param name="request">The request containing account link information</param>
-	/// <returns>The created account link URL</returns>
-	[HttpPost("create-account-link")]
-	public IActionResult CreateAccountLink([FromBody] AccountLinkRequestDto request)
-	{
-		// Basic validation
-		if (string.IsNullOrWhiteSpace(request?.AccountId))
-		{
-			return BadRequest(new { error = "Account ID is required." });
-		}
-
-		try
-		{
-			var secretKey = _config["Stripe:SecretKey"];
-			var client = new StripeClient(secretKey);
-			var service = client.V2.Core.AccountLinks;
-
-			var options = new Stripe.V2.Core.AccountLinkCreateOptions
-			{
-				Account = request.AccountId,
-				UseCase = new Stripe.V2.Core.AccountLinkCreateUseCaseOptions
-				{
-					Type = "account_onboarding",
-					AccountOnboarding = new Stripe.V2.Core.AccountLinkCreateUseCaseAccountOnboardingOptions
-					{
-						Configurations = new List<string> { "recipient" },
-						// Note: You should replace these example URLs with your actual front-end URLs
-						RefreshUrl = "http://localhost:3001/home",
-						ReturnUrl = $"http://localhost:3001/home?accountId={request.AccountId}",
-					},
-				},
-			};
-
-			var accountLink = service.Create(options);
-
-			return Ok(new { url = accountLink.Url });
-		}
-		catch (StripeException e)
-		{
-			// Catching StripeException specifically can be useful for debugging
-			return StatusCode(500, new { error = e.StripeError.Message });
-		}
-		catch (Exception e)
-		{
-			return StatusCode(500, new { error = e.Message });
 		}
 	}
 }

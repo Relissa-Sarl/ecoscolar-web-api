@@ -1,5 +1,10 @@
+using EcoScolarWebApi.Data;
 using EcoScolarWebApi.Extensions;
 using EcoScolarWebApi.Models;
+using EcoScolarWebApi.Services;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Identity;
+using EcoScolarWebApi.Mappers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,7 +12,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddAuthAndIdentity();
 builder.Services.AddSwaggerAndVersioning();
+
+builder.Services.AddHostedService<EcoScolarWebApi.Services.AutoConfirmReceiptService>();
 builder.Services.AddEcoScolarServices(builder.Configuration);
+builder.Services.AddMappersServices(builder.Configuration);
 
 builder.Services.AddControllers().AddJsonOptions(options =>
 	options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
@@ -16,11 +24,31 @@ builder.Services.AddHealthChecks();
 builder.Services.AddCors(options => options.AddPolicy("AllowFrontend", policy =>
 	policy.WithOrigins("http://localhost:3000").AllowAnyHeader().AllowAnyMethod().AllowCredentials()));
 
+if (args.Contains("--seed-production", StringComparer.OrdinalIgnoreCase))
+{
+	var includeDemoData = args.Contains("--include-demo-data", StringComparer.OrdinalIgnoreCase);
+	using var seedApp = builder.Build();
+	using var scope = seedApp.Services.CreateScope();
+	var db = scope.ServiceProvider.GetRequiredService<EcoscolarDbContext>();
+	var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+	var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+	await ProductionDataSeeder.SeedAsync(db, userManager, roleManager, seedApp.Configuration, includeDemoData);
+	return;
+}
+
 // App creation
 var app = builder.Build();
 
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
+
 // Migrations and seeding
 app.ApplyDatabaseMigrations(app.Configuration);
+await app.SeedLocationsIfEmptyAsync(app.Configuration);
+await app.SeedIdentityRolesAsync(app.Configuration);
 await app.SeedDatabaseInDevelopmentAsync();
 
 // Middleware configuration

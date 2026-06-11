@@ -5,9 +5,11 @@ using EcoScolarWebApi.Enums;
 using EcoScolarWebApi.Models;
 using EcoScolarWebApi.Services.Contracts;
 using FluentAssertions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NSubstitute;
+using System.Security.Claims;
 using Xunit;
 using LanguageEnum = EcoScolarWebApi.Enums.LanguageEnum;
 
@@ -33,7 +35,17 @@ public class BookCreateIntegrationTests : IDisposable
 			.Options;
 
 		_context = new EcoscolarDbContext(options);
-		_controller = new AdvertsController(_context, Substitute.For<IAdvertSearchService>());
+		_controller = new AdvertsController(_context, Substitute.For<IAdvertSearchService>(), Substitute.For<IEmailSenderService>());
+
+        var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
+        {
+            new Claim(ClaimTypes.NameIdentifier, "integration-user")
+        }, "TestAuth"));
+
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext { User = user }
+        };
 	}
 
 	[Fact]
@@ -43,7 +55,10 @@ public class BookCreateIntegrationTests : IDisposable
 		{
 			BookCategoryId = 1,
 			Name = "Sciences",
-			Description = "Manuels scientifiques"
+            NameFr = "Sciences",
+            NameDe = "Wissenschaften",
+            NameIt = "Scienze",
+            Description = "Manuels scientifiques"
 		});
 		await _context.SaveChangesAsync();
 
@@ -78,7 +93,10 @@ public class BookCreateIntegrationTests : IDisposable
 		{
 			BookCategoryId = 1,
 			Name = "Sciences",
-			Description = "Manuels scientifiques"
+			NameDe = "Wissenschaften",
+            NameFr = "Sciences",
+            NameIt = "Scienze",
+            Description = "Manuels scientifiques"
 		});
 		await _context.SaveChangesAsync();
 

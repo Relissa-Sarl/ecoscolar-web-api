@@ -1,20 +1,25 @@
-﻿using EcoScolarWebApi.Commun;
+using EcoScolarWebApi.Commun;
 using EcoScolarWebApi.Controllers;
 using EcoScolarWebApi.Data;
 using EcoScolarWebApi.DTOs.Adverts;
+using EcoScolarWebApi.DTOs.Reviews;
+using EcoScolarWebApi.DTOs.Stripe;
 using EcoScolarWebApi.DTOs.Users;
 using EcoScolarWebApi.Enums;
 using EcoScolarWebApi.Models;
+using EcoScolarWebApi.Services;
 using EcoScolarWebApi.Services.Contracts;
 using FluentAssertions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NSubstitute;
 using System.Security.Claims;
+using EcoScolarWebApi.Mappers;
 using Xunit;
 
-namespace EcoScolarWebApi.Tests.Controllers;
+namespace EcoScolarWebApi.Tests;
 
 public class UsersControllerTests
 {
@@ -22,6 +27,9 @@ public class UsersControllerTests
 	private readonly IUserService _userServiceMock;
 	private readonly EcoscolarDbContext _context;
 	private readonly UsersController _controller;
+	private readonly ReviewMapper _reviewMapper;
+	private readonly UserMapper _userMapper;
+	private readonly IStripeConnectService _stripeConnectServiceMock;
 
 	public UsersControllerTests()
 	{
@@ -35,9 +43,14 @@ public class UsersControllerTests
 		_context = new EcoscolarDbContext(options);
 
 		_userServiceMock = Substitute.For<IUserService>();
+        _reviewMapper = new ReviewMapper();
 
-		// Simulate the dependency injection of UserManager and DbContext into the UsersController
-		_controller = new UsersController(_userServiceMock, _userManagerMock, _context);
+		_userMapper = new UserMapper();
+
+		_stripeConnectServiceMock = Substitute.For<IStripeConnectService>();
+
+        // Simulate the dependency injection of UserManager and DbContext into the UsersController
+        _controller = new UsersController(_userServiceMock, _userManagerMock, _context, _reviewMapper, _stripeConnectServiceMock);
 	}
 
 
@@ -48,7 +61,7 @@ public class UsersControllerTests
 	{
 		// Arrange
 		_userServiceMock.GetCurrentUserProfileAsync(Arg.Any<ClaimsPrincipal>())
-			.Returns(Result<UserReadDto>.Failure(new[] { "User not found" }, ErrorType.NotFound));
+			.Returns(Result<UserResponse>.Failure(new[] { "Seller not found" }, ErrorType.NotFound));
 
 		// Act
 		var result = await _controller.GetMyProfile();
@@ -61,20 +74,22 @@ public class UsersControllerTests
 	public async Task GetMyProfile_ShouldReturnOk_WithUserData_WhenUserExists()
 	{
 		// Arrange
-		var userReadDto = new UserReadDto(
+		var UserResponse = new UserResponse(
 			"guid-123",
 			"alexis",
 			"Alexis",
 			"Rojas",
 			"alexis@etml.ch",
+			true,
+			false,
+			new List<SpokenLanguageDto>(),
 			null,
 			"2000-01-01",
-			true,
-			new List<SpokenLanguageDto>()
+			["User"]
 		);
 
 		_userServiceMock.GetCurrentUserProfileAsync(Arg.Any<ClaimsPrincipal>())
-			.Returns(Result<UserReadDto>.Success(userReadDto));
+			.Returns(Result<UserResponse>.Success(UserResponse));
 
 		// Act
 		var result = await _controller.GetMyProfile();
@@ -83,55 +98,204 @@ public class UsersControllerTests
 		var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
 
 		// Vérification que les données retournées correspondent à l'utilisateur existant
-		okResult.Value.Should().BeEquivalentTo(userReadDto);
+		okResult.Value.Should().BeEquivalentTo(UserResponse);
 	}
 
 	[Fact]
 	public async Task GetMyProfile_ShouldReturnUnauthorized_WhenSessionInvalid()
 	{
 		_userServiceMock.GetCurrentUserProfileAsync(Arg.Any<ClaimsPrincipal>())
-			.Returns(Result<UserReadDto>.Failure("Invalid session.", ErrorType.Unauthorized));
+			.Returns(Result<UserResponse>.Failure("Invalid session.", ErrorType.Unauthorized));
 
 		var result = await _controller.GetMyProfile();
 
 		result.Should().BeOfType<UnauthorizedObjectResult>();
 	}
 
-	#endregion
+    #endregion
 
-	#region Tests pour UpdateFullProfile
+    #region Tests pour AnonymizeProfileAsync (Service)
 
-	[Fact]
+    [Fact]
+    public async Task AnonymizeProfileAsync_ShouldReturnUnauthorized_WhenUserIdIsMissing()
+    {
+        // Arrange
+        var store = Substitute.For<IUserStore<User>>();
+        var userManagerMock = Substitute.For<UserManager<User>>(store, null!, null!, null!, null!, null!, null!, null!, null!);
+        var signInManagerMock = Substitute.For<SignInManager<User>>(userManagerMock, Substitute.For<IHttpContextAccessor>(), Substitute.For<IUserClaimsPrincipalFactory<User>>(), null!, null!, null!, null!);
+
+        var options = new DbContextOptionsBuilder<EcoscolarDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+        using var context = new EcoscolarDbContext(options);
+
+        var userService = new UserService(userManagerMock, context, signInManagerMock, _userMapper);
+
+        userManagerMock.GetUserId(Arg.Any<ClaimsPrincipal>()).Returns((string?)null);
+
+        // Act
+        var result = await userService.AnonymizeProfileAsync(new ClaimsPrincipal());
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.ErrorType.Should().Be(ErrorType.Unauthorized);
+    }
+
+    [Fact]
+    public async Task AnonymizeProfileAsync_ShouldAnonymizeDataAndSignOut_WhenUserExists()
+    {
+        // Arrange
+        var store = Substitute.For<IUserStore<User>>();
+        var userManagerMock = Substitute.For<UserManager<User>>(store, null!, null!, null!, null!, null!, null!, null!, null!);
+        var signInManagerMock = Substitute.For<SignInManager<User>>(userManagerMock, Substitute.For<IHttpContextAccessor>(), Substitute.For<IUserClaimsPrincipalFactory<User>>(), null!, null!, null!, null!);
+
+        var options = new DbContextOptionsBuilder<EcoscolarDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()).Options;
+
+        using var context = new EcoscolarDbContext(options);
+        var userService = new UserService(userManagerMock, context, signInManagerMock, _userMapper);
+
+        var existingUser = new User
+        {
+            Id = "guid-delete-me",
+            FirstName = "Damien",
+            LastName = "Loup",
+            Nickname = "Sikties",
+            DateOfBirth = "1995-05-21",
+            IsOnboarded = true
+        };
+
+        context.Users.Add(existingUser);
+        var favorite = new UserFavorite { UserId = existingUser.Id, AdvertId = 99 };
+        context.UserFavorites.Add(favorite);
+        await context.SaveChangesAsync();
+
+        userManagerMock.GetUserId(Arg.Any<ClaimsPrincipal>()).Returns(existingUser.Id);
+
+        userManagerMock.Users.Returns(context.Users);
+
+        userManagerMock.NormalizeEmail(Arg.Any<string>()).Returns("@DELETED.ECOSCOLAR.COM");
+        userManagerMock.NormalizeName(Arg.Any<string>()).Returns("@DELETED.ECOSCOLAR.COM");
+
+        userManagerMock.SetEmailAsync(Arg.Any<User>(), Arg.Any<string>())
+        .Returns(Task.FromResult(IdentityResult.Success));
+
+        userManagerMock.SetUserNameAsync(Arg.Any<User>(), Arg.Any<string>())
+            .Returns(Task.FromResult(IdentityResult.Success));
+
+        userManagerMock.UpdateAsync(Arg.Any<User>()).Returns(IdentityResult.Success);
+
+        signInManagerMock.SignOutAsync().Returns(Task.CompletedTask);
+
+        // Act
+        var result = await userService.AnonymizeProfileAsync(new ClaimsPrincipal());
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+
+        existingUser.FirstName.Should().NotBe("Damien");
+        existingUser.LastName.Should().NotBe("Loup");
+        existingUser.Nickname.Should().StartWith("DeletedUser_");
+        existingUser.DateOfBirth.Should().Be("1995-01-01");
+        existingUser.IsOnboarded.Should().BeFalse();
+
+        var favoriteInDb = await context.UserFavorites
+        .FirstOrDefaultAsync(f => f.UserId == existingUser.Id && f.AdvertId == 99);
+
+        favoriteInDb.Should().BeNull();
+
+        // Vérification Identity native
+        existingUser.NormalizedEmail.Should().Contain("@DELETED.ECOSCOLAR.COM");
+        existingUser.NormalizedUserName.Should().Contain("@DELETED.ECOSCOLAR.COM");
+
+        // Vérification de la déconnexion forcée
+        await signInManagerMock.Received(1).SignOutAsync();
+    }
+
+    #endregion
+
+    #region Tests pour DeleteMyProfile
+
+    [Fact]
+    public async Task DeleteMyProfile_ShouldReturnOk_WhenAnonymizationSucceeds()
+    {
+        // Arrange
+        _userServiceMock.AnonymizeProfileAsync(Arg.Any<ClaimsPrincipal>())
+            .Returns(Result<bool>.Success(true));
+
+        // Act
+        var result = await _controller.DeleteMyProfile();
+
+        // Assert
+        var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+        okResult.Value.Should().BeEquivalentTo(new { message = "The account has successfully got anonymized" });
+    }
+
+    [Fact]
+    public async Task DeleteMyProfile_ShouldReturnUnauthorized_WhenSessionIsInvalid()
+    {
+        // Arrange
+        _userServiceMock.AnonymizeProfileAsync(Arg.Any<ClaimsPrincipal>())
+            .Returns(Result<bool>.Failure("SESSION_INVALID", ErrorType.Unauthorized));
+
+        // Act
+        var result = await _controller.DeleteMyProfile();
+
+        // Assert
+        var unauthorizedResult = result.Should().BeOfType<UnauthorizedObjectResult>().Subject;
+        unauthorizedResult.Value.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task DeleteMyProfile_ShouldReturnNotFound_WhenUserSessionExpired()
+    {
+        // Arrange
+        _userServiceMock.AnonymizeProfileAsync(Arg.Any<ClaimsPrincipal>())
+            .Returns(Result<bool>.Failure("SESSION_EXPIRED", ErrorType.NotFound));
+
+        // Act
+        var resultDelete = await _controller.DeleteMyProfile();
+
+        // Assert
+        resultDelete.Should().BeOfType<NotFoundObjectResult>();
+    }
+
+    #endregion
+
+    #region Tests pour UpdateFullProfile
+
+    [Fact]
 	public async Task UpdateFullProfile_ShouldReturnOk_WhenUpdateSucceeds()
 	{
-		var updatedDto = new UserReadDto(
+		var UserResponse = new UserResponse(
 			"guid-update",
 			"nick",
 			"First",
 			"Last",
 			"update@example.com",
+			true,
+			false,
+			[new SpokenLanguageDto("FR", "Native")],
 			new LocationReadDto("1000", "Lausanne", "Vaud"),
 			"2000-01-01",
-			true,
-			[new SpokenLanguageDto("FR", "Native")]
+			["User"]
 		);
 
 		_userServiceMock.UpdateProfileAsync(Arg.Any<ClaimsPrincipal>(), Arg.Any<UserUpdateDto>())
-			.Returns(Result<UserReadDto>.Success(updatedDto));
+			.Returns(Result<UserResponse>.Success(UserResponse));
 
 		var result = await _controller.UpdateFullProfile(new UserUpdateDto(
 			"nick", "First", "Last", "1000", "2000-01-01",
 			[new SpokenLanguageDto("FR", "Native")]));
 
 		var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
-		okResult.Value.Should().BeEquivalentTo(updatedDto);
+		okResult.Value.Should().BeEquivalentTo(UserResponse);
 	}
 
 	[Fact]
 	public async Task UpdateFullProfile_ShouldReturnNotFound_WhenUserMissing()
 	{
 		_userServiceMock.UpdateProfileAsync(Arg.Any<ClaimsPrincipal>(), Arg.Any<UserUpdateDto>())
-			.Returns(Result<UserReadDto>.Failure("User not found", ErrorType.NotFound));
+			.Returns(Result<UserResponse>.Failure("User not found", ErrorType.NotFound));
 
 		var result = await _controller.UpdateFullProfile(new UserUpdateDto(
 			"nick", "First", "Last", "1000", "2000-01-01",
@@ -144,7 +308,7 @@ public class UsersControllerTests
 	public async Task UpdateFullProfile_ShouldReturnBadRequest_WhenPostalCodeInvalid()
 	{
 		_userServiceMock.UpdateProfileAsync(Arg.Any<ClaimsPrincipal>(), Arg.Any<UserUpdateDto>())
-			.Returns(Result<UserReadDto>.Failure("Invalid postal code"));
+			.Returns(Result<UserResponse>.Failure("Invalid postal code", ErrorType.BadRequest));
 
 		var result = await _controller.UpdateFullProfile(new UserUpdateDto(
 			"nick", "First", "Last", "9999", "2000-01-01",
@@ -210,8 +374,8 @@ public class UsersControllerTests
 			Title = "Book Title",
 			Description = "Book Descr",
 			Price = 10,
-			UserId = existingUser.Id,
-			User = existingUser,
+			SellerId = existingUser.Id,
+			Seller = existingUser,
 			Status = AdvertStatus.ACTIVE,
 			CreatedAt = DateTime.UtcNow,
 			NotificationDate = DateTime.UtcNow,
@@ -227,8 +391,8 @@ public class UsersControllerTests
 			Title = "Guitar",
 			Description = "Acoustic",
 			Price = 120,
-			UserId = existingUser.Id,
-			User = existingUser,
+			SellerId = existingUser.Id,
+			Seller = existingUser,
 			Status = AdvertStatus.ACTIVE,
 			CreatedAt = DateTime.UtcNow,
 			NotificationDate = DateTime.UtcNow,
@@ -240,8 +404,8 @@ public class UsersControllerTests
 			Title = "Math tutoring",
 			Description = "Algebra",
 			Price = 30,
-			UserId = existingUser.Id,
-			User = existingUser,
+			SellerId = existingUser.Id,
+			Seller = existingUser,
 			Status = AdvertStatus.ACTIVE,
 			CreatedAt = DateTime.UtcNow,
 			NotificationDate = DateTime.UtcNow,
@@ -255,21 +419,21 @@ public class UsersControllerTests
 		{
 			UserId = existingUser.Id,
 			AdvertId = bookAdvert.AdvertId,
-			Adverts = bookAdvert,
+			Advert = bookAdvert,
 			User = existingUser
 		};
 		var favoritePhysical = new UserFavorite
 		{
 			UserId = existingUser.Id,
 			AdvertId = physicalItemAdvert.AdvertId,
-			Adverts = physicalItemAdvert,
+			Advert = physicalItemAdvert,
 			User = existingUser
 		};
 		var favoriteService = new UserFavorite
 		{
 			UserId = existingUser.Id,
 			AdvertId = serviceAdvert.AdvertId,
-			Adverts = serviceAdvert,
+			Advert = serviceAdvert,
 			User = existingUser
 		};
 
@@ -291,6 +455,45 @@ public class UsersControllerTests
 		// Cleanup for in memory db persistence between tests
 		_context.UserFavorites.RemoveRange(favoriteBook, favoritePhysical, favoriteService);
 		await _context.SaveChangesAsync();
+	}
+
+	#endregion
+
+	#region Tests for DeleteSearchAlert
+
+	[Fact]
+	public async Task DeleteSearchAlert_ShouldReturnNotFound_WhenAlertDoesNotExist()
+	{
+		var existingUser = new User { Id = "guid-alert-del-0", UserName = "alert@test.ch" };
+		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+
+		var result = await _controller.DeleteSearchAlert(999);
+
+		result.Should().BeOfType<NotFoundObjectResult>();
+	}
+
+	[Fact]
+	public async Task DeleteSearchAlert_ShouldReturnNoContent_WhenAlertOwnedByUser()
+	{
+		var existingUser = new User { Id = "guid-alert-del-1", UserName = "alert@test.ch" };
+		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+
+		_context.SearchAlerts.Add(new SearchAlert
+		{
+			UserId = existingUser.Id,
+			AdvertSearch = "Biologie",
+			AdvertType = CatalogAdvertTypeCodes.Books
+		});
+		await _context.SaveChangesAsync();
+
+		var alertId = _context.SearchAlerts.First().ResearchId;
+
+		var result = await _controller.DeleteSearchAlert(alertId);
+
+		result.Should().BeOfType<NoContentResult>();
+
+		var inDb = await _context.SearchAlerts.FindAsync(alertId);
+		inDb.Should().BeNull();
 	}
 
 	#endregion
@@ -336,7 +539,7 @@ public class UsersControllerTests
 			AdvertId = 2,
 			Title = "Another book",
 			Description = "Desc",
-			UserId = "other",
+			SellerId = "other",
 			ISBN = "12345",
 			Author = "John",
 			Publisher = "Pub",
@@ -369,7 +572,7 @@ public class UsersControllerTests
 			AdvertId = 3,
 			Title = "ToBeDeleted",
 			Description = "Desc",
-			UserId = "other",
+			SellerId = "other",
 			ISBN = "12345",
 			Author = "John",
 			Publisher = "Pub",
@@ -391,6 +594,87 @@ public class UsersControllerTests
 
 		var favoriteInDb = await _context.UserFavorites.FirstOrDefaultAsync(u => u.UserId == existingUser.Id && u.AdvertId == 3);
 		favoriteInDb.Should().BeNull();
+	}
+
+	#endregion
+
+	#region Tests for CreateSearchAlert
+
+	[Fact]
+	public async Task CreateSearchAlert_ShouldReturnNotFound_WhenUserDoesNotExist()
+	{
+		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns((User?)null);
+
+		var result = await _controller.CreateSearchAlert(new CreateSearchAlertDto { Q = "Biologie" });
+
+		result.Should().BeOfType<NotFoundObjectResult>();
+	}
+
+	[Fact]
+	public async Task CreateSearchAlert_ShouldReturnBadRequest_WhenNoCriteria()
+	{
+		var existingUser = new User { Id = "guid-alert-0", UserName = "alert@test.ch" };
+		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+
+		var result = await _controller.CreateSearchAlert(new CreateSearchAlertDto());
+
+		result.Should().BeOfType<BadRequestObjectResult>();
+	}
+
+	[Fact]
+	public async Task CreateSearchAlert_ShouldReturnCreated_WhenCriteriaValid()
+	{
+		var existingUser = new User { Id = "guid-alert-1", UserName = "alert@test.ch" };
+		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
+
+		var result = await _controller.CreateSearchAlert(new CreateSearchAlertDto { Q = "Calculatrice" });
+
+		var created = result.Should().BeOfType<ObjectResult>().Subject;
+		created.StatusCode.Should().Be(StatusCodes.Status201Created);
+		var alertDto = created.Value.Should().BeOfType<SearchAlertReadDto>().Subject;
+		alertDto.Q.Should().Be("Calculatrice");
+		alertDto.Id.Should().BeGreaterThan(0);
+
+		var inDb = await _context.SearchAlerts.FirstOrDefaultAsync(a => a.UserId == existingUser.Id);
+		inDb.Should().NotBeNull();
+		inDb!.AdvertSearch.Should().Be("Calculatrice");
+	}
+
+	#endregion
+
+	#region Tests for GetMySearchAlerts
+
+	[Fact]
+	public async Task GetMySearchAlerts_ShouldReturnNotFound_WhenUserDoesNotExist()
+	{
+		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns((User?)null);
+
+		var result = await _controller.GetMySearchAlerts();
+
+		result.Should().BeOfType<NotFoundObjectResult>();
+	}
+
+	[Fact]
+	public async Task GetMySearchAlerts_ShouldReturnOnlyCurrentUserAlerts_OrderedByResearchIdDesc()
+	{
+		var userA = new User { Id = "guid-alert-get-a", UserName = "a@test.ch" };
+		var userB = new User { Id = "guid-alert-get-b", UserName = "b@test.ch" };
+		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(userA);
+
+		_context.SearchAlerts.AddRange(
+			new SearchAlert { UserId = userA.Id, AdvertSearch = "Old", AdvertType = CatalogAdvertTypeCodes.Books },
+			new SearchAlert { UserId = userA.Id, AdvertSearch = "New", AdvertType = CatalogAdvertTypeCodes.Books },
+			new SearchAlert { UserId = userB.Id, AdvertSearch = "Other", AdvertType = CatalogAdvertTypeCodes.Books }
+		);
+		await _context.SaveChangesAsync();
+
+		var result = await _controller.GetMySearchAlerts();
+
+		var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+		var alerts = okResult.Value.Should().BeAssignableTo<IEnumerable<SearchAlertReadDto>>().Subject.ToList();
+		alerts.Should().HaveCount(2);
+		alerts[0].Q.Should().Be("New");
+		alerts[1].Q.Should().Be("Old");
 	}
 
 	#endregion
@@ -421,8 +705,8 @@ public class UsersControllerTests
 			Title = "Book Title",
 			Description = "Book Descr",
 			Price = 10,
-			UserId = existingUser.Id,
-			User = existingUser,
+			SellerId = existingUser.Id,
+			Seller = existingUser,
 			Status = AdvertStatus.ACTIVE,
 			CreatedAt = DateTime.UtcNow,
 			NotificationDate = DateTime.UtcNow,
@@ -438,8 +722,8 @@ public class UsersControllerTests
 			Title = "Guitar",
 			Description = "Acoustic",
 			Price = 120,
-			UserId = existingUser.Id,
-			User = existingUser,
+			SellerId = existingUser.Id,
+			Seller = existingUser,
 			Status = AdvertStatus.ACTIVE,
 			CreatedAt = DateTime.UtcNow,
 			NotificationDate = DateTime.UtcNow,
@@ -476,5 +760,236 @@ public class UsersControllerTests
 		returnedAdverts.Should().NotBeNull();
 		returnedAdverts.Should().BeEmpty();
 	}
-    #endregion
-    }
+     #endregion
+
+	#region Tests for GetUserReviews
+
+	[Fact]
+	public async Task GetUserReviews_ShouldReturnNotFound_WhenUserDoesNotExist()
+	{
+		// Arrange
+		// Act
+		var result = await _controller.GetUserReviews("non-existent-user");
+
+		// Assert
+		result.Result.Should().BeOfType<NotFoundResult>();
+	}
+
+	[Fact]
+	public async Task GetUserReviews_ShouldReturnOkWithReviews_WhenUserExists()
+	{
+		// Arrange
+		var userId = "test-user-id";
+		var reviewerId = "reviewer-user-id";
+
+		var user = new User { Id = userId, Nickname = "test_user", FirstName = "Test", LastName = "User" };
+		var reviewer = new User { Id = reviewerId, Nickname = "reviewer", FirstName = "Review", LastName = "Er" };
+
+		var transaction = new Transaction
+		{
+			TransactionId = 10,
+			BuyerId = userId,
+			AdvertId = 101,
+			Advert = new Book
+			{
+				AdvertId = 101,
+				Title = "Book Title",
+				Description = "Book Desc",
+				SellerId = reviewerId,
+				Seller = reviewer,
+				ISBN = "12345",
+				Author = "John",
+				Publisher = "Pub",
+				Edition = "1st",
+				WrittenLanguage = Enums.LanguageEnum.FR
+			}
+		};
+
+		var review = new Review
+		{
+			ReviewId = 1,
+			Comment = "Great service!",
+			Rating = 5,
+			Date = DateTime.UtcNow,
+			ReviewerId = reviewerId,
+			Reviewer = reviewer,
+			ReviewedId = userId,
+			Reviewed = user,
+			TransactionId = 10,
+			Transaction = transaction,
+			ReviewedRole = ReviewedRole.BUYER
+		};
+
+		_context.Users.AddRange(user, reviewer);
+		_context.Transactions.Add(transaction);
+		_context.Reviews.Add(review);
+		await _context.SaveChangesAsync();
+
+		// Act
+		var result = await _controller.GetUserReviews(userId);
+
+		// Assert
+		var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+		var returnedReviews = okResult.Value.Should().BeAssignableTo<IEnumerable<ReviewResponseDTO>>().Subject.ToList();
+		returnedReviews.Should().HaveCount(1);
+		returnedReviews[0].ReviewId.Should().Be(1);
+		returnedReviews[0].Comment.Should().Be("Great service!");
+		returnedReviews[0].Rating.Should().Be(5);
+		returnedReviews[0].ReviewedId.Should().Be(userId);
+		returnedReviews[0].ReviewerId.Should().Be(reviewerId);
+
+		// Cleanup
+		_context.Reviews.Remove(review);
+		_context.Transactions.Remove(transaction);
+		_context.Users.RemoveRange(user, reviewer);
+		await _context.SaveChangesAsync();
+	}
+
+	#endregion
+
+	#region Tests pour Stripe Connect (Controller)
+
+	[Fact]
+	public async Task CreateStripeOnboardingLink_ShouldReturnOk_WhenSuccessful()
+	{
+		// Arrange
+		var expectedResponse = new StripeOnboardingResponseDto("https://stripe-link.url");
+		_stripeConnectServiceMock.CreateOnboardingLinkAsync(Arg.Any<ClaimsPrincipal>(), Arg.Any<string>())
+			.Returns(Result<StripeOnboardingResponseDto>.Success(expectedResponse));
+
+		var httpContext = new DefaultHttpContext();
+		httpContext.Request.Scheme = "http";
+		httpContext.Request.Host = new HostString("localhost", 5000);
+		_controller.ControllerContext = new ControllerContext { HttpContext = httpContext };
+
+		// Act
+		var result = await _controller.CreateStripeOnboardingLink();
+
+		// Assert
+		var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+		okResult.Value.Should().BeEquivalentTo(expectedResponse);
+	}
+
+	[Fact]
+	public async Task CreateStripeOnboardingLink_ShouldReturnNotFound_WhenUserNotFound()
+	{
+		// Arrange
+		_stripeConnectServiceMock.CreateOnboardingLinkAsync(Arg.Any<ClaimsPrincipal>(), Arg.Any<string>())
+			.Returns(Result<StripeOnboardingResponseDto>.Failure("User not found", ErrorType.NotFound));
+
+		var httpContext = new DefaultHttpContext();
+		httpContext.Request.Scheme = "http";
+		httpContext.Request.Host = new HostString("localhost", 5000);
+		_controller.ControllerContext = new ControllerContext { HttpContext = httpContext };
+
+		// Act
+		var result = await _controller.CreateStripeOnboardingLink();
+
+		// Assert
+		var notFoundResult = result.Should().BeOfType<NotFoundObjectResult>().Subject;
+		notFoundResult.Value.Should().NotBeNull();
+	}
+
+	[Fact]
+	public async Task CreateStripeOnboardingLink_ShouldReturnInternalServerError_WhenStripeFailsInternally()
+	{
+		// Arrange
+		_stripeConnectServiceMock.CreateOnboardingLinkAsync(Arg.Any<ClaimsPrincipal>(), Arg.Any<string>())
+			.Returns(Result<StripeOnboardingResponseDto>.Failure("Stripe internal failure", ErrorType.InternalError));
+
+		var httpContext = new DefaultHttpContext();
+		httpContext.Request.Scheme = "http";
+		httpContext.Request.Host = new HostString("localhost", 5000);
+		_controller.ControllerContext = new ControllerContext { HttpContext = httpContext };
+
+		// Act
+		var result = await _controller.CreateStripeOnboardingLink();
+
+		// Assert
+		var statusResult = result.Should().BeOfType<ObjectResult>().Subject;
+		statusResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+	}
+
+	[Fact]
+	public async Task CreateStripeOnboardingLink_ShouldReturnBadRequest_WhenRequestIsInvalid()
+	{
+		// Arrange
+		_stripeConnectServiceMock.CreateOnboardingLinkAsync(Arg.Any<ClaimsPrincipal>(), Arg.Any<string>())
+			.Returns(Result<StripeOnboardingResponseDto>.Failure("Bad Request", ErrorType.BadRequest));
+
+		var httpContext = new DefaultHttpContext();
+		httpContext.Request.Scheme = "http";
+		httpContext.Request.Host = new HostString("localhost", 5000);
+		_controller.ControllerContext = new ControllerContext { HttpContext = httpContext };
+
+		// Act
+		var result = await _controller.CreateStripeOnboardingLink();
+
+		// Assert
+		var badRequestResult = result.Should().BeOfType<BadRequestObjectResult>().Subject;
+		badRequestResult.Value.Should().NotBeNull();
+	}
+
+	[Fact]
+	public async Task GetStripeStatus_ShouldReturnOk_WhenSuccessful()
+	{
+		// Arrange
+		var expectedStatus = new StripeStatusDto(true, "acct_123");
+		_stripeConnectServiceMock.GetStatusAsync(Arg.Any<ClaimsPrincipal>())
+			.Returns(Result<StripeStatusDto>.Success(expectedStatus));
+
+		// Act
+		var result = await _controller.GetStripeStatus();
+
+		// Assert
+		var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+		okResult.Value.Should().BeEquivalentTo(expectedStatus);
+	}
+
+	[Fact]
+	public async Task GetStripeStatus_ShouldReturnNotFound_WhenUserNotFound()
+	{
+		// Arrange
+		_stripeConnectServiceMock.GetStatusAsync(Arg.Any<ClaimsPrincipal>())
+			.Returns(Result<StripeStatusDto>.Failure("User not found", ErrorType.NotFound));
+
+		// Act
+		var result = await _controller.GetStripeStatus();
+
+		// Assert
+		var notFoundResult = result.Should().BeOfType<NotFoundObjectResult>().Subject;
+		notFoundResult.Value.Should().NotBeNull();
+	}
+
+	[Fact]
+	public async Task GetStripeStatus_ShouldReturnInternalServerError_WhenStripeFailsInternally()
+	{
+		// Arrange
+		_stripeConnectServiceMock.GetStatusAsync(Arg.Any<ClaimsPrincipal>())
+			.Returns(Result<StripeStatusDto>.Failure("Stripe internal failure", ErrorType.InternalError));
+
+		// Act
+		var result = await _controller.GetStripeStatus();
+
+		// Assert
+		var statusResult = result.Should().BeOfType<ObjectResult>().Subject;
+		statusResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+	}
+
+	[Fact]
+	public async Task GetStripeStatus_ShouldReturnBadRequest_WhenRequestIsInvalid()
+	{
+		// Arrange
+		_stripeConnectServiceMock.GetStatusAsync(Arg.Any<ClaimsPrincipal>())
+			.Returns(Result<StripeStatusDto>.Failure("Bad Request", ErrorType.BadRequest));
+
+		// Act
+		var result = await _controller.GetStripeStatus();
+
+		// Assert
+		var badRequestResult = result.Should().BeOfType<BadRequestObjectResult>().Subject;
+		badRequestResult.Value.Should().NotBeNull();
+	}
+
+	#endregion
+}

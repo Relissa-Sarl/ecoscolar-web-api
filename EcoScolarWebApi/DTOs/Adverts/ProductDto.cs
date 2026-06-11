@@ -17,8 +17,8 @@ public record ProductReadDto(long Id, string Title, string Description, decimal 
 			PublicationDate: entity.CreatedAt,
 			NotificationDate: entity.NotificationDate,
 			Status: entity.Status,
-			UserId: entity.UserId,
-			SellerPseudo: entity.User?.UserName ?? "Anonyme",
+			UserId: entity.SellerId,
+			SellerPseudo: entity.Seller?.Nickname ?? "Anonyme",
 			Condition: entity.Condition,
 			Weight: entity.Weight ?? null,
 			ProductCategoryId: entity.ProductCategoryId ?? null,
@@ -38,7 +38,8 @@ public record ProductReadDto(long Id, string Title, string Description, decimal 
 /// <param name="Images">The array of image URLs for the product advert</param>
 /// <param name="Condition">The condition of the product advert</param>
 /// <param name="ProductCategoryId">The ID of the product category to which the product advert belongs</param>
-public record ProductCreateDto(string Title, string Description, decimal Price, string UserId, string[]? Images, PhysicalItemCondition Condition, long? ProductCategoryId = null)
+/// <param name="Weight">The weight of the product advert</param>
+public record ProductCreateDto(string Title, string Description, decimal Price, string UserId, string[]? Images, PhysicalItemCondition Condition, long? ProductCategoryId = null, decimal? Weight = null)
 	: AdvertCreateDto(Title, Description, Price, UserId)
 {
 	/// <summary>
@@ -53,9 +54,9 @@ public record ProductCreateDto(string Title, string Description, decimal Price, 
 	}
 
 	/// <summary>
-	/// Maps the properties of the ProductCreateDto to an existing Adverts entity, specifically to a PhysicalItems entity.
+	/// Maps the properties of the ProductCreateDto to an existing PhysicalItem entity, specifically to a PhysicalItems entity.
 	/// </summary>
-	/// <param name="entity">The Adverts entity to map to</param>
+	/// <param name="entity">The PhysicalItem entity to map to</param>
 	public override void MapToEntity(Advert entity)
 	{
 		base.MapToEntity(entity);
@@ -63,7 +64,8 @@ public record ProductCreateDto(string Title, string Description, decimal Price, 
 		{
 			product.Condition = Condition;
 			product.ProductCategoryId = ProductCategoryId;
-			if (Images.IsNullOrEmpty())
+			product.Weight = Weight;
+            if (Images.IsNullOrEmpty())
 			{
 				product.Pictures.Add(new Picture { Label = "https://picsum.photos/800/600" });
 			}
