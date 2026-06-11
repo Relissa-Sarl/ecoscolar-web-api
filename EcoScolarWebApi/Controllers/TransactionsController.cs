@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using EcoScolarWebApi.Data;
 using EcoScolarWebApi.DTOs.Reviews;
+using EcoScolarWebApi.DTOs.Transactions;
 using EcoScolarWebApi.Enums;
 using EcoScolarWebApi.Mappers;
 using EcoScolarWebApi.Models;
@@ -159,6 +160,74 @@ public class TransactionsController(EcoscolarDbContext context, UserManager<User
 		await _context.SaveChangesAsync();
 
 		return Ok();
+	}
+
+	[HttpPost]
+	public async Task<IActionResult> CreateTransactions([FromBody] CreateTransactionRequestDto request)
+	{
+		var user = await _userManager.GetUserAsync(User);
+		if (user is null)
+			return Unauthorized();
+
+		if (request.AdvertIds == null || request.AdvertIds.Count == 0)
+		{
+			return BadRequest(new { message = "AdvertIds are required." });
+		}
+
+		var createdTransactions = new List<Transaction>();
+
+		foreach (var advertId in request.AdvertIds)
+		{
+			// Check if a transaction already exists for this advert
+			var existingTransaction = await _context.Transactions
+				.FirstOrDefaultAsync(t => t.AdvertId == advertId);
+
+			if (existingTransaction != null)
+			{
+				createdTransactions.Add(existingTransaction);
+				continue;
+			}
+
+			var advert = await _context.Adverts.FindAsync(advertId);
+			if (advert == null)
+			{
+				return NotFound(new { message = $"Advert with ID {advertId} not found." });
+			}
+
+			// Calculate platform fee (5% of price, rounded to 2 decimal places)
+			var platformFee = Math.Round(advert.Price * 0.05m, 2);
+
+			var newTransaction = new Transaction
+			{
+				AdvertId = advertId,
+				BuyerId = user.Id,
+				Date = DateTime.UtcNow,
+				Status = TransactionStatus.PAID_WAITING_SHIPPING,
+				PlatformFee = platformFee,
+				StripeSessionId = request.StripeSessionId,
+				BuyerConsent = false,
+				SellerConsent = false
+			};
+
+			// Update the advert status to SOLD
+			advert.Status = AdvertStatus.SOLD;
+			_context.Entry(advert).State = EntityState.Modified;
+
+			_context.Transactions.Add(newTransaction);
+			createdTransactions.Add(newTransaction);
+		}
+
+		await _context.SaveChangesAsync();
+
+		return Ok(createdTransactions.Select(t => new {
+			t.TransactionId,
+			t.AdvertId,
+			t.BuyerId,
+			t.Status,
+			t.Date,
+			t.PlatformFee,
+			t.StripeSessionId
+		}));
 	}
 }
 
