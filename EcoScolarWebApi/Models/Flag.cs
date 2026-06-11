@@ -18,7 +18,7 @@ public class Flag
     // === Foreign Keys ===
 
     [Required]
-    public string ReporterId { get; set; } 
+    public string ReporterId { get; set; }
 
     [Required]
     public string FlaggedId { get; set; }

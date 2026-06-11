@@ -120,7 +120,7 @@ public class CartIntegrationTest : IClassFixture<AuthInMemoryWebApplicationFacto
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
-        
+
         var createdDto = await response.Content.ReadFromJsonAsync<CartItemDto>(JsonOptions);
         createdDto.Should().NotBeNull();
         createdDto!.AdvertId.Should().Be(advertId);

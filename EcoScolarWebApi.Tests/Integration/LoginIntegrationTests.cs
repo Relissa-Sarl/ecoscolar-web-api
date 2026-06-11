@@ -12,89 +12,89 @@ namespace EcoScolarWebApi.Tests.Integration;
 /// </summary>
 public class LoginIntegrationTests : IDisposable
 {
-	private readonly ServiceProvider _provider;
-	private readonly EcoscolarDbContext _context;
-	private readonly UserManager<User> _userManager;
-	private readonly SignInManager<User> _signInManager;
+    private readonly ServiceProvider _provider;
+    private readonly EcoscolarDbContext _context;
+    private readonly UserManager<User> _userManager;
+    private readonly SignInManager<User> _signInManager;
 
-	public LoginIntegrationTests()
-	{
-		_provider = IntegrationTestIdentityHelper.CreateIdentityProvider(out _context);
-		_userManager = _provider.GetRequiredService<UserManager<User>>();
-		_signInManager = _provider.GetRequiredService<SignInManager<User>>();
-	}
+    public LoginIntegrationTests()
+    {
+        _provider = IntegrationTestIdentityHelper.CreateIdentityProvider(out _context);
+        _userManager = _provider.GetRequiredService<UserManager<User>>();
+        _signInManager = _provider.GetRequiredService<SignInManager<User>>();
+    }
 
-	[Fact]
-	public async Task Login_WithValidCredentials_Succeeds()
-	{
-		const string email = "login.integration@example.com";
-		const string password = "Password123!";
+    [Fact]
+    public async Task Login_WithValidCredentials_Succeeds()
+    {
+        const string email = "login.integration@example.com";
+        const string password = "Password123!";
 
-		(await _userManager.CreateAsync(new User
-		{
-			UserName = email,
-			Email = email
-		}, password)).Succeeded.Should().BeTrue();
+        (await _userManager.CreateAsync(new User
+        {
+            UserName = email,
+            Email = email
+        }, password)).Succeeded.Should().BeTrue();
 
-		var user = await _userManager.FindByEmailAsync(email);
-		var result = await _signInManager.CheckPasswordSignInAsync(user!, password, lockoutOnFailure: false);
+        var user = await _userManager.FindByEmailAsync(email);
+        var result = await _signInManager.CheckPasswordSignInAsync(user!, password, lockoutOnFailure: false);
 
-		result.Succeeded.Should().BeTrue();
-	}
+        result.Succeeded.Should().BeTrue();
+    }
 
-	[Fact]
-	public async Task Login_WithInvalidPassword_Fails()
-	{
-		const string email = "login.bad@example.com";
+    [Fact]
+    public async Task Login_WithInvalidPassword_Fails()
+    {
+        const string email = "login.bad@example.com";
 
-		(await _userManager.CreateAsync(new User { UserName = email, Email = email }, "Password123!"))
-			.Succeeded.Should().BeTrue();
+        (await _userManager.CreateAsync(new User { UserName = email, Email = email }, "Password123!"))
+            .Succeeded.Should().BeTrue();
 
-		var user = await _userManager.FindByEmailAsync(email);
-		var result = await _signInManager.CheckPasswordSignInAsync(user!, "WrongPassword!", lockoutOnFailure: false);
+        var user = await _userManager.FindByEmailAsync(email);
+        var result = await _signInManager.CheckPasswordSignInAsync(user!, "WrongPassword!", lockoutOnFailure: false);
 
-		result.Succeeded.Should().BeFalse();
-	}
+        result.Succeeded.Should().BeFalse();
+    }
 
-	[Fact]
-	public async Task Login_WithUnknownEmail_UserNotFound()
-	{
-		var user = await _userManager.FindByEmailAsync("unknown@example.com");
+    [Fact]
+    public async Task Login_WithUnknownEmail_UserNotFound()
+    {
+        var user = await _userManager.FindByEmailAsync("unknown@example.com");
 
-		user.Should().BeNull();
-	}
+        user.Should().BeNull();
+    }
 
-	[Fact]
-	public async Task Register_StoresEmailCorrectly()
-	{
-		const string email = "register.store@example.com";
-		const string password = "Password123!";
+    [Fact]
+    public async Task Register_StoresEmailCorrectly()
+    {
+        const string email = "register.store@example.com";
+        const string password = "Password123!";
 
-		(await _userManager.CreateAsync(new User { UserName = email, Email = email }, password))
-			.Succeeded.Should().BeTrue();
+        (await _userManager.CreateAsync(new User { UserName = email, Email = email }, password))
+            .Succeeded.Should().BeTrue();
 
-		var stored = await _userManager.FindByEmailAsync(email);
-		stored.Should().NotBeNull();
-		stored!.Email.Should().Be(email);
-		stored.UserName.Should().Be(email);
-	}
+        var stored = await _userManager.FindByEmailAsync(email);
+        stored.Should().NotBeNull();
+        stored!.Email.Should().Be(email);
+        stored.UserName.Should().Be(email);
+    }
 
-	[Fact]
-	public async Task Register_WithDuplicateEmail_Fails()
-	{
-		const string email = "duplicate@example.com";
+    [Fact]
+    public async Task Register_WithDuplicateEmail_Fails()
+    {
+        const string email = "duplicate@example.com";
 
-		(await _userManager.CreateAsync(new User { UserName = email, Email = email }, "Password123!"))
-			.Succeeded.Should().BeTrue();
+        (await _userManager.CreateAsync(new User { UserName = email, Email = email }, "Password123!"))
+            .Succeeded.Should().BeTrue();
 
-		var duplicate = await _userManager.CreateAsync(new User { UserName = email, Email = email }, "Password123!");
-		duplicate.Succeeded.Should().BeFalse();
-	}
+        var duplicate = await _userManager.CreateAsync(new User { UserName = email, Email = email }, "Password123!");
+        duplicate.Succeeded.Should().BeFalse();
+    }
 
-	public void Dispose()
-	{
-		_context.Database.EnsureDeleted();
-		_context.Dispose();
-		_provider.Dispose();
-	}
+    public void Dispose()
+    {
+        _context.Database.EnsureDeleted();
+        _context.Dispose();
+        _provider.Dispose();
+    }
 }

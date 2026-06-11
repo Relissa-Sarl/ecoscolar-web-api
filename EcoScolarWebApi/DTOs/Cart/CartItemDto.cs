@@ -34,4 +34,4 @@ namespace EcoScolarWebApi.DTOs.Cart
 
         public decimal ShippingCost { get; set; }
     }
-}   
+}

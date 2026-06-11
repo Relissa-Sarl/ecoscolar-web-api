@@ -9,7 +9,7 @@ public class UserLanguage
     public User User { get; set; }
 
     public string Label { get; set; }
-    public Language Language { get; set; } 
+    public Language Language { get; set; }
 
     public string LanguageLevel { get; set; }
 }

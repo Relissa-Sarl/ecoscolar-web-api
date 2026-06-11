@@ -4,32 +4,32 @@ using EcoScolarWebApi.Models;
 namespace EcoScolarWebApi.DTOs.Adverts;
 
 public record BookReadDto(long id, string title, string description, decimal price, DateTime publicationDate, DateTime notificationDate, AdvertStatus status, string userId, string sellerPseudo,
-	List<string> pictures, PhysicalItemCondition condition, long bookCategoryId, string bookCategoryLabel, string isbn, string author, string publisher, string edition, Enums.LanguageEnum writtenLanguage, decimal? weight = null)
+    List<string> pictures, PhysicalItemCondition condition, long bookCategoryId, string bookCategoryLabel, string isbn, string author, string publisher, string edition, Enums.LanguageEnum writtenLanguage, decimal? weight = null)
 {
-	public static BookReadDto FromEntity(Book entity)
-	{
-		return new BookReadDto(
-			id: entity.AdvertId,
-			title: entity.Title,
-			description: entity.Description,
-			price: entity.Price,
-			publicationDate: entity.CreatedAt,
-			notificationDate: entity.NotificationDate,
-			status: entity.Status,
-			userId: entity.SellerId,
-			sellerPseudo: entity.Seller?.Nickname ?? "Anonyme",
-			condition: entity.Condition,
-			weight: entity.Weight,
-			bookCategoryId: entity.BookCategoryId,
-			bookCategoryLabel: entity.BookCategory.Description,
-			isbn: entity.ISBN,
-			author: entity.Author,
-			publisher: entity.Publisher,
-			edition: entity.Edition,
-			writtenLanguage: entity.WrittenLanguage,
-			pictures: entity.Pictures?.Select(p => p.Label).ToList() ?? new List<string>()
-		);
-	}
+    public static BookReadDto FromEntity(Book entity)
+    {
+        return new BookReadDto(
+            id: entity.AdvertId,
+            title: entity.Title,
+            description: entity.Description,
+            price: entity.Price,
+            publicationDate: entity.CreatedAt,
+            notificationDate: entity.NotificationDate,
+            status: entity.Status,
+            userId: entity.SellerId,
+            sellerPseudo: entity.Seller?.Nickname ?? "Anonyme",
+            condition: entity.Condition,
+            weight: entity.Weight,
+            bookCategoryId: entity.BookCategoryId,
+            bookCategoryLabel: entity.BookCategory.Description,
+            isbn: entity.ISBN,
+            author: entity.Author,
+            publisher: entity.Publisher,
+            edition: entity.Edition,
+            writtenLanguage: entity.WrittenLanguage,
+            pictures: entity.Pictures?.Select(p => p.Label).ToList() ?? new List<string>()
+        );
+    }
 }
 
 /// <summary>
@@ -47,36 +47,36 @@ public record BookReadDto(long id, string title, string description, decimal pri
 /// <param name="Publisher">The publisher of the Books PhysicalItem</param>
 /// <param name="Edition">The edition of the Books PhysicalItem</param>
 public record BookCreateDto(
-	string Title, string Description, decimal Price, string UserId, string[]? Images, PhysicalItemCondition Condition,
-	long CategoryId, string Isbn, string Author, string Publisher, string Edition, Enums.LanguageEnum WrittenLanguage
+    string Title, string Description, decimal Price, string UserId, string[]? Images, PhysicalItemCondition Condition,
+    long CategoryId, string Isbn, string Author, string Publisher, string Edition, Enums.LanguageEnum WrittenLanguage
 ) : ProductCreateDto(Title, Description, Price, UserId, Images, Condition, ProductCategoryId: null, Weight: null)
 {
-	/// <summary>
-	/// Converts the BookCreateDto to a Books entity.
-	/// </summary>
-	/// <returns>The Books entity</returns>
-	public new Book ToEntity()
-	{
-		var Books = new Book();
-		this.MapToEntity(Books);
-		return Books;
-	}
+    /// <summary>
+    /// Converts the BookCreateDto to a Books entity.
+    /// </summary>
+    /// <returns>The Books entity</returns>
+    public new Book ToEntity()
+    {
+        var Books = new Book();
+        this.MapToEntity(Books);
+        return Books;
+    }
 
-	/// <summary>
-	/// Maps the properties of the BookCreateDto to an existing PhysicalItem entity, specifically to a Books entity.
-	/// </summary>
-	/// <param name="entity">The PhysicalItem entity to map to</param>
-	public override void MapToEntity(Advert entity)
-	{
-		base.MapToEntity(entity);
-		if (entity is Book Books)
-		{
-			Books.Author = Author;
-			Books.Publisher = Publisher;
-			Books.Edition = Edition;
-			Books.ISBN = Isbn;
-			Books.BookCategoryId = CategoryId;
-			Books.WrittenLanguage = WrittenLanguage;
-		}
-	}
+    /// <summary>
+    /// Maps the properties of the BookCreateDto to an existing PhysicalItem entity, specifically to a Books entity.
+    /// </summary>
+    /// <param name="entity">The PhysicalItem entity to map to</param>
+    public override void MapToEntity(Advert entity)
+    {
+        base.MapToEntity(entity);
+        if (entity is Book Books)
+        {
+            Books.Author = Author;
+            Books.Publisher = Publisher;
+            Books.Edition = Edition;
+            Books.ISBN = Isbn;
+            Books.BookCategoryId = CategoryId;
+            Books.WrittenLanguage = WrittenLanguage;
+        }
+    }
 }

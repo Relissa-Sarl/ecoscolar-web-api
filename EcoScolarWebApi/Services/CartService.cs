@@ -66,7 +66,7 @@ namespace EcoScolarWebApi.Services
             var dtos = cartItems.Select(c =>
             {
                 var primaryImage = _context.Pictures.FirstOrDefault(p => p.PhysicalItemId == c.AdvertId)?.Label;
-                
+
                 string type = c.Advert switch
                 {
                     PhysicalItem => "PhysicalItem",

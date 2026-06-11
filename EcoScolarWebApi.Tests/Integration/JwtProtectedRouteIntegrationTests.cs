@@ -16,58 +16,58 @@ namespace EcoScolarWebApi.Tests.Integration;
 /// </summary>
 public class JwtProtectedRouteIntegrationTests : IDisposable
 {
-	private readonly ServiceProvider _provider;
-	private readonly EcoscolarDbContext _context;
-	private readonly UserManager<User> _userManager;
-	private readonly UserService _userService;
-	private readonly UserMapper _userMapper;
+    private readonly ServiceProvider _provider;
+    private readonly EcoscolarDbContext _context;
+    private readonly UserManager<User> _userManager;
+    private readonly UserService _userService;
+    private readonly UserMapper _userMapper;
 
     public JwtProtectedRouteIntegrationTests()
-	{
-		_provider = IntegrationTestIdentityHelper.CreateIdentityProvider(out _context);
-		_userManager = _provider.GetRequiredService<UserManager<User>>();
-		var signInManager = _provider.GetRequiredService<SignInManager<User>>();
-		_userMapper = new UserMapper();
-		_userService = new UserService(_userManager, _context, signInManager, _userMapper);
-	}
+    {
+        _provider = IntegrationTestIdentityHelper.CreateIdentityProvider(out _context);
+        _userManager = _provider.GetRequiredService<UserManager<User>>();
+        var signInManager = _provider.GetRequiredService<SignInManager<User>>();
+        _userMapper = new UserMapper();
+        _userService = new UserService(_userManager, _context, signInManager, _userMapper);
+    }
 
-	[Fact]
-	public async Task GetMyProfile_WithoutAuth_ReturnsUnauthorized()
-	{
-		var result = await _userService.GetCurrentUserProfileAsync(new ClaimsPrincipal());
+    [Fact]
+    public async Task GetMyProfile_WithoutAuth_ReturnsUnauthorized()
+    {
+        var result = await _userService.GetCurrentUserProfileAsync(new ClaimsPrincipal());
 
-		result.IsSuccess.Should().BeFalse();
-		result.ErrorType.Should().Be(ErrorType.Unauthorized);
-	}
+        result.IsSuccess.Should().BeFalse();
+        result.ErrorType.Should().Be(ErrorType.Unauthorized);
+    }
 
-	[Fact]
-	public async Task GetMyProfile_WithAuthenticatedUser_ReturnsProfile()
-	{
-		const string email = "jwt.integration@example.com";
+    [Fact]
+    public async Task GetMyProfile_WithAuthenticatedUser_ReturnsProfile()
+    {
+        const string email = "jwt.integration@example.com";
 
-		var user = new User
-		{
-			UserName = email,
-			Email = email,
-			FirstName = "Jwt",
-			LastName = "Test",
+        var user = new User
+        {
+            UserName = email,
+            Email = email,
+            FirstName = "Jwt",
+            LastName = "Test",
         };
-		(await _userManager.CreateAsync(user, "Password123!")).Succeeded.Should().BeTrue();
+        (await _userManager.CreateAsync(user, "Password123!")).Succeeded.Should().BeTrue();
 
-		var claims = new ClaimsPrincipal(new ClaimsIdentity([
-			new Claim(ClaimTypes.NameIdentifier, user.Id)
-		], "TestAuth"));
+        var claims = new ClaimsPrincipal(new ClaimsIdentity([
+            new Claim(ClaimTypes.NameIdentifier, user.Id)
+        ], "TestAuth"));
 
-		var result = await _userService.GetCurrentUserProfileAsync(claims);
+        var result = await _userService.GetCurrentUserProfileAsync(claims);
 
-		result.IsSuccess.Should().BeTrue();
-		result.Data!.Email.Should().Be(email);
-	}
+        result.IsSuccess.Should().BeTrue();
+        result.Data!.Email.Should().Be(email);
+    }
 
-	public void Dispose()
-	{
-		_context.Database.EnsureDeleted();
-		_context.Dispose();
-		_provider.Dispose();
-	}
+    public void Dispose()
+    {
+        _context.Database.EnsureDeleted();
+        _context.Dispose();
+        _provider.Dispose();
+    }
 }

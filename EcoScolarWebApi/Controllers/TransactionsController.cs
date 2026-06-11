@@ -15,67 +15,67 @@ namespace EcoScolarWebApi.Controllers;
 [ApiController]
 public class TransactionsController(EcoscolarDbContext context, UserManager<User> userManager, ReviewMapper reviewMapper) : ControllerBase
 {
-	private readonly EcoscolarDbContext _context = context;
-	private readonly UserManager<User> _userManager = userManager;
-	private readonly ReviewMapper _reviewMapper = reviewMapper;
+    private readonly EcoscolarDbContext _context = context;
+    private readonly UserManager<User> _userManager = userManager;
+    private readonly ReviewMapper _reviewMapper = reviewMapper;
 
-	[HttpPost("{transactionId}/reviews")]
-	public async Task<ActionResult<IEnumerable<ReviewResponseDTO>>> CreateReview(long transactionId, [FromBody] ReviewRequestDTO review)
-	{
-		var transactionUserIds = await _context.Transactions
-			.Where(t => t.TransactionId == transactionId)
-			.Select(t => new TransactionUserIdsDto(t.BuyerId, t.Advert.SellerId))
-			.FirstOrDefaultAsync();
+    [HttpPost("{transactionId}/reviews")]
+    public async Task<ActionResult<IEnumerable<ReviewResponseDTO>>> CreateReview(long transactionId, [FromBody] ReviewRequestDTO review)
+    {
+        var transactionUserIds = await _context.Transactions
+            .Where(t => t.TransactionId == transactionId)
+            .Select(t => new TransactionUserIdsDto(t.BuyerId, t.Advert.SellerId))
+            .FirstOrDefaultAsync();
 
-		// If the transaction doesn't exist, return 404 Not Found
-		if (transactionUserIds is null)
-			return NotFound();
+        // If the transaction doesn't exist, return 404 Not Found
+        if (transactionUserIds is null)
+            return NotFound();
 
-		var user = await _userManager.GetUserAsync(User);
-		if (user is null)
-			return Unauthorized();
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+            return Unauthorized();
 
-		string? reviewedUserId = null;
-		ReviewedRole reviewedRole;
+        string? reviewedUserId = null;
+        ReviewedRole reviewedRole;
 
         // Check if the current user is either the buyer or the seller in this transaction
         if (user.Id == transactionUserIds.BuyerId)
-		{
-			reviewedUserId = transactionUserIds.SellerId;
-			reviewedRole = ReviewedRole.SELLER;
-		}
-		else if (user.Id == transactionUserIds.SellerId)
-		{
-			reviewedUserId = transactionUserIds.BuyerId;
-			reviewedRole = ReviewedRole.BUYER;
-		}
-		else
-			return Forbid();
+        {
+            reviewedUserId = transactionUserIds.SellerId;
+            reviewedRole = ReviewedRole.SELLER;
+        }
+        else if (user.Id == transactionUserIds.SellerId)
+        {
+            reviewedUserId = transactionUserIds.BuyerId;
+            reviewedRole = ReviewedRole.BUYER;
+        }
+        else
+            return Forbid();
 
-		var alreadyReviewed = await _context.Reviews.AnyAsync(r => r.TransactionId == transactionId && r.ReviewerId == user.Id);
-		if (alreadyReviewed)
-			return Conflict(new { message = "A review already exists for this transaction from the current user." });
+        var alreadyReviewed = await _context.Reviews.AnyAsync(r => r.TransactionId == transactionId && r.ReviewerId == user.Id);
+        if (alreadyReviewed)
+            return Conflict(new { message = "A review already exists for this transaction from the current user." });
 
-		var newReview = new Review
-		{
-			Comment = review.Comment,
-			Rating = review.Rating,
-			ReviewerId = user.Id,
-			ReviewedId = reviewedUserId,
-			TransactionId = transactionId,
-			ReviewedRole = reviewedRole
-		};
+        var newReview = new Review
+        {
+            Comment = review.Comment,
+            Rating = review.Rating,
+            ReviewerId = user.Id,
+            ReviewedId = reviewedUserId,
+            TransactionId = transactionId,
+            ReviewedRole = reviewedRole
+        };
 
-		_context.Reviews.Add(newReview);
-		await _context.SaveChangesAsync();
+        _context.Reviews.Add(newReview);
+        await _context.SaveChangesAsync();
 
-		// Reload the review of the transaction (bidirectional reviews)
-		var reviews = await _reviewMapper.ProjectToReviewResponseDTOs(
-							_context.Reviews.Where(r => r.TransactionId == transactionId))
-							.ToListAsync();
+        // Reload the review of the transaction (bidirectional reviews)
+        var reviews = await _reviewMapper.ProjectToReviewResponseDTOs(
+                            _context.Reviews.Where(r => r.TransactionId == transactionId))
+                            .ToListAsync();
 
-		return CreatedAtAction(nameof(CreateReview), new { transactionId }, reviews);
-	}
+        return CreatedAtAction(nameof(CreateReview), new { transactionId }, reviews);
+    }
 }
 
 public record TransactionUserIdsDto(string BuyerId, string SellerId);

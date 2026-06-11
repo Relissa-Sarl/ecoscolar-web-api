@@ -85,7 +85,7 @@ namespace EcoScolarWebApi.Services
             if (string.IsNullOrWhiteSpace(body))
                 return Result<SupportTicketMessageAdminDto>.Failure("Please enter a message.", ErrorType.Conflict);
 
-            if (! await _context.SupportTickets.AnyAsync(t => t.Id == ticketId))
+            if (!await _context.SupportTickets.AnyAsync(t => t.Id == ticketId))
                 return Result<SupportTicketMessageAdminDto>.Failure("Request not found.", ErrorType.NotFound);
 
             var message = new SupportTicketMessage

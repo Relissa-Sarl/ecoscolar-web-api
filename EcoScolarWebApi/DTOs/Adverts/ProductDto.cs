@@ -5,27 +5,27 @@ using Microsoft.IdentityModel.Tokens;
 namespace EcoScolarWebApi.DTOs.Adverts;
 
 public record ProductReadDto(long Id, string Title, string Description, decimal Price, DateTime PublicationDate, DateTime NotificationDate, AdvertStatus Status, string UserId, string SellerPseudo,
-	List<string> Pictures, PhysicalItemCondition Condition, decimal? Weight, long? ProductCategoryId, string? ProductCategoryLabel)
+    List<string> Pictures, PhysicalItemCondition Condition, decimal? Weight, long? ProductCategoryId, string? ProductCategoryLabel)
 {
-	public static ProductReadDto FromEntity(PhysicalItem entity)
-	{
-		return new ProductReadDto(
-			Id: entity.AdvertId,
-			Title: entity.Title,
-			Description: entity.Description,
-			Price: entity.Price,
-			PublicationDate: entity.CreatedAt,
-			NotificationDate: entity.NotificationDate,
-			Status: entity.Status,
-			UserId: entity.SellerId,
-			SellerPseudo: entity.Seller?.Nickname ?? "Anonyme",
-			Condition: entity.Condition,
-			Weight: entity.Weight ?? null,
-			ProductCategoryId: entity.ProductCategoryId ?? null,
-			ProductCategoryLabel: entity.ProductCategory?.Name ?? null,
-			Pictures: entity.Pictures?.Select(p => p.Label).ToList() ?? []
-		);
-	}
+    public static ProductReadDto FromEntity(PhysicalItem entity)
+    {
+        return new ProductReadDto(
+            Id: entity.AdvertId,
+            Title: entity.Title,
+            Description: entity.Description,
+            Price: entity.Price,
+            PublicationDate: entity.CreatedAt,
+            NotificationDate: entity.NotificationDate,
+            Status: entity.Status,
+            UserId: entity.SellerId,
+            SellerPseudo: entity.Seller?.Nickname ?? "Anonyme",
+            Condition: entity.Condition,
+            Weight: entity.Weight ?? null,
+            ProductCategoryId: entity.ProductCategoryId ?? null,
+            ProductCategoryLabel: entity.ProductCategory?.Name ?? null,
+            Pictures: entity.Pictures?.Select(p => p.Label).ToList() ?? []
+        );
+    }
 }
 
 /// <summary>
@@ -40,39 +40,39 @@ public record ProductReadDto(long Id, string Title, string Description, decimal 
 /// <param name="ProductCategoryId">The ID of the product category to which the product advert belongs</param>
 /// <param name="Weight">The weight of the product advert</param>
 public record ProductCreateDto(string Title, string Description, decimal Price, string UserId, string[]? Images, PhysicalItemCondition Condition, long? ProductCategoryId = null, decimal? Weight = null)
-	: AdvertCreateDto(Title, Description, Price, UserId)
+    : AdvertCreateDto(Title, Description, Price, UserId)
 {
-	/// <summary>
-	/// Converts the ProductCreateDto to a PhysicalItems entity.
-	/// </summary>
-	/// <returns>The PhysicalItems entity</returns>
-	public new PhysicalItem ToEntity()
-	{
-		var product = new PhysicalItem();
-		this.MapToEntity(product);
-		return product;
-	}
+    /// <summary>
+    /// Converts the ProductCreateDto to a PhysicalItems entity.
+    /// </summary>
+    /// <returns>The PhysicalItems entity</returns>
+    public new PhysicalItem ToEntity()
+    {
+        var product = new PhysicalItem();
+        this.MapToEntity(product);
+        return product;
+    }
 
-	/// <summary>
-	/// Maps the properties of the ProductCreateDto to an existing PhysicalItem entity, specifically to a PhysicalItems entity.
-	/// </summary>
-	/// <param name="entity">The PhysicalItem entity to map to</param>
-	public override void MapToEntity(Advert entity)
-	{
-		base.MapToEntity(entity);
-		if (entity is PhysicalItem product)
-		{
-			product.Condition = Condition;
-			product.ProductCategoryId = ProductCategoryId;
-			product.Weight = Weight;
+    /// <summary>
+    /// Maps the properties of the ProductCreateDto to an existing PhysicalItem entity, specifically to a PhysicalItems entity.
+    /// </summary>
+    /// <param name="entity">The PhysicalItem entity to map to</param>
+    public override void MapToEntity(Advert entity)
+    {
+        base.MapToEntity(entity);
+        if (entity is PhysicalItem product)
+        {
+            product.Condition = Condition;
+            product.ProductCategoryId = ProductCategoryId;
+            product.Weight = Weight;
             if (Images.IsNullOrEmpty())
-			{
-				product.Pictures.Add(new Picture { Label = "https://picsum.photos/800/600" });
-			}
-			else
+            {
+                product.Pictures.Add(new Picture { Label = "https://picsum.photos/800/600" });
+            }
+            else
             {
                 product.Pictures = Images.Select(img => new Picture { Label = img }).ToList();
             }
-		}
-	}
+        }
+    }
 }

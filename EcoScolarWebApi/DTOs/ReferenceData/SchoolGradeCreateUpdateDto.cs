@@ -4,9 +4,9 @@ namespace EcoScolarWebApi.DTOs.ReferenceData;
 
 public class SchoolGradeCreateUpdateDto
 {
-	[Required]
-	[StringLength(100)]
-	public string Name { get; set; }
+    [Required]
+    [StringLength(100)]
+    public string Name { get; set; }
 
     [Required]
     [StringLength(100)]
@@ -21,6 +21,6 @@ public class SchoolGradeCreateUpdateDto
     public string NameIt { get; set; }
 
     [Required]
-	[StringLength(100)]
-	public string SchoolGrade { get; set; }
+    [StringLength(100)]
+    public string SchoolGrade { get; set; }
 }

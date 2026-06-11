@@ -16,64 +16,64 @@ namespace EcoScolarWebApi.Tests.Integration;
 /// </summary>
 public class AuthInMemoryWebApplicationFactory : WebApplicationFactory<global::Program>
 {
-	private readonly string _keysPath = Path.Combine(Path.GetTempPath(), "ecoscolar-auth-tests", Guid.NewGuid().ToString("N"));
-	private bool _seeded;
+    private readonly string _keysPath = Path.Combine(Path.GetTempPath(), "ecoscolar-auth-tests", Guid.NewGuid().ToString("N"));
+    private bool _seeded;
 
-	protected override void ConfigureWebHost(IWebHostBuilder builder)
-	{
-		builder.UseEnvironment("Testing");
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        builder.UseEnvironment("Testing");
 
-		builder.ConfigureLogging(logging => logging.ClearProviders());
+        builder.ConfigureLogging(logging => logging.ClearProviders());
 
-		builder.ConfigureTestServices(services =>
-		{
-			Directory.CreateDirectory(_keysPath);
+        builder.ConfigureTestServices(services =>
+        {
+            Directory.CreateDirectory(_keysPath);
 
-			services.AddDataProtection()
-				.PersistKeysToFileSystem(new DirectoryInfo(_keysPath))
-				.SetApplicationName("EcoScolarAuthTests");
+            services.AddDataProtection()
+                .PersistKeysToFileSystem(new DirectoryInfo(_keysPath))
+                .SetApplicationName("EcoScolarAuthTests");
 
-			services.Configure<IdentityOptions>(options =>
-			{
-				options.SignIn.RequireConfirmedAccount = false;
-				options.User.RequireUniqueEmail = true;
-			});
+            services.Configure<IdentityOptions>(options =>
+            {
+                options.SignIn.RequireConfirmedAccount = false;
+                options.User.RequireUniqueEmail = true;
+            });
 
-			services.ConfigureApplicationCookie(options =>
-			{
-				options.Cookie.Name = "Ecoscolar.Auth.Session";
-				options.Cookie.HttpOnly = true;
-				options.Cookie.SecurePolicy = CookieSecurePolicy.None;
-				options.Cookie.SameSite = SameSiteMode.Lax;
-			});
-		});
-	}
+            services.ConfigureApplicationCookie(options =>
+            {
+                options.Cookie.Name = "Ecoscolar.Auth.Session";
+                options.Cookie.HttpOnly = true;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.None;
+                options.Cookie.SameSite = SameSiteMode.Lax;
+            });
+        });
+    }
 
-	public void EnsureSeeded()
-	{
-		if (_seeded)
-			return;
+    public void EnsureSeeded()
+    {
+        if (_seeded)
+            return;
 
-		using var scope = Services.CreateScope();
-		var db = scope.ServiceProvider.GetRequiredService<EcoscolarDbContext>();
-		db.Database.EnsureCreated();
-		IntegrationTestIdentityHelper.SeedLocations(db);
-		_seeded = true;
-	}
+        using var scope = Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<EcoscolarDbContext>();
+        db.Database.EnsureCreated();
+        IntegrationTestIdentityHelper.SeedLocations(db);
+        _seeded = true;
+    }
 
-	public HttpClient CreateCookieClient()
-	{
-		EnsureSeeded();
-		return CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = true });
-	}
+    public HttpClient CreateCookieClient()
+    {
+        EnsureSeeded();
+        return CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = true });
+    }
 
-	protected override void Dispose(bool disposing)
-	{
-		if (disposing && Directory.Exists(_keysPath))
-		{
-			try { Directory.Delete(_keysPath, recursive: true); } catch { /* best effort cleanup */ }
-		}
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing && Directory.Exists(_keysPath))
+        {
+            try { Directory.Delete(_keysPath, recursive: true); } catch { /* best effort cleanup */ }
+        }
 
-		base.Dispose(disposing);
-	}
+        base.Dispose(disposing);
+    }
 }

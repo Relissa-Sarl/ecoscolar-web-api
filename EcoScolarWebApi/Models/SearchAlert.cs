@@ -32,7 +32,7 @@ public class SearchAlert
 
     // === Foreign Keys ===
 
-    public long? SubjectId { get; set; } 
+    public long? SubjectId { get; set; }
 
     public long? BookCategoryId { get; set; }
 

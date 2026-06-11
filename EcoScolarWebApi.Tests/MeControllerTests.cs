@@ -308,7 +308,7 @@ public class MeControllerTests : IDisposable
             Date = DateTime.UtcNow,
             Status = TransactionStatus.COMPLETED
         };
-        
+
         var review = new Review
         {
             ReviewId = 2,

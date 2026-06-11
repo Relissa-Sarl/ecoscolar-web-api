@@ -18,7 +18,7 @@ public class Advert
     [StringLength(2000)]
     public string Description { get; set; }
 
-    [Required] 
+    [Required]
     [Column(TypeName = "decimal(18,2)")]
     public decimal Price { get; set; }
 

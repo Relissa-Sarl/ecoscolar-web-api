@@ -19,7 +19,7 @@ namespace EcoScolarWebApi.Tests.Integration;
 /// </summary>
 public class AuthHttpIntegrationTests : IClassFixture<AuthInMemoryWebApplicationFactory>
 {
-	private readonly AuthInMemoryWebApplicationFactory _factory;
+    private readonly AuthInMemoryWebApplicationFactory _factory;
     private readonly EcoscolarDbContext _context;
     private readonly ServiceProvider _provider;
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
@@ -36,15 +36,15 @@ public class AuthHttpIntegrationTests : IClassFixture<AuthInMemoryWebApplication
         }
     }
 
-	private static string UniqueEmail(string prefix) => $"{prefix}.{Guid.NewGuid():N}@example.com";
+    private static string UniqueEmail(string prefix) => $"{prefix}.{Guid.NewGuid():N}@example.com";
 
-	private HttpClient CreateClient() => _factory.CreateCookieClient();
+    private HttpClient CreateClient() => _factory.CreateCookieClient();
 
-	private static async Task RegisterAsync(HttpClient client, string email, string password = "Password123!")
-	{
-		var response = await client.PostAsJsonAsync("/api/v1/auth/register", new { email, password });
-		response.StatusCode.Should().Be(HttpStatusCode.OK);
-	}
+    private static async Task RegisterAsync(HttpClient client, string email, string password = "Password123!")
+    {
+        var response = await client.PostAsJsonAsync("/api/v1/auth/register", new { email, password });
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
 
     [Fact]
     public async Task Register_WithValidCredentials_CreatesUser()
@@ -114,29 +114,29 @@ public class AuthHttpIntegrationTests : IClassFixture<AuthInMemoryWebApplication
     }
 
     [Fact]
-	public async Task Login_WithUnknownEmail_ReturnsUnauthorized()
-	{
-		var client = CreateClient();
+    public async Task Login_WithUnknownEmail_ReturnsUnauthorized()
+    {
+        var client = CreateClient();
 
-		var response = await client.PostAsJsonAsync("/api/v1/auth/login?useCookies=true", new
-		{
-			email = UniqueEmail("unknown"),
-			password = "Password123!"
-		});
+        var response = await client.PostAsJsonAsync("/api/v1/auth/login?useCookies=true", new
+        {
+            email = UniqueEmail("unknown"),
+            password = "Password123!"
+        });
 
-		response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
-	}
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
 
-	[Fact]
-	public async Task GetMyProfile_WithoutAuth_ReturnsUnauthorized()
-	{
-		_factory.EnsureSeeded();
-		var client = _factory.CreateClient();
+    [Fact]
+    public async Task GetMyProfile_WithoutAuth_ReturnsUnauthorized()
+    {
+        _factory.EnsureSeeded();
+        var client = _factory.CreateClient();
 
-		var response = await client.GetAsync("/api/v1/users/me");
+        var response = await client.GetAsync("/api/v1/users/me");
 
-		response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
-	}
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
 
     [Fact]
     public async Task GetMyProfile_WithCookieAuth_ReturnsUserEmail()
@@ -287,17 +287,17 @@ public class AuthHttpIntegrationTests : IClassFixture<AuthInMemoryWebApplication
     }
 
     private static async Task LoginWithCookiesAsync(HttpClient client, string email, string password = "Password123!")
-	{
-		var response = await client.PostAsJsonAsync("/api/v1/auth/login?useCookies=true", new { email, password });
-		response.StatusCode.Should().Be(HttpStatusCode.OK);
-	}
+    {
+        var response = await client.PostAsJsonAsync("/api/v1/auth/login?useCookies=true", new { email, password });
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
 
-	private static async Task<UserReadDto> GetProfileAsync(HttpClient client)
-	{
-		var response = await client.GetAsync("/api/v1/users/me");
-		response.StatusCode.Should().Be(HttpStatusCode.OK);
-		return (await response.Content.ReadFromJsonAsync<UserReadDto>(JsonOptions))!;
-	}
+    private static async Task<UserReadDto> GetProfileAsync(HttpClient client)
+    {
+        var response = await client.GetAsync("/api/v1/users/me");
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        return (await response.Content.ReadFromJsonAsync<UserReadDto>(JsonOptions))!;
+    }
 
-	private sealed record BearerTokenResponse(string TokenType, string AccessToken, int ExpiresIn, string RefreshToken);
+    private sealed record BearerTokenResponse(string TokenType, string AccessToken, int ExpiresIn, string RefreshToken);
 }

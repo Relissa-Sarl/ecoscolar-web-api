@@ -12,25 +12,25 @@ namespace EcoScolarWebApi.Tests.Integration;
 /// </summary>
 public class SearchAlertsHttpIntegrationTests : IClassFixture<AuthInMemoryWebApplicationFactory>
 {
-	private readonly AuthInMemoryWebApplicationFactory _factory;
-	private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
+    private readonly AuthInMemoryWebApplicationFactory _factory;
+    private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
 
-	public SearchAlertsHttpIntegrationTests(AuthInMemoryWebApplicationFactory factory) => _factory = factory;
+    public SearchAlertsHttpIntegrationTests(AuthInMemoryWebApplicationFactory factory) => _factory = factory;
 
-	private static string UniqueEmail(string prefix) => $"{prefix}.{Guid.NewGuid():N}@example.com";
+    private static string UniqueEmail(string prefix) => $"{prefix}.{Guid.NewGuid():N}@example.com";
 
-	private HttpClient CreateClient() => _factory.CreateCookieClient();
+    private HttpClient CreateClient() => _factory.CreateCookieClient();
 
-	[Fact]
-	public async Task SearchAlerts_WithoutAuth_ReturnsUnauthorized()
-	{
-		_factory.EnsureSeeded();
-		var client = _factory.CreateClient();
+    [Fact]
+    public async Task SearchAlerts_WithoutAuth_ReturnsUnauthorized()
+    {
+        _factory.EnsureSeeded();
+        var client = _factory.CreateClient();
 
-		var response = await client.PostAsJsonAsync("/api/v1/users/me/search-alerts", new { q = "Biologie" });
+        var response = await client.PostAsJsonAsync("/api/v1/users/me/search-alerts", new { q = "Biologie" });
 
-		response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
-	}
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
 
     //Doesn't work because of the way cookies are handled in tests (cookie container is shared across clients, so the auth cookie is not sent on subsequent requests).
     [Fact]
@@ -117,11 +117,11 @@ public class SearchAlertsHttpIntegrationTests : IClassFixture<AuthInMemoryWebApp
     }
 
     private static async Task RegisterAndLoginAsync(HttpClient client, string email, string password = "Password123!")
-	{
-		var registerResponse = await client.PostAsJsonAsync("/api/v1/auth/register", new { email, password });
-		registerResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+    {
+        var registerResponse = await client.PostAsJsonAsync("/api/v1/auth/register", new { email, password });
+        registerResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
-		var loginResponse = await client.PostAsJsonAsync("/api/v1/auth/login?useCookies=true", new { email, password });
-		loginResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-	}
+        var loginResponse = await client.PostAsJsonAsync("/api/v1/auth/login?useCookies=true", new { email, password });
+        loginResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
 }
