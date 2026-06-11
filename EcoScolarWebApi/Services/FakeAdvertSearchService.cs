@@ -36,7 +36,7 @@ public class FakeAdvertSearchService : IAdvertSearchService
 				a.Type == CatalogAdvertTypeCodes.Books
 				&& a.Isbn is not null
 				&& Normalize(a.Isbn).Contains(needle, StringComparison.Ordinal));
-		}
+        }
 
 		if (!string.IsNullOrWhiteSpace(query.Q))
 		{

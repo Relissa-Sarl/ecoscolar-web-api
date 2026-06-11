@@ -136,7 +136,8 @@ public sealed class AdvertSearchService : IAdvertSearchService
 						Isbn = string.IsNullOrWhiteSpace(src.ISBN) ? null : src.ISBN,
 						Category = src.BookCategory?.Name,
 						Subjects = null,
-						Grade = null
+						Grade = null,
+						sellerId = bk.SellerId
 					};
 				}
 			case TutoringAdvert svc:
@@ -152,7 +153,8 @@ public sealed class AdvertSearchService : IAdvertSearchService
 						Isbn = null,
 						Category = null,
 						Subjects = src.Subject?.Name,
-						Grade = src.SchoolGrade?.Name
+						Grade = src.SchoolGrade?.Name,
+						sellerId = svc.SellerId
 					};
 				}
 			case PhysicalItem phy when phy is not Book:
@@ -165,7 +167,8 @@ public sealed class AdvertSearchService : IAdvertSearchService
 					Isbn = null,
 					Category = null,
 					Subjects = null,
-					Grade = null
+					Grade = null,
+					sellerId = phy.SellerId
 				};
 			default:
 				throw new InvalidOperationException($"Unknown PhysicalItem CLR type '{a.GetType().Name}'.");
@@ -187,7 +190,8 @@ public sealed class AdvertSearchService : IAdvertSearchService
 			Grade = null,
 			Price = b.Price,
 			Description = b.Description ?? string.Empty,
-			ImageUrl = imageUrl
+			ImageUrl = imageUrl,
+			sellerId = b.SellerId
 		};
 	}
 
@@ -204,7 +208,8 @@ public sealed class AdvertSearchService : IAdvertSearchService
 			Grade = s.SchoolGrade?.Name,
 			Price = s.Price,
 			Description = s.Description ?? string.Empty,
-			ImageUrl = null
+			ImageUrl = null,
+			sellerId = s.SellerId
 		};
 	}
 
@@ -222,7 +227,8 @@ public sealed class AdvertSearchService : IAdvertSearchService
 			Grade = null,
 			Price = p.Price,
 			Description = p.Description ?? string.Empty,
-			ImageUrl = imageUrl
+			ImageUrl = imageUrl,
+			sellerId = p.SellerId
 		};
 	}
 
