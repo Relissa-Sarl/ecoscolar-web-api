@@ -40,7 +40,8 @@ public class EmailSenderService : IEmailSenderService
 
         var encodedToken = Uri.EscapeDataString(resetCode);
 
-        var frontendResetLink = $"http://localhost:3000/reset-password?email={Uri.EscapeDataString(email)}&token={encodedToken}";
+        var baseUrl = _configuration["Frontend:BaseUrl"] ?? "http://localhost:3000";
+        var frontendResetLink = $"{baseUrl.TrimEnd('/')}/reset-password?email={Uri.EscapeDataString(email)}&token={encodedToken}";
 
         var body = $"""
         <div style="font-family: sans-serif; line-height: 1.5; color: #333;">
