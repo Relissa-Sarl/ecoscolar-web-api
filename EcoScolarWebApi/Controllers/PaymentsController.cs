@@ -72,8 +72,8 @@ public class PaymentsController : ControllerBase
 			}
 			if (advert.Status == AdvertStatus.PAUSED || advert.Status == AdvertStatus.SOLD)
 			{
-				return BadRequest(new { error = "Un des articles dans votre panier est en cours de paiement ou déjà vendu." });
-			}
+                return BadRequest(new { code = "ITEM_UNAVAILABLE", error = "Un des articles dans votre panier est en cours de paiement ou déjà vendu." });
+            }
 		}
 
 		// Update all products status to PAUSED during checkout
