@@ -24,6 +24,19 @@ builder.Services.AddHealthChecks();
 builder.Services.AddCors(options => options.AddPolicy("AllowFrontend", policy =>
 	policy.WithOrigins("http://localhost:3000").AllowAnyHeader().AllowAnyMethod().AllowCredentials()));
 
+if (args.Contains("--seed-production", StringComparer.OrdinalIgnoreCase))
+{
+	var includeDemoData = args.Contains("--include-demo-data", StringComparer.OrdinalIgnoreCase);
+	using var seedApp = builder.Build();
+	using var scope = seedApp.Services.CreateScope();
+	var db = scope.ServiceProvider.GetRequiredService<EcoscolarDbContext>();
+	var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+	var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+	await ProductionDataSeeder.SeedAsync(db, userManager, roleManager, seedApp.Configuration, includeDemoData);
+	return;
+}
+
 // App creation
 var app = builder.Build();
 
