@@ -86,6 +86,7 @@ public class TransactionsController(EcoscolarDbContext context, UserManager<User
 
 		var transaction = await _context.Transactions
 			.Include(t => t.Advert)
+                .ThenInclude(a => a.Seller)
 			.FirstOrDefaultAsync(t => t.TransactionId == transactionId);
 
 		if (transaction is null)
@@ -98,6 +99,29 @@ public class TransactionsController(EcoscolarDbContext context, UserManager<User
 		if (transaction.Advert != null)
 		{
 			transaction.Advert.Status = AdvertStatus.SOLD;
+
+            // Trigger Stripe transfer if the seller has a connected account
+            if (!string.IsNullOrEmpty(transaction.Advert.Seller?.StripeAccountId))
+            {
+                try
+                {
+                    var transferOptions = new Stripe.TransferCreateOptions
+                    {
+                        Amount = (long)(transaction.Advert.Price * 100), // en centimes
+                        Currency = "chf",
+                        Destination = transaction.Advert.Seller.StripeAccountId,
+                        TransferGroup = "COMMANDE_ID_789", // Same as defined in checkout
+                    };
+
+                    var transferService = new Stripe.TransferService();
+                    await transferService.CreateAsync(transferOptions);
+                }
+                catch (Stripe.StripeException ex)
+                {
+                    // Log the exception or handle it, but allow the transaction to be completed
+                    Console.WriteLine($"Stripe transfer failed: {ex.Message}");
+                }
+            }
 		}
 
 		await _context.SaveChangesAsync();
