@@ -46,12 +46,19 @@ internal static class IntegrationTestIdentityHelper
 
 	internal static void SeedLocations(EcoscolarDbContext context)
 	{
-		if (context.Locations.Any())
-			return;
+		try
+		{
+			if (context.Locations.Any())
+				return;
 
-		context.Locations.AddRange(
-			new Location { LocationId = 1, PostalCode = "1000", City = "Lausanne", Region = "Vaud" },
-			new Location { LocationId = 2, PostalCode = "1820", City = "Montreux", Region = "Vaud" });
-		context.SaveChanges();
+			context.Locations.AddRange(
+				new Location { LocationId = 1, PostalCode = "1000", City = "Lausanne", Region = "Vaud" },
+				new Location { LocationId = 2, PostalCode = "1820", City = "Montreux", Region = "Vaud" });
+			context.SaveChanges();
+		}
+		catch (Exception)
+		{
+			// Ignore concurrency/duplicate key seeding conflicts in parallel test environments
+		}
 	}
 }

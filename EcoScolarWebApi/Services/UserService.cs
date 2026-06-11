@@ -78,11 +78,11 @@ public class UserService : IUserService
 			.FirstOrDefaultAsync(u => u.Id == currentUserId);
 
 		if (currentUser == null)
-			return Result<UserResponse>.Failure("Seller not found", ErrorType.NotFound);
+			return Result<UserResponse>.Failure("User not found", ErrorType.NotFound);
 
 		var location = await _context.Locations.FirstOrDefaultAsync(l => l.PostalCode == dto.PostalCode);
 		if (location == null)
-			return Result<UserResponse>.Failure("Invalid postal code");
+			return Result<UserResponse>.Failure("InvalidPostalCode");
 
 		currentUser.Nickname = dto.Nickname;
 		currentUser.FirstName = dto.FirstName;
