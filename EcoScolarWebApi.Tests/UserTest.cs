@@ -3,6 +3,7 @@ using EcoScolarWebApi.Controllers;
 using EcoScolarWebApi.Data;
 using EcoScolarWebApi.DTOs.Adverts;
 using EcoScolarWebApi.DTOs.Reviews;
+using EcoScolarWebApi.DTOs.Stripe;
 using EcoScolarWebApi.DTOs.Users;
 using EcoScolarWebApi.Enums;
 using EcoScolarWebApi.Models;
@@ -842,6 +843,152 @@ public class UsersControllerTests
 		_context.Transactions.Remove(transaction);
 		_context.Users.RemoveRange(user, reviewer);
 		await _context.SaveChangesAsync();
+	}
+
+	#endregion
+
+	#region Tests pour Stripe Connect (Controller)
+
+	[Fact]
+	public async Task CreateStripeOnboardingLink_ShouldReturnOk_WhenSuccessful()
+	{
+		// Arrange
+		var expectedResponse = new StripeOnboardingResponseDto("https://stripe-link.url");
+		_stripeConnectServiceMock.CreateOnboardingLinkAsync(Arg.Any<ClaimsPrincipal>(), Arg.Any<string>())
+			.Returns(Result<StripeOnboardingResponseDto>.Success(expectedResponse));
+
+		var httpContext = new DefaultHttpContext();
+		httpContext.Request.Scheme = "http";
+		httpContext.Request.Host = new HostString("localhost", 5000);
+		_controller.ControllerContext = new ControllerContext { HttpContext = httpContext };
+
+		// Act
+		var result = await _controller.CreateStripeOnboardingLink();
+
+		// Assert
+		var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+		okResult.Value.Should().BeEquivalentTo(expectedResponse);
+	}
+
+	[Fact]
+	public async Task CreateStripeOnboardingLink_ShouldReturnNotFound_WhenUserNotFound()
+	{
+		// Arrange
+		_stripeConnectServiceMock.CreateOnboardingLinkAsync(Arg.Any<ClaimsPrincipal>(), Arg.Any<string>())
+			.Returns(Result<StripeOnboardingResponseDto>.Failure("User not found", ErrorType.NotFound));
+
+		var httpContext = new DefaultHttpContext();
+		httpContext.Request.Scheme = "http";
+		httpContext.Request.Host = new HostString("localhost", 5000);
+		_controller.ControllerContext = new ControllerContext { HttpContext = httpContext };
+
+		// Act
+		var result = await _controller.CreateStripeOnboardingLink();
+
+		// Assert
+		var notFoundResult = result.Should().BeOfType<NotFoundObjectResult>().Subject;
+		notFoundResult.Value.Should().NotBeNull();
+	}
+
+	[Fact]
+	public async Task CreateStripeOnboardingLink_ShouldReturnInternalServerError_WhenStripeFailsInternally()
+	{
+		// Arrange
+		_stripeConnectServiceMock.CreateOnboardingLinkAsync(Arg.Any<ClaimsPrincipal>(), Arg.Any<string>())
+			.Returns(Result<StripeOnboardingResponseDto>.Failure("Stripe internal failure", ErrorType.InternalError));
+
+		var httpContext = new DefaultHttpContext();
+		httpContext.Request.Scheme = "http";
+		httpContext.Request.Host = new HostString("localhost", 5000);
+		_controller.ControllerContext = new ControllerContext { HttpContext = httpContext };
+
+		// Act
+		var result = await _controller.CreateStripeOnboardingLink();
+
+		// Assert
+		var statusResult = result.Should().BeOfType<ObjectResult>().Subject;
+		statusResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+	}
+
+	[Fact]
+	public async Task CreateStripeOnboardingLink_ShouldReturnBadRequest_WhenRequestIsInvalid()
+	{
+		// Arrange
+		_stripeConnectServiceMock.CreateOnboardingLinkAsync(Arg.Any<ClaimsPrincipal>(), Arg.Any<string>())
+			.Returns(Result<StripeOnboardingResponseDto>.Failure("Bad Request", ErrorType.BadRequest));
+
+		var httpContext = new DefaultHttpContext();
+		httpContext.Request.Scheme = "http";
+		httpContext.Request.Host = new HostString("localhost", 5000);
+		_controller.ControllerContext = new ControllerContext { HttpContext = httpContext };
+
+		// Act
+		var result = await _controller.CreateStripeOnboardingLink();
+
+		// Assert
+		var badRequestResult = result.Should().BeOfType<BadRequestObjectResult>().Subject;
+		badRequestResult.Value.Should().NotBeNull();
+	}
+
+	[Fact]
+	public async Task GetStripeStatus_ShouldReturnOk_WhenSuccessful()
+	{
+		// Arrange
+		var expectedStatus = new StripeStatusDto(true, "acct_123");
+		_stripeConnectServiceMock.GetStatusAsync(Arg.Any<ClaimsPrincipal>())
+			.Returns(Result<StripeStatusDto>.Success(expectedStatus));
+
+		// Act
+		var result = await _controller.GetStripeStatus();
+
+		// Assert
+		var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+		okResult.Value.Should().BeEquivalentTo(expectedStatus);
+	}
+
+	[Fact]
+	public async Task GetStripeStatus_ShouldReturnNotFound_WhenUserNotFound()
+	{
+		// Arrange
+		_stripeConnectServiceMock.GetStatusAsync(Arg.Any<ClaimsPrincipal>())
+			.Returns(Result<StripeStatusDto>.Failure("User not found", ErrorType.NotFound));
+
+		// Act
+		var result = await _controller.GetStripeStatus();
+
+		// Assert
+		var notFoundResult = result.Should().BeOfType<NotFoundObjectResult>().Subject;
+		notFoundResult.Value.Should().NotBeNull();
+	}
+
+	[Fact]
+	public async Task GetStripeStatus_ShouldReturnInternalServerError_WhenStripeFailsInternally()
+	{
+		// Arrange
+		_stripeConnectServiceMock.GetStatusAsync(Arg.Any<ClaimsPrincipal>())
+			.Returns(Result<StripeStatusDto>.Failure("Stripe internal failure", ErrorType.InternalError));
+
+		// Act
+		var result = await _controller.GetStripeStatus();
+
+		// Assert
+		var statusResult = result.Should().BeOfType<ObjectResult>().Subject;
+		statusResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+	}
+
+	[Fact]
+	public async Task GetStripeStatus_ShouldReturnBadRequest_WhenRequestIsInvalid()
+	{
+		// Arrange
+		_stripeConnectServiceMock.GetStatusAsync(Arg.Any<ClaimsPrincipal>())
+			.Returns(Result<StripeStatusDto>.Failure("Bad Request", ErrorType.BadRequest));
+
+		// Act
+		var result = await _controller.GetStripeStatus();
+
+		// Assert
+		var badRequestResult = result.Should().BeOfType<BadRequestObjectResult>().Subject;
+		badRequestResult.Value.Should().NotBeNull();
 	}
 
 	#endregion

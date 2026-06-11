@@ -39,8 +39,9 @@ namespace EcoScolarWebApi.Services
                 
                 string type = c.Advert switch
                 {
-                    PhysicalItem => "PhysicalItem",
-                    TutoringAdvert => "TutoringAdvert",
+                    Book => "BOOK",
+                    PhysicalItem => "PRODUCT",
+                    TutoringAdvert => "SERVICE",
                     _ => "Advert"
                 };
 
@@ -109,8 +110,9 @@ namespace EcoScolarWebApi.Services
 
             string type = advert switch
             {
-                PhysicalItem => "PhysicalItem",
-                TutoringAdvert => "TutoringAdvert",
+                Book => "BOOK",
+                PhysicalItem => "PRODUCT",
+                TutoringAdvert => "SERVICE",
                 _ => "Advert"
             };
 
