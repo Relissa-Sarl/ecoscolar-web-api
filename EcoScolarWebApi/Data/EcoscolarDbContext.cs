@@ -107,6 +107,9 @@ public class EcoscolarDbContext(DbContextOptions<EcoscolarDbContext> options) : 
 			entity.Property(t => t.Date)
 				.HasDefaultValueSql("CURRENT_TIMESTAMP");
 
+			entity.Property(t => t.Status)
+				.HasConversion<string>();
+
 			entity.HasOne(t => t.Advert)
 				.WithMany()
 				.HasForeignKey(t => t.AdvertId)

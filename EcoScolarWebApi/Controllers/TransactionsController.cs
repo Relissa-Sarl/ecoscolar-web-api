@@ -76,6 +76,66 @@ public class TransactionsController(EcoscolarDbContext context, UserManager<User
 
 		return CreatedAtAction(nameof(CreateReview), new { transactionId }, reviews);
 	}
+
+	[HttpPut("{transactionId}/confirm-receipt")]
+	public async Task<IActionResult> ConfirmReceipt(long transactionId)
+	{
+		var user = await _userManager.GetUserAsync(User);
+		if (user is null)
+			return Unauthorized();
+
+		var transaction = await _context.Transactions
+			.Include(t => t.Advert)
+			.FirstOrDefaultAsync(t => t.TransactionId == transactionId);
+
+		if (transaction is null)
+			return NotFound();
+
+		if (transaction.BuyerId != user.Id)
+			return Forbid();
+
+		transaction.Status = TransactionStatus.COMPLETED;
+		if (transaction.Advert != null)
+		{
+			transaction.Advert.Status = AdvertStatus.SOLD;
+		}
+
+		await _context.SaveChangesAsync();
+
+		return NoContent();
+	}
+
+	[HttpPost("{transactionId}/dispute")]
+	public async Task<IActionResult> DisputePurchase(long transactionId, [FromBody] EcoScolarWebApi.DTOs.Transactions.DisputeRequestDto request)
+	{
+		var user = await _userManager.GetUserAsync(User);
+		if (user is null)
+			return Unauthorized();
+
+		var transaction = await _context.Transactions
+			.FirstOrDefaultAsync(t => t.TransactionId == transactionId);
+
+		if (transaction is null)
+			return NotFound();
+
+		if (transaction.BuyerId != user.Id)
+			return Forbid();
+
+		var dispute = new Dispute
+		{
+			TransactionId = transactionId,
+			Reason = request.Reason,
+			Status = "OPEN",
+			Date = DateTime.UtcNow
+		};
+
+		transaction.Status = TransactionStatus.DISPUTED;
+		
+		_context.Disputes.Add(dispute);
+		await _context.SaveChangesAsync();
+
+		return Ok();
+	}
 }
 
 public record TransactionUserIdsDto(string BuyerId, string SellerId);

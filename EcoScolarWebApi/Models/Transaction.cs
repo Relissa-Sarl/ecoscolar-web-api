@@ -1,5 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using EcoScolarWebApi.Enums;
 
 namespace EcoScolarWebApi.Models;
 
@@ -16,7 +17,7 @@ public class Transaction
     public DateTime Date { get; set; } = DateTime.UtcNow;
 
     [Required]
-    public string Status { get; set; } = string.Empty;
+    public TransactionStatus Status { get; set; } = TransactionStatus.PENDING;
 
     public DateTime? ExpirationReservationTime { get; set; }
 
