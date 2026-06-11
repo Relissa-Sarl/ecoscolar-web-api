@@ -131,4 +131,33 @@ public class MeController : ControllerBase
         }
         return null;
     }
+
+    [HttpPost("sales/{transactionId}/confirm-shipping")]
+    public async Task<IActionResult> ConfirmShipping(long transactionId)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized(new { message = "Invalid session." });
+
+        var transaction = await _context.Transactions
+            .Include(t => t.Advert)
+            .FirstOrDefaultAsync(t => t.TransactionId == transactionId);
+
+        if (transaction == null)
+            return NotFound();
+
+        if (transaction.Advert.SellerId != userId)
+            return Forbid();
+
+        if (transaction.Status != TransactionStatus.PAID_WAITING_SHIPPING)
+            return BadRequest(new { message = "La transaction n'est pas en attente d'expédition." });
+
+        transaction.Status = TransactionStatus.SHIPPED;
+        transaction.ShippedDate = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return Ok();
+    }
 }

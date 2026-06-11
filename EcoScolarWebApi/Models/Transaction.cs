@@ -21,6 +21,8 @@ public class Transaction
 
     public DateTime? ExpirationReservationTime { get; set; }
 
+    public DateTime? ShippedDate { get; set; }
+
     [Required]
     [Column(TypeName = "decimal(18,2)")]
     public decimal PlatformFee { get; set; }

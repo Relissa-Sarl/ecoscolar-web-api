@@ -4,6 +4,7 @@ using EcoScolarWebApi.Models;
 using EcoScolarWebApi.Services;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
+using EcoScolarWebApi.Mappers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +12,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddAuthAndIdentity();
 builder.Services.AddSwaggerAndVersioning();
+
+builder.Services.AddHostedService<EcoScolarWebApi.Services.AutoConfirmReceiptService>();
 builder.Services.AddEcoScolarServices(builder.Configuration);
 builder.Services.AddMappersServices(builder.Configuration);
 
