@@ -111,7 +111,7 @@ public class UserServiceIntegrationTests : IDisposable
 		var result = await _userService.UpdateProfileAsync(principal, dto);
 
 		result.IsSuccess.Should().BeFalse();
-		result.Errors.Should().Contain("Invalid postal code");
+		result.Errors.Should().Contain("InvalidPostalCode");
 	}
 
 	[Fact]
