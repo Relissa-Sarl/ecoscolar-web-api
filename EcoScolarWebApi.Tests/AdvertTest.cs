@@ -27,6 +27,23 @@ public class AdvertsControllerTests : IDisposable
     private readonly IUserService _userServiceMock;
     private readonly ReviewMapper _reviewMapper;
 
+    private void MockUser(string userId, string role = "User")
+    {
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.NameIdentifier, userId),
+            new Claim(ClaimTypes.Name, "testuser"),
+            new Claim(ClaimTypes.Role, role)
+        };
+        var identity = new ClaimsIdentity(claims, "TestAuthType");
+        var claimsPrincipal = new ClaimsPrincipal(identity);
+
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new Microsoft.AspNetCore.Http.DefaultHttpContext { User = claimsPrincipal }
+        };
+    }
+
 
     public AdvertsControllerTests()
     {
@@ -47,6 +64,17 @@ public class AdvertsControllerTests : IDisposable
         // Simulate the dependency injection of context and store into the AdvertsController
         _usersController = new UsersController(_userServiceMock, _userManagerMock, _context, _reviewMapper, Substitute.For<IStripeConnectService>());
 		_controller = new AdvertsController(_context, _searchService, _emailSenderServiceMock);
+
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.NameIdentifier, "guid-123"),
+            new Claim(ClaimTypes.Name, "john_doe")
+        };
+        var identity = new ClaimsIdentity(claims, "TestAuthType");
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new Microsoft.AspNetCore.Http.DefaultHttpContext { User = new ClaimsPrincipal(identity) }
+        };
     }
 
     public void Dispose()
@@ -2106,6 +2134,7 @@ public class AdvertsControllerTests : IDisposable
     {
         // Arrange
         var sellerUser = new User { Id = "seller-123", UserName = "seller_bob", Email = "seller@example.com", Nickname = "Bob" };
+        MockUser(sellerUser.Id);
         var advert = new Book
         {
             AdvertId = 10,
@@ -2147,6 +2176,7 @@ public class AdvertsControllerTests : IDisposable
     {
         // Arrange
         var sellerUser = new User { Id = "seller-456", UserName = "seller_alice", Email = "alice@example.com" };
+        MockUser(sellerUser.Id);
         var advert = new Book
         {
             AdvertId = 11,

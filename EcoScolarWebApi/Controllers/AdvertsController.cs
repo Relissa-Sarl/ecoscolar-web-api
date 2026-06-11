@@ -5,9 +5,11 @@ using EcoScolarWebApi.DTOs.Adverts;
 using EcoScolarWebApi.Enums;
 using EcoScolarWebApi.Models;
 using EcoScolarWebApi.Services.Contracts;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Stripe.Billing;
+using System.Security.Claims;
 
 namespace EcoScolarWebApi.Controllers;
 
@@ -20,6 +22,21 @@ public class AdvertsController : ControllerBase
 	private readonly EcoscolarDbContext _context;                                           // Database context for accessing the database
 	private readonly IEmailSenderService _emailSenderService;
 	private bool AdvertExists(long id) => _context.Adverts.Any(e => e.AdvertId == id);      // Helper method to check if an PhysicalItem with the specified ID exists in the database
+
+    private async Task<bool?> IsOwnerOrAdmin(long advertId)
+    {
+        var advert = await _context.Adverts.AsNoTracking().FirstOrDefaultAsync(a => a.AdvertId == advertId);
+        if (advert == null) return null;
+
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        return advert.SellerId == currentUserId || User.IsInRole("Admin");
+    }
+
+    private bool IsCurrentUser(string userId)
+    {
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        return userId == currentUserId || User.IsInRole("Admin");
+    }
 
 	/// <summary>
 	/// AdvertsController constructor
@@ -359,6 +376,7 @@ public class AdvertsController : ControllerBase
 	/// </summary>
 	/// <param name="bookDto">The DTO containing the Books PhysicalItem details</param>
 	/// <returns>The created PhysicalItem details</returns>
+	[Authorize]
 	[HttpPost("books")]
 	public async Task<ActionResult<AdvertReadDto>> CreateBook([FromBody] BookCreateDto bookDto)
 	{
@@ -368,6 +386,8 @@ public class AdvertsController : ControllerBase
 		{
 			return BadRequest(ModelState);
 		}
+
+        if (!IsCurrentUser(bookDto.UserId)) return Forbid();
 
 		Book book = bookDto.ToEntity();
 
@@ -386,6 +406,7 @@ public class AdvertsController : ControllerBase
 	/// </summary>
 	/// <param name="productDto">The DTO containing the product PhysicalItem details</param>
 	/// <returns>The created PhysicalItem details</returns>
+	[Authorize]
 	[HttpPost("products")]
 	public async Task<ActionResult<AdvertReadDto>> CreateProduct([FromBody] ProductCreateDto productDto)
 	{
@@ -395,6 +416,8 @@ public class AdvertsController : ControllerBase
 		{
 			return BadRequest(ModelState);
 		}
+
+        if (!IsCurrentUser(productDto.UserId)) return Forbid();
 
 		PhysicalItem product = productDto.ToEntity();
 
@@ -413,6 +436,7 @@ public class AdvertsController : ControllerBase
 	/// </summary>
 	/// <param name="serviceDto">The DTO containing the service PhysicalItem details</param>
 	/// <returns>The created PhysicalItem details</returns>
+	[Authorize]
 	[HttpPost("services")]
 	public async Task<ActionResult<AdvertReadDto>> CreateService([FromBody] ServiceCreateDto serviceDto)
 	{
@@ -422,6 +446,8 @@ public class AdvertsController : ControllerBase
 		{
 			return BadRequest(ModelState);
 		}
+
+        if (!IsCurrentUser(serviceDto.UserId)) return Forbid();
 
 		TutoringAdvert service = serviceDto.ToEntity();
 
@@ -444,6 +470,7 @@ public class AdvertsController : ControllerBase
 	/// <param name="id">The ID of the Books PhysicalItem to edit</param>
 	/// <param name="bookDto">The DTO containing the updated Books PhysicalItem details</param>
 	/// <returns>The updated PhysicalItem details</returns>
+	[Authorize]
 	[HttpPut("books/{id}")]
 	public async Task<IActionResult> EditBook(long id, [FromBody] BookCreateDto bookDto)
 	{
@@ -451,6 +478,10 @@ public class AdvertsController : ControllerBase
 		{
 			return BadRequest(ModelState);
 		}
+
+        var isOwner = await IsOwnerOrAdmin(id);
+        if (isOwner == null) return NotFound();
+        if (isOwner == false) return Forbid();
 
 		Book? existingBook = await _context.Books
 			.Include(b => b.Pictures)
@@ -482,6 +513,7 @@ public class AdvertsController : ControllerBase
 	/// <param name="id">The ID of the product PhysicalItem to edit</param>
 	/// <param name="productDto">The DTO containing the updated product PhysicalItem details</param>
 	/// <returns>The updated PhysicalItem details</returns>
+	[Authorize]
 	[HttpPut("products/{id}")]
 	public async Task<IActionResult> EditProduct(long id, [FromBody] ProductCreateDto productDto)
 	{
@@ -489,6 +521,10 @@ public class AdvertsController : ControllerBase
 		{
 			return BadRequest(ModelState);
 		}
+
+        var isOwner = await IsOwnerOrAdmin(id);
+        if (isOwner == null) return NotFound();
+        if (isOwner == false) return Forbid();
 
 		PhysicalItem? existingProduct = await _context.Products
 			.Include(p => p.Pictures)
@@ -520,6 +556,7 @@ public class AdvertsController : ControllerBase
 	/// <param name="id">The ID of the service PhysicalItem to edit</param>
 	/// <param name="serviceDto">The DTO containing the updated service PhysicalItem details</param>
 	/// <returns>The updated PhysicalItem details</returns>
+	[Authorize]
 	[HttpPut("services/{id}")]
 	public async Task<IActionResult> EditService(long id, [FromBody] ServiceCreateDto serviceDto)
 	{
@@ -527,6 +564,10 @@ public class AdvertsController : ControllerBase
 		{
 			return BadRequest(ModelState);
 		}
+
+        var isOwner = await IsOwnerOrAdmin(id);
+        if (isOwner == null) return NotFound();
+        if (isOwner == false) return Forbid();
 
 		TutoringAdvert? existingService = await _context.Services
 			.FirstOrDefaultAsync(s => s.AdvertId == id);
@@ -560,9 +601,14 @@ public class AdvertsController : ControllerBase
 	/// <param name="id">The ID of the PhysicalItem to update</param>
 	/// <param name="status">The new status for the PhysicalItem</param>
 	/// <returns>The updated PhysicalItem details</returns>
+	[Authorize]
 	[HttpPatch("{id}/status")]
 	public async Task<IActionResult> UpdateAdvertStatus(long id, [FromBody] AdvertStatus status)
 	{
+        var isOwner = await IsOwnerOrAdmin(id);
+        if (isOwner == null) return NotFound();
+        if (isOwner == false) return Forbid();
+
 		Advert? Adverts;
 		try
 		{
@@ -620,6 +666,7 @@ public class AdvertsController : ControllerBase
 	/// </summary>
 	/// <param name="id">The ID of the PhysicalItem to delete</param>
 	/// <returns>The deleted PhysicalItem details</returns>
+	[Authorize]
 	[HttpDelete("{id}")]
 	public async Task<IActionResult> DeleteAdvert(long id)
 	{
@@ -628,6 +675,10 @@ public class AdvertsController : ControllerBase
 
 		if (hasTransactions)
             return BadRequest("Can't delete an advert with transactions");
+
+        var isOwner = await IsOwnerOrAdmin(id);
+        if (isOwner == null) return NotFound();
+        if (isOwner == false) return Forbid();
 
         Advert? advert = await _context.Adverts.FindAsync(id);
 		if (advert == null)
@@ -647,9 +698,14 @@ public class AdvertsController : ControllerBase
 	/// <param name="id">The ID of the PhysicalItem from which to remove images</param>
 	/// <param name="imageUrls">The list of image URLs to remove</param>
 	/// <returns>The updated PhysicalItem details</returns>
+	[Authorize]
 	[HttpDelete("{id}/images")]
 	public async Task<IActionResult> RemoveAdvertImages(long id, [FromBody] List<string> imageUrls)
 	{
+        var isOwner = await IsOwnerOrAdmin(id);
+        if (isOwner == null) return NotFound();
+        if (isOwner == false) return Forbid();
+
 		PhysicalItem? product;
 		try
 		{
