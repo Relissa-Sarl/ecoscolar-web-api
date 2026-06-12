@@ -11,9 +11,14 @@ namespace EcoScolarWebApi.Services;
 /// Catalogue summaries/detail sur <see cref="Advert"/> (livres, produits hors livre, services).
 /// Filtre <c>isbn</c> : lignes résolues comme annonces reliées à <see cref="Book"/>.
 /// Filtre <c>q</c> : titre ou ISBN (pour les lignes livre uniquement dans la sous-requête).
+/// Les autres filtres et la pagination sont appliqués avant le mapping DTO.
 /// </summary>
 public sealed class AdvertSearchService : IAdvertSearchService
 {
+	private const int DefaultPage = 1;
+	private const int DefaultPageSize = 9;
+	private const int MaxPageSize = 50;
+
 	private readonly EcoscolarDbContext _context;
 
 	public AdvertSearchService(EcoscolarDbContext context)
@@ -21,7 +26,7 @@ public sealed class AdvertSearchService : IAdvertSearchService
 		_context = context;
 	}
 
-	public async Task<IEnumerable<AdvertSummaryDto>> SearchSummariesAsync(
+	public async Task<CatalogSummaryPageDto> SearchSummariesAsync(
 		AdvertSearchQuery? query,
 		CancellationToken cancellationToken = default)
 	{
@@ -29,34 +34,21 @@ public sealed class AdvertSearchService : IAdvertSearchService
 			.AsNoTracking()
 			.Where(a => a.Status == AdvertStatus.ACTIVE);
 
-		if (query != null && !string.IsNullOrWhiteSpace(query.Isbn))
+		if (query is not null)
 		{
-			var needle = Normalize(query.Isbn);
-
-			advertsQuery = advertsQuery.Where(a =>
-				_context.Set<Book>().Any(b =>
-					b.AdvertId == a.AdvertId
-					&& b.ISBN != null
-					&& b.ISBN.Trim() != string.Empty
-					&& b.ISBN.Replace("-", string.Empty).Trim().ToLower().Contains(needle)));
+			advertsQuery = ApplyFilters(advertsQuery, query);
 		}
 
-		if (query != null && !string.IsNullOrWhiteSpace(query.Q))
-		{
-			var keyword = query.Q.Trim();
-			var titleProbe = keyword.ToLower();
-			var isbnProbe = Normalize(keyword);
+		var pageSize = NormalizePageSize(query?.PageSize);
+		var page = NormalizePage(query?.Page);
+		var totalItems = await advertsQuery.CountAsync(cancellationToken);
+		var totalPages = Math.Max(1, (int)Math.Ceiling(totalItems / (double)pageSize));
+		page = Math.Min(page, totalPages);
 
-			advertsQuery = advertsQuery.Where(a =>
-				a.Title.ToLower().Contains(titleProbe)
-				|| _context.Set<Book>().Any(b =>
-					b.AdvertId == a.AdvertId
-					&& b.ISBN != null
-					&& b.ISBN.Trim() != string.Empty
-					&& b.ISBN.Replace("-", string.Empty).Trim().ToLower().Contains(isbnProbe)));
-		}
-
-		var adverts = await advertsQuery.ToListAsync(cancellationToken);
+		var adverts = await ApplySort(advertsQuery, query?.Sort)
+			.Skip((page - 1) * pageSize)
+			.Take(pageSize)
+			.ToListAsync(cancellationToken);
 
 		var bookAdvertIds = adverts.OfType<Book>().Select(b => b.AdvertId).Distinct().ToArray();
 		var serviceAdvertIds = adverts.OfType<TutoringAdvert>().Select(s => s.AdvertId).Distinct().ToArray();
@@ -77,7 +69,14 @@ public sealed class AdvertSearchService : IAdvertSearchService
 				.Where(s => serviceAdvertIds.Contains(s.AdvertId))
 				.ToDictionaryAsync(s => s.AdvertId, cancellationToken);
 
-		return adverts.Select(a => MapSummary(a, booksDict, servicesDict)).ToList();
+		return new CatalogSummaryPageDto
+		{
+			Items = adverts.Select(a => MapSummary(a, booksDict, servicesDict)).ToList(),
+			Page = page,
+			PageSize = pageSize,
+			TotalItems = totalItems,
+			TotalPages = totalPages
+		};
 	}
 
 	public async Task<AdvertDetailDto?> GetDetailAsync(long id, CancellationToken cancellationToken = default)
@@ -114,6 +113,125 @@ public sealed class AdvertSearchService : IAdvertSearchService
 			.FirstOrDefaultAsync(cancellationToken);
 
 		return productDetail == null ? null : ToDetailFromPhysical(productDetail);
+	}
+
+	private IQueryable<Advert> ApplyFilters(IQueryable<Advert> advertsQuery, AdvertSearchQuery query)
+	{
+		if (!string.IsNullOrWhiteSpace(query.Isbn))
+		{
+			var needle = Normalize(query.Isbn);
+
+			advertsQuery = advertsQuery.Where(a =>
+				_context.Set<Book>().Any(b =>
+					b.AdvertId == a.AdvertId
+					&& b.ISBN != null
+					&& b.ISBN.Trim() != string.Empty
+					&& b.ISBN.Replace("-", string.Empty).Trim().ToLower().Contains(needle)));
+		}
+
+		if (!string.IsNullOrWhiteSpace(query.Q))
+		{
+			var keyword = query.Q.Trim();
+			var titleProbe = keyword.ToLower();
+			var isbnProbe = Normalize(keyword);
+
+			advertsQuery = advertsQuery.Where(a =>
+				a.Title.ToLower().Contains(titleProbe)
+				|| _context.Set<Book>().Any(b =>
+					b.AdvertId == a.AdvertId
+					&& b.ISBN != null
+					&& b.ISBN.Trim() != string.Empty
+					&& b.ISBN.Replace("-", string.Empty).Trim().ToLower().Contains(isbnProbe)));
+		}
+
+		advertsQuery = ApplyTypeFilter(advertsQuery, query.Type);
+
+		if (query.MinPrice.HasValue)
+			advertsQuery = advertsQuery.Where(a => a.Price >= query.MinPrice.Value);
+
+		if (query.MaxPrice.HasValue)
+			advertsQuery = advertsQuery.Where(a => a.Price <= query.MaxPrice.Value);
+
+		var categories = SplitTerms(query.Category);
+		if (categories.Length > 0)
+		{
+			advertsQuery = advertsQuery.Where(a =>
+				_context.Set<Book>().Any(b =>
+					b.AdvertId == a.AdvertId
+					&& b.BookCategory != null
+					&& categories.Contains(b.BookCategory.Name.ToLower())));
+		}
+
+		var grades = SplitTerms(query.Grade);
+		if (grades.Length > 0)
+		{
+			advertsQuery = advertsQuery.Where(a =>
+				_context.Set<TutoringAdvert>().Any(s =>
+					s.AdvertId == a.AdvertId
+					&& s.SchoolGrade != null
+					&& grades.Contains(s.SchoolGrade.Name.ToLower())));
+		}
+
+		var subjects = SplitTerms(query.Subjects);
+		if (subjects.Length > 0)
+		{
+			advertsQuery = advertsQuery.Where(a =>
+				_context.Set<TutoringAdvert>().Any(s =>
+					s.AdvertId == a.AdvertId
+					&& s.Subject != null
+					&& subjects.Contains(s.Subject.Name.ToLower())));
+		}
+
+		return advertsQuery;
+	}
+
+	private static IQueryable<Advert> ApplyTypeFilter(IQueryable<Advert> advertsQuery, string? type)
+	{
+		return type?.Trim().ToUpperInvariant() switch
+		{
+			CatalogAdvertTypeCodes.Books => advertsQuery.Where(a => a is Book),
+			CatalogAdvertTypeCodes.Product => advertsQuery.Where(a => a is PhysicalItem && !(a is Book)),
+			CatalogAdvertTypeCodes.Service => advertsQuery.Where(a => a is TutoringAdvert),
+			_ => advertsQuery
+		};
+	}
+
+	private static IQueryable<Advert> ApplySort(IQueryable<Advert> advertsQuery, string? sort)
+	{
+		return sort?.Trim().ToLowerInvariant() switch
+		{
+			"price_asc" => advertsQuery
+				.OrderBy(a => a.Price)
+				.ThenByDescending(a => a.CreatedAt)
+				.ThenByDescending(a => a.AdvertId),
+			"price_desc" => advertsQuery
+				.OrderByDescending(a => a.Price)
+				.ThenByDescending(a => a.CreatedAt)
+				.ThenByDescending(a => a.AdvertId),
+			_ => advertsQuery
+				.OrderByDescending(a => a.CreatedAt)
+				.ThenByDescending(a => a.AdvertId)
+		};
+	}
+
+	private static int NormalizePage(int? page)
+	{
+		return Math.Max(DefaultPage, page ?? DefaultPage);
+	}
+
+	private static int NormalizePageSize(int? pageSize)
+	{
+		return Math.Clamp(pageSize ?? DefaultPageSize, 1, MaxPageSize);
+	}
+
+	private static string[] SplitTerms(string? rawTerms)
+	{
+		return rawTerms?
+			.Split(',', StringSplitOptions.RemoveEmptyEntries)
+			.Select(term => term.Trim().ToLowerInvariant())
+			.Where(term => term.Length > 0)
+			.Distinct()
+			.ToArray() ?? [];
 	}
 
 	private static AdvertSummaryDto MapSummary(
