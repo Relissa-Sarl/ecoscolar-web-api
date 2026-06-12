@@ -107,6 +107,6 @@ public record AdvertCreateDto(string Title, string Description, decimal Price, s
 		entity.Price = Price;
 		entity.Status = AdvertStatus.ACTIVE;
 		entity.SellerId = UserId;
-		entity.NotificationDate = DateTime.UtcNow.AddMonths(3);
+		entity.NotificationDate = DateTime.UtcNow;
 	}
 }

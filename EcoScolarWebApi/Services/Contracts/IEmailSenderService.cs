@@ -6,4 +6,5 @@ namespace EcoScolarWebApi.Services.Contracts;
 public interface IEmailSenderService : IEmailSender<User>
 {
     Task SendItemSoldEmailAsync(User seller, Advert advert);
+    Task SendAdvertExpirationWarningAsync(User seller, Advert advert, string renewLink);
 }

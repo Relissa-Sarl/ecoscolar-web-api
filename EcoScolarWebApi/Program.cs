@@ -14,6 +14,7 @@ builder.Services.AddAuthAndIdentity();
 builder.Services.AddSwaggerAndVersioning();
 
 builder.Services.AddHostedService<EcoScolarWebApi.Services.AutoConfirmReceiptService>();
+builder.Services.AddHostedService<EcoScolarWebApi.Services.AdvertExpirationService>();
 builder.Services.AddEcoScolarServices(builder.Configuration);
 builder.Services.AddMappersServices(builder.Configuration);
 
