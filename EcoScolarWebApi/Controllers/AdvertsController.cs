@@ -605,10 +605,6 @@ public class AdvertsController : ControllerBase
 	[HttpPatch("{id}/status")]
 	public async Task<IActionResult> UpdateAdvertStatus(long id, [FromBody] AdvertStatus status)
 	{
-        var isOwner = await IsOwnerOrAdmin(id);
-        if (isOwner == null) return NotFound();
-        if (isOwner == false) return Forbid();
-
 		Advert? Adverts;
 		try
 		{
@@ -619,6 +615,22 @@ public class AdvertsController : ControllerBase
 			return BadRequest(new { error = e.Message });
 		}
 		if (Adverts == null) return NotFound();
+
+        var isOwner = await IsOwnerOrAdmin(id);
+        if (isOwner == null) return NotFound();
+        if (isOwner == false)
+		{
+			// If the user is neither owner nor admin, they are only allowed to release a paused item
+			// back to active status (e.g. after a cancelled or failed checkout session).
+			if (Adverts.Status == AdvertStatus.PAUSED && status == AdvertStatus.ACTIVE)
+			{
+				// Allowed
+			}
+			else
+			{
+				return Forbid();
+			}
+		}
 
 		var oldStatus = Adverts.Status;
 		Adverts.Status = status;
