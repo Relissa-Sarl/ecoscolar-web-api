@@ -72,7 +72,7 @@ public class EmailSenderService : IEmailSenderService
         var body = $"""
         <div style="font-family: sans-serif; line-height: 1.5; color: #333;">
             <p>Bonjour {seller.Nickname},</p>
-            <p>Bonne nouvelle ! Votre annonce "<strong>{advert.Title}</strong>" a été achetée.</strong>.</p>
+            <p>Bonne nouvelle ! Votre annonce <href="[{advert.AdvertId}">"<strong>{advert.Title}</strong>" a été achetée.</strong>.</p>
             <p>Nous vous remercions pour votre confiance sur notre plateforme.</p>
             <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
         </div>
