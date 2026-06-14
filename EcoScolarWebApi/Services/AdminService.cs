@@ -126,16 +126,16 @@ namespace EcoScolarWebApi.Services
                 return Result<UserResponse>.Failure("Unauthorized access.", ErrorType.Unauthorized);
 
             currentUser.IsBanned = !currentUser.IsBanned;
-            if (currentUser.IsBanned)
-            {
-                //await _userManager.SetLockoutEnabledAsync(currentUser, true);
-                await _userManager.SetLockoutEndDateAsync(currentUser, DateTime.Today.AddYears(999));
-            }
-            else
-            {
-                //await _userManager.SetLockoutEnabledAsync(currentUser, false);
-                await _userManager.SetLockoutEndDateAsync(currentUser, null);
-            }
+            //if (currentUser.IsBanned)
+            //{
+            //    await _userManager.SetLockoutEnabledAsync(currentUser, true);
+            //    await _userManager.SetLockoutEndDateAsync(currentUser, DateTime.Today.AddYears(999));
+            //}
+            //else
+            //{
+            //    await _userManager.SetLockoutEnabledAsync(currentUser, false);
+            //    await _userManager.SetLockoutEndDateAsync(currentUser, null);
+            //}
 
             var updateResult = await _userManager.UpdateAsync(currentUser);
             if (!updateResult.Succeeded)

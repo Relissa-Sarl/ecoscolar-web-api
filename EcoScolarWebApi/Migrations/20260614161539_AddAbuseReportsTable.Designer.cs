@@ -4,6 +4,7 @@ using EcoScolarWebApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EcoScolarWebApi.Migrations
 {
     [DbContext(typeof(EcoscolarDbContext))]
-    partial class EcoscolarDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260614161539_AddAbuseReportsTable")]
+    partial class AddAbuseReportsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -419,28 +422,13 @@ namespace EcoScolarWebApi.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("PictureId"));
 
-                    b.Property<string>("ContentType")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
                     b.Property<string>("Label")
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<string>("ObjectKey")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
                     b.Property<long>("PhysicalItemId")
                         .HasColumnType("bigint");
-
-                    b.Property<string>("PublicUrl")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("int");
 
                     b.HasKey("PictureId");
 

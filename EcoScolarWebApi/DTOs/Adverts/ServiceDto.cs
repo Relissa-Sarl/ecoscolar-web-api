@@ -1,10 +1,10 @@
-﻿using EcoScolarWebApi.Enums;
+using EcoScolarWebApi.Enums;
 using EcoScolarWebApi.Models;
 
 namespace EcoScolarWebApi.DTOs.Adverts;
 
 public record ServiceReadDto(long Id, string Title, string Description, decimal Price, DateTime PublicationDate, DateTime NotificationDate, AdvertStatus Status, string UserId, string SellerPseudo,
-	long SubjectId, string SubjectLabel, long SchoolGradeId, string SchoolGradeLabel, Enums.LanguageEnum TeachingLanguage, string StudyLevel)
+	long SubjectId, string SubjectLabel, long SchoolGradeId, string SchoolGradeLabel, Enums.LanguageEnum TeachingLanguage, string StudyLevel, int ExpiresInDays)
 {
 	public static ServiceReadDto FromEntity(TutoringAdvert entity)
 	{
@@ -23,7 +23,8 @@ public record ServiceReadDto(long Id, string Title, string Description, decimal 
 			SchoolGradeId: entity.SchoolGradeId,
 			SchoolGradeLabel: entity.SchoolGrade.Name,
 			TeachingLanguage: entity.TeachingLanguage,
-			StudyLevel: entity.StudyLevel
+			StudyLevel: entity.StudyLevel,
+			ExpiresInDays: EcoScolarWebApi.Helpers.AdvertExpirationHelper.GetExpiresInDays(entity.CreatedAt)
 		);
 	}
 }

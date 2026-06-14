@@ -1,4 +1,4 @@
-﻿using EcoScolarWebApi.Data;
+using EcoScolarWebApi.Data;
 using EcoScolarWebApi.DTOs.Adverts;
 using EcoScolarWebApi.Models;
 using EcoScolarWebApi.Services.Contracts;
@@ -305,8 +305,9 @@ public sealed class AdvertSearchService : IAdvertSearchService
 						Category = src.BookCategory?.Name,
 						Subjects = null,
 						Grade = null,
-						ImageUrl = primaryPic?.PublicUrl ?? primaryPic?.Label,
-						sellerId = bk.SellerId
+					ImageUrl = primaryPic?.PublicUrl ?? primaryPic?.Label,
+					sellerId = bk.SellerId,
+					ExpiresInDays = EcoScolarWebApi.Helpers.AdvertExpirationHelper.GetExpiresInDays(src.CreatedAt)
 					};
 				}
 			case TutoringAdvert svc:
@@ -323,30 +324,32 @@ public sealed class AdvertSearchService : IAdvertSearchService
 						Category = null,
 						Subjects = src.Subject?.Name,
 						Grade = src.SchoolGrade?.Name,
-						ImageUrl = null,
-						sellerId = svc.SellerId
+					ImageUrl = null,
+					sellerId = svc.SellerId,
+					ExpiresInDays = EcoScolarWebApi.Helpers.AdvertExpirationHelper.GetExpiresInDays(src.CreatedAt)
 					};
 				}
-			case PhysicalItem phy when phy is not Book:
+		case PhysicalItem phy when phy is not Book:
+			{
+				var srcPhy = productsDict != null && productsDict.TryGetValue(phy.AdvertId, out var fullPhy)
+					? fullPhy
+					: phy;
+				var primaryPic = srcPhy.Pictures?.OrderBy(p => p.SortOrder).FirstOrDefault();
+				return new AdvertSummaryDto
 				{
-					var srcPhy = productsDict != null && productsDict.TryGetValue(phy.AdvertId, out var fullPhy)
-						? fullPhy
-						: phy;
-					var primaryPic = srcPhy.Pictures?.OrderBy(p => p.SortOrder).FirstOrDefault();
-					return new AdvertSummaryDto
-					{
-						Id = phy.AdvertId,
-						Title = phy.Title,
-						Price = phy.Price,
-						Type = CatalogAdvertTypeCodes.Product,
-						Isbn = null,
-						Category = null,
-						Subjects = null,
-						Grade = null,
-						ImageUrl = primaryPic?.PublicUrl ?? primaryPic?.Label,
-						sellerId = phy.SellerId
-					};
-				}
+					Id = phy.AdvertId,
+					Title = phy.Title,
+					Price = phy.Price,
+					Type = CatalogAdvertTypeCodes.Product,
+					Isbn = null,
+					Category = null,
+					Subjects = null,
+					Grade = null,
+					ImageUrl = primaryPic?.PublicUrl ?? primaryPic?.Label,
+					sellerId = phy.SellerId,
+					ExpiresInDays = EcoScolarWebApi.Helpers.AdvertExpirationHelper.GetExpiresInDays(srcPhy.CreatedAt)
+				};
+			}
 			default:
 				throw new InvalidOperationException($"Unknown PhysicalItem CLR type '{a.GetType().Name}'.");
 		}
@@ -369,7 +372,8 @@ public sealed class AdvertSearchService : IAdvertSearchService
 			Price = b.Price,
 			Description = b.Description ?? string.Empty,
 			ImageUrl = imageUrl,
-			sellerId = b.SellerId
+			sellerId = b.SellerId,
+			ExpiresInDays = EcoScolarWebApi.Helpers.AdvertExpirationHelper.GetExpiresInDays(b.CreatedAt)
 		};
 	}
 
@@ -387,7 +391,8 @@ public sealed class AdvertSearchService : IAdvertSearchService
 			Price = s.Price,
 			Description = s.Description ?? string.Empty,
 			ImageUrl = null,
-			sellerId = s.SellerId
+			sellerId = s.SellerId,
+			ExpiresInDays = EcoScolarWebApi.Helpers.AdvertExpirationHelper.GetExpiresInDays(s.CreatedAt)
 		};
 	}
 
@@ -407,7 +412,8 @@ public sealed class AdvertSearchService : IAdvertSearchService
 			Price = p.Price,
 			Description = p.Description ?? string.Empty,
 			ImageUrl = imageUrl,
-			sellerId = p.SellerId
+			sellerId = p.SellerId,
+			ExpiresInDays = EcoScolarWebApi.Helpers.AdvertExpirationHelper.GetExpiresInDays(p.CreatedAt)
 		};
 	}
 

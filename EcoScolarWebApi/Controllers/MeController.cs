@@ -196,4 +196,32 @@ public class MeController : ControllerBase
 
         return Ok();
     }
+
+    [HttpPost("sales/{advertId}/renew")]
+    public async Task<IActionResult> RenewAdvert(long advertId)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized(new { message = "Invalid session." });
+
+        var advert = await _context.Adverts.FirstOrDefaultAsync(a => a.AdvertId == advertId);
+
+        if (advert == null)
+            return NotFound();
+
+        if (advert.SellerId != userId)
+            return Forbid();
+
+        if (advert.Status == AdvertStatus.SOLD || advert.Status == AdvertStatus.BLOCKED)
+            return BadRequest(new { message = "Cette annonce ne peut pas être renouvelée." });
+
+        advert.CreatedAt = DateTime.UtcNow;
+        advert.NotificationDate = DateTime.UtcNow;
+        advert.Status = AdvertStatus.ACTIVE;
+
+        await _context.SaveChangesAsync();
+
+        return Ok();
+    }
 }

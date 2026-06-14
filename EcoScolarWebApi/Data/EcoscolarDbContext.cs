@@ -38,6 +38,7 @@ public class EcoscolarDbContext(DbContextOptions<EcoscolarDbContext> options) : 
 	public DbSet<SearchAlert> SearchAlerts { get; set; }
 	public DbSet<SupportTicket> SupportTickets { get; set; } = default!;
 	public DbSet<SupportTicketMessage> SupportTicketMessages { get; set; } = default!;
+	public DbSet<AbuseReport> AbuseReports { get; set; } = default!;
 
 	protected override void OnModelCreating(ModelBuilder builder)
 	{
@@ -172,6 +173,28 @@ public class EcoscolarDbContext(DbContextOptions<EcoscolarDbContext> options) : 
 				.WithMany()
 				.HasForeignKey(f => f.FlaggedId)
 				.OnDelete(DeleteBehavior.Cascade);
+		});
+
+		// AbuseReport
+		builder.Entity<AbuseReport>(entity =>
+		{
+			entity.Property(ar => ar.CreatedAt)
+				.HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+			entity.HasOne(ar => ar.Reporter)
+				.WithMany()
+				.HasForeignKey(ar => ar.ReporterUserId)
+				.OnDelete(DeleteBehavior.Restrict);
+
+			entity.HasOne(ar => ar.TargetAdvert)
+				.WithMany()
+				.HasForeignKey(ar => ar.TargetAdvertId)
+				.OnDelete(DeleteBehavior.Cascade);
+
+			entity.HasOne(ar => ar.TargetComment)
+				.WithMany()
+				.HasForeignKey(ar => ar.TargetCommentId)
+				.OnDelete(DeleteBehavior.NoAction);
 		});
 
 		// SearchAlert

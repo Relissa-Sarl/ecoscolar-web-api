@@ -490,6 +490,9 @@ public class AdvertsController : ControllerBase
 		if (existingBook == null) return NotFound();
 		bookDto.MapToEntity(existingBook);
 
+		if (existingBook.Status == AdvertStatus.SOLD || existingBook.Status == AdvertStatus.PAUSED || existingBook.Status == AdvertStatus.EXPIRED || existingBook.Status == AdvertStatus.BLOCKED)
+			return Forbid();
+
 		try
 		{
 			_context.Entry(existingBook).State = EntityState.Modified;
@@ -533,7 +536,10 @@ public class AdvertsController : ControllerBase
 		if (existingProduct == null) return NotFound();
 		productDto.MapToEntity(existingProduct);
 
-		try
+        if (existingProduct.Status == AdvertStatus.SOLD || existingProduct.Status == AdvertStatus.PAUSED || existingProduct.Status == AdvertStatus.EXPIRED || existingProduct.Status == AdvertStatus.BLOCKED)
+            return Forbid();
+
+        try
 		{
 			_context.Entry(existingProduct).State = EntityState.Modified;
 			await _context.SaveChangesAsync();
@@ -575,7 +581,10 @@ public class AdvertsController : ControllerBase
 		if (existingService == null) return NotFound();
 		serviceDto.MapToEntity(existingService);
 
-		try
+        if (existingService.Status == AdvertStatus.SOLD || existingService.Status == AdvertStatus.PAUSED || existingService.Status == AdvertStatus.EXPIRED || existingService.Status == AdvertStatus.BLOCKED)
+            return Forbid();
+
+        try
 		{
 			_context.Entry(existingService).State = EntityState.Modified;
 			await _context.SaveChangesAsync();
@@ -605,10 +614,6 @@ public class AdvertsController : ControllerBase
 	[HttpPatch("{id}/status")]
 	public async Task<IActionResult> UpdateAdvertStatus(long id, [FromBody] AdvertStatus status)
 	{
-        var isOwner = await IsOwnerOrAdmin(id);
-        if (isOwner == null) return NotFound();
-        if (isOwner == false) return Forbid();
-
 		Advert? Adverts;
 		try
 		{
@@ -619,6 +624,22 @@ public class AdvertsController : ControllerBase
 			return BadRequest(new { error = e.Message });
 		}
 		if (Adverts == null) return NotFound();
+
+        var isOwner = await IsOwnerOrAdmin(id);
+        if (isOwner == null) return NotFound();
+        if (isOwner == false)
+		{
+			// If the user is neither owner nor admin, they are only allowed to release a paused item
+			// back to active status (e.g. after a cancelled or failed checkout session).
+			if (Adverts.Status == AdvertStatus.PAUSED && status == AdvertStatus.ACTIVE)
+			{
+				// Allowed
+			}
+			else
+			{
+				return Forbid();
+			}
+		}
 
 		var oldStatus = Adverts.Status;
 		Adverts.Status = status;

@@ -22,6 +22,7 @@ public static class ServiceCollectionExtensions
 		services.AddSingleton<UserMapper>();
         services.AddSingleton<ReviewMapper>();
         services.AddSingleton<LocationMapper>();
+        services.AddSingleton<AbuseReportMapper>();
         return services;
     }
 
@@ -127,6 +128,7 @@ public static class ServiceCollectionExtensions
 		services.AddScoped<IAdminService, AdminService>();
 		services.AddScoped<ISupportContactService, SupportContactService>();
 		services.AddScoped<IStripeConnectService, StripeConnectService>();
+		services.AddScoped<IAbuseReportService, AbuseReportService>();
 
 		// MinIO image storage
 		var minioEndpoint = config["Minio:Endpoint"].NullIfEmpty() ?? "localhost:9000";
