@@ -11,4 +11,5 @@ public record AdvertSummaryDto
 	public string? Subjects { get; set; }
 	public string? Grade { get; set; }
 	public string? sellerId { get; set; }
+	public int ExpiresInDays { get; set; }
 }
