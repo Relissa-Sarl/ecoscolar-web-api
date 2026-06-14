@@ -63,6 +63,11 @@ public class AdvertPicturesController : ControllerBase
             return BadRequest(new { error = $"Maximum {MaxPicturesPerAdvert} images par annonce (actuellement {existingCount})." });
 
         var created = new List<PictureDto>();
+        var uploadedKeys = new List<string>();
+
+        var nextOrder = advert.Pictures.Count > 0
+            ? advert.Pictures.Max(p => p.SortOrder) + 1
+            : 0;
 
         foreach (var file in files)
         {
@@ -70,15 +75,12 @@ public class AdvertPicturesController : ControllerBase
             try
             {
                 stored = await _imageStorage.UploadAsync(file, $"adverts/{advertId}", ct);
+                uploadedKeys.Add(stored.ObjectKey);
             }
             catch (InvalidOperationException ex)
             {
                 return BadRequest(new { error = ex.Message });
             }
-
-            var nextOrder = advert.Pictures.Count > 0
-                ? advert.Pictures.Max(p => p.SortOrder) + 1
-                : 0;
 
             var picture = new Picture
             {
@@ -86,15 +88,24 @@ public class AdvertPicturesController : ControllerBase
                 ObjectKey = stored.ObjectKey,
                 ContentType = stored.ContentType,
                 PublicUrl = stored.PublicUrl,
-                SortOrder = nextOrder,
+                SortOrder = nextOrder++,
                 PhysicalItemId = advertId
             };
 
             _context.Pictures.Add(picture);
-            await _context.SaveChangesAsync(ct);
-
             advert.Pictures.Add(picture);
             created.Add(new PictureDto(picture.PictureId, stored.PublicUrl, picture.SortOrder));
+        }
+
+        try
+        {
+            await _context.SaveChangesAsync(ct);
+        }
+        catch (Exception)
+        {
+            foreach (var key in uploadedKeys)
+                await _imageStorage.DeleteAsync(key, ct).ConfigureAwait(false);
+            throw;
         }
 
         return Ok(created);
