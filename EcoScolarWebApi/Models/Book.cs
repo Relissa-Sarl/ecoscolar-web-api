@@ -8,19 +8,19 @@ public class Book : PhysicalItem
 {
     [Required]
     [StringLength(20)]
-    public string ISBN { get; set; }
+    public string ISBN { get; set; } = string.Empty;
 
     [Required]
     [StringLength(150)]
-    public string Author { get; set; }
+    public string Author { get; set; } = string.Empty;
 
     [Required]
     [StringLength(150)]
-    public string Publisher { get; set; }
+    public string Publisher { get; set; } = string.Empty;
 
     [Required]
     [StringLength(150)]
-    public string Edition { get; set; }
+    public string Edition { get; set; } = string.Empty;
 
     [Required]
     public Enums.LanguageEnum WrittenLanguage { get; set; }
@@ -29,5 +29,5 @@ public class Book : PhysicalItem
     public long BookCategoryId { get; set; }
 
     [ForeignKey("BookCategoryId")]
-    public virtual BookCategory BookCategory { get; set; }
+    public virtual BookCategory BookCategory { get; set; } = null!;
 }

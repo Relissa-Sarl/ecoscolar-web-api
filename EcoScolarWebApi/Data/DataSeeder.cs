@@ -6,7 +6,6 @@ using CsvHelper.Configuration;
 using CsvHelper.Configuration.Attributes;
 using EcoScolarWebApi.Enums;
 using EcoScolarWebApi.Models;
-using EcoScolarWebApi.Enums;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -96,10 +95,10 @@ public class DataSeeder
 		public int PostalCode { get; set; }
 
 		[Name("City")]
-		public string City { get; set; }
+		public string City { get; set; } = string.Empty;
 
 		[Name("Region")]
-		public string Region { get; set; }
+		public string Region { get; set; } = string.Empty;
 	}
 
 	private static async Task SeedTestDataAsync(EcoscolarDbContext context, UserManager<User> userManager)

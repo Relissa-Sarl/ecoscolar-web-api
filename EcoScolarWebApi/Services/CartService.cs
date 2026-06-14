@@ -21,7 +21,7 @@ namespace EcoScolarWebApi.Services
         {
             var cartItems = await _context.CartItems
                 .Include(c => c.Advert)
-                    .ThenInclude(a => a.Seller)
+                    .ThenInclude(a => a.Seller!)
                 .Where(c => c.UserId == userId)
                 .ToListAsync();
 

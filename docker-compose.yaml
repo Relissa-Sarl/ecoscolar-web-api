@@ -37,6 +37,11 @@ services:
       Stripe__SecretKey: ${STRIPE_SECRET_KEY}
       Smtp__Host: ecoscolar-mailpit
       Smtp__Port: 1025
+      Minio__Endpoint: ecoscolar-minio:9000
+      Minio__AccessKey: ${MINIO_ACCESS_KEY}
+      Minio__SecretKey: ${MINIO_SECRET_KEY}
+      Minio__Bucket: ${MINIO_BUCKET}
+      Minio__PublicBaseUrl: ${MINIO_PUBLIC_BASE_URL}
     networks:
       - dmz
       - ecoscolar
@@ -73,6 +78,32 @@ services:
       retries: 5
 
   # -----------------------------
+  # MinIO - S3-compatible local object storage
+  # -----------------------------
+  ecoscolar-minio:
+    image: minio/minio:latest
+    container_name: ecoscolar-minio
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
+    volumes:
+      - minio-ecoscolar-data:/data
+    networks:
+      - ecoscolar
+      - dmz
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # -----------------------------
   # Mailpit - SMTP Server and Web UI for Testing Emails
   # -----------------------------
   ecoscolar-mailpit:
@@ -100,3 +131,4 @@ networks:
 
 volumes:
   mssql-ecoscolar-data:
+  minio-ecoscolar-data:

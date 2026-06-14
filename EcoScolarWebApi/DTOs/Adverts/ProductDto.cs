@@ -71,7 +71,7 @@ public record ProductCreateDto(string Title, string Description, decimal Price, 
 			}
 			else
             {
-                product.Pictures = Images.Select(img => new Picture { Label = img }).ToList();
+                product.Pictures = Images!.Select(img => new Picture { Label = img }).ToList();
             }
 		}
 	}

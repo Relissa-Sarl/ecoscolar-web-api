@@ -8,19 +8,19 @@ namespace EcoScolarWebApi.Models;
 public class Language
 {
     [Key]
-    public string Label { get; set; }
+    public string Label { get; set; } = string.Empty;
 
     [Required]
-    public string Name { get; set; } // TODO - Rename in MCD Language -> Name
+    public string Name { get; set; } = string.Empty; // TODO - Rename in MCD Language -> Name
 
     [Required]
-    public string NameFr { get; set; }
+    public string NameFr { get; set; } = string.Empty;
 
     [Required]
-    public string NameDe { get; set; }
+    public string NameDe { get; set; } = string.Empty;
 
     [Required]
-    public string NameIt { get; set; }
+    public string NameIt { get; set; } = string.Empty;
 
     // === Many-to-many relationships ===
 

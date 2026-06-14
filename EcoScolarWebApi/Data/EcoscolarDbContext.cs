@@ -24,7 +24,7 @@ public class EcoscolarDbContext(DbContextOptions<EcoscolarDbContext> options) : 
 	public DbSet<SchoolGrade> SchoolGrades { get; set; } = default!;
 	public DbSet<Subject> Subjects { get; set; } = default!;
 	public DbSet<BookCategory> BookCategories { get; set; } = default!;
-	public DbSet<User> Users { get; set; } = default!;
+	public new DbSet<User> Users { get; set; } = default!;
 	public DbSet<UserLanguage> UserLanguages { get; set; } = default!;
 	public DbSet<Language> Languages { get; set; } = default!;
 	public DbSet<Location> Locations { get; set; } = default!;

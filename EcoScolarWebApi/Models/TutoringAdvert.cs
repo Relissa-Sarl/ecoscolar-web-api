@@ -8,7 +8,7 @@ public class TutoringAdvert : Advert // TODO : Rename in MCD Services -> to Serv
 {
     [Required]
     [StringLength(50)]
-    public string StudyLevel { get; set; }
+    public string StudyLevel { get; set; } = string.Empty;
 
     [Required]
     public long SubjectId { get; set; }
@@ -21,8 +21,8 @@ public class TutoringAdvert : Advert // TODO : Rename in MCD Services -> to Serv
                                                              // A TutoringAdvert can be taught in multiple languages, so maybe we need a many-to-many relationship between TutoringAdvert and Language.
 
     [ForeignKey("SubjectId")]
-    public virtual Subject Subject { get; set; }
+    public virtual Subject Subject { get; set; } = null!;
 
     [ForeignKey("SchoolGradeId")]
-    public virtual SchoolGrade SchoolGrade { get; set; }
+    public virtual SchoolGrade SchoolGrade { get; set; } = null!;
 }

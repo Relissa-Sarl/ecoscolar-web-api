@@ -10,5 +10,6 @@ public record AdvertSummaryDto
 	public string? Category { get; set; }
 	public string? Subjects { get; set; }
 	public string? Grade { get; set; }
+	public string? ImageUrl { get; set; }
 	public string? sellerId { get; set; }
 }

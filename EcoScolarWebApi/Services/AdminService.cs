@@ -65,7 +65,7 @@ namespace EcoScolarWebApi.Services
                     m.UserId,
                     m.CreatedAt,
                     // On mappe l'utilisateur vers un DTO simplifié ou on extrait juste les infos nécessaires
-                    new UserAdminDto(m.User.FirstName, m.User.LastName, m.User.Nickname, m.User.Email),
+                    m.User != null ? new UserAdminDto(m.User.FirstName, m.User.LastName, m.User.Nickname, m.User.Email) : null,
                     // On projette chaque message de l'entité vers le DTO Message
                     m.Messages.Select(msg => new SupportTicketMessageAdminDto(
                         msg.Id,

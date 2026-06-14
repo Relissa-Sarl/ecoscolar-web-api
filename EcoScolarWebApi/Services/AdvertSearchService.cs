@@ -52,6 +52,9 @@ public sealed class AdvertSearchService : IAdvertSearchService
 
 		var bookAdvertIds = adverts.OfType<Book>().Select(b => b.AdvertId).Distinct().ToArray();
 		var serviceAdvertIds = adverts.OfType<TutoringAdvert>().Select(s => s.AdvertId).Distinct().ToArray();
+		var productAdvertIds = adverts.OfType<PhysicalItem>()
+			.Where(p => p is not Book)
+			.Select(p => p.AdvertId).Distinct().ToArray();
 
 		var booksDict = bookAdvertIds.Length == 0
 			? []
@@ -69,9 +72,16 @@ public sealed class AdvertSearchService : IAdvertSearchService
 				.Where(s => serviceAdvertIds.Contains(s.AdvertId))
 				.ToDictionaryAsync(s => s.AdvertId, cancellationToken);
 
+		var productsDict = productAdvertIds.Length == 0
+			? []
+			: await _context.Products.AsNoTracking()
+				.Include(p => p.Pictures)
+				.Where(p => productAdvertIds.Contains(p.AdvertId))
+				.ToDictionaryAsync(p => p.AdvertId, cancellationToken);
+
 		return new CatalogSummaryPageDto
 		{
-			Items = adverts.Select(a => MapSummary(a, booksDict, servicesDict)).ToList(),
+			Items = adverts.Select(a => MapSummary(a, booksDict, servicesDict, productsDict)).ToList(),
 			Page = page,
 			PageSize = pageSize,
 			TotalItems = totalItems,
@@ -275,7 +285,8 @@ public sealed class AdvertSearchService : IAdvertSearchService
 	private static AdvertSummaryDto MapSummary(
 		Advert a,
 		Dictionary<long, Book> booksDict,
-		Dictionary<long, TutoringAdvert> servicesDict)
+		Dictionary<long, TutoringAdvert> servicesDict,
+		Dictionary<long, PhysicalItem>? productsDict = null)
 	{
 		switch (a)
 		{
@@ -283,6 +294,7 @@ public sealed class AdvertSearchService : IAdvertSearchService
 				{
 					booksDict.TryGetValue(bk.AdvertId, out var fullBk);
 					var src = fullBk ?? bk;
+					var primaryPic = src.Pictures?.OrderBy(p => p.SortOrder).FirstOrDefault();
 					return new AdvertSummaryDto
 					{
 						Id = bk.AdvertId,
@@ -293,6 +305,7 @@ public sealed class AdvertSearchService : IAdvertSearchService
 						Category = src.BookCategory?.Name,
 						Subjects = null,
 						Grade = null,
+						ImageUrl = primaryPic?.PublicUrl ?? primaryPic?.Label,
 						sellerId = bk.SellerId
 					};
 				}
@@ -310,22 +323,30 @@ public sealed class AdvertSearchService : IAdvertSearchService
 						Category = null,
 						Subjects = src.Subject?.Name,
 						Grade = src.SchoolGrade?.Name,
+						ImageUrl = null,
 						sellerId = svc.SellerId
 					};
 				}
 			case PhysicalItem phy when phy is not Book:
-				return new AdvertSummaryDto
 				{
-					Id = phy.AdvertId,
-					Title = phy.Title,
-					Price = phy.Price,
-					Type = CatalogAdvertTypeCodes.Product,
-					Isbn = null,
-					Category = null,
-					Subjects = null,
-					Grade = null,
-					sellerId = phy.SellerId
-				};
+					var srcPhy = productsDict != null && productsDict.TryGetValue(phy.AdvertId, out var fullPhy)
+						? fullPhy
+						: phy;
+					var primaryPic = srcPhy.Pictures?.OrderBy(p => p.SortOrder).FirstOrDefault();
+					return new AdvertSummaryDto
+					{
+						Id = phy.AdvertId,
+						Title = phy.Title,
+						Price = phy.Price,
+						Type = CatalogAdvertTypeCodes.Product,
+						Isbn = null,
+						Category = null,
+						Subjects = null,
+						Grade = null,
+						ImageUrl = primaryPic?.PublicUrl ?? primaryPic?.Label,
+						sellerId = phy.SellerId
+					};
+				}
 			default:
 				throw new InvalidOperationException($"Unknown PhysicalItem CLR type '{a.GetType().Name}'.");
 		}
@@ -333,7 +354,8 @@ public sealed class AdvertSearchService : IAdvertSearchService
 
 	private static AdvertDetailDto ToDetailFromBook(Book b)
 	{
-		string? imageUrl = b.Pictures?.FirstOrDefault()?.Label;
+		var primaryPic = b.Pictures?.OrderBy(p => p.SortOrder).FirstOrDefault();
+		string? imageUrl = primaryPic?.PublicUrl ?? primaryPic?.Label;
 
 		return new AdvertDetailDto
 		{
@@ -371,7 +393,8 @@ public sealed class AdvertSearchService : IAdvertSearchService
 
 	private static AdvertDetailDto ToDetailFromPhysical(PhysicalItem p)
 	{
-		string? imageUrl = p.Pictures?.FirstOrDefault()?.Label;
+		var primaryPic = p.Pictures?.OrderBy(p => p.SortOrder).FirstOrDefault();
+		string? imageUrl = primaryPic?.PublicUrl ?? primaryPic?.Label;
 		return new AdvertDetailDto
 		{
 			Id = p.AdvertId,
