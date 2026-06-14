@@ -13,4 +13,5 @@ public record AdvertDetailDto
 	public string Description { get; set; } = string.Empty;
 	public string? ImageUrl { get; set; }
 	public string? sellerId { get; set; }
+	public int ExpiresInDays { get; set; }
 }
