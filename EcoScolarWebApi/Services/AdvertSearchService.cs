@@ -152,6 +152,15 @@ public sealed class AdvertSearchService : IAdvertSearchService
 		if (query.MaxPrice.HasValue)
 			advertsQuery = advertsQuery.Where(a => a.Price <= query.MaxPrice.Value);
 
+		var bookCategoryIds = SplitLongIds(query.BookCategoryIds);
+		if (bookCategoryIds.Length > 0)
+		{
+			advertsQuery = advertsQuery.Where(a =>
+				_context.Set<Book>().Any(b =>
+					b.AdvertId == a.AdvertId
+					&& bookCategoryIds.Contains(b.BookCategoryId)));
+		}
+
 		var categories = SplitTerms(query.Category);
 		if (categories.Length > 0)
 		{
@@ -162,6 +171,15 @@ public sealed class AdvertSearchService : IAdvertSearchService
 					&& categories.Contains(b.BookCategory.Name.ToLower())));
 		}
 
+		var schoolGradeIds = SplitLongIds(query.SchoolGradeIds);
+		if (schoolGradeIds.Length > 0)
+		{
+			advertsQuery = advertsQuery.Where(a =>
+				_context.Set<TutoringAdvert>().Any(s =>
+					s.AdvertId == a.AdvertId
+					&& schoolGradeIds.Contains(s.SchoolGradeId)));
+		}
+
 		var grades = SplitTerms(query.Grade);
 		if (grades.Length > 0)
 		{
@@ -170,6 +188,15 @@ public sealed class AdvertSearchService : IAdvertSearchService
 					s.AdvertId == a.AdvertId
 					&& s.SchoolGrade != null
 					&& grades.Contains(s.SchoolGrade.Name.ToLower())));
+		}
+
+		var subjectIds = SplitLongIds(query.SubjectIds);
+		if (subjectIds.Length > 0)
+		{
+			advertsQuery = advertsQuery.Where(a =>
+				_context.Set<TutoringAdvert>().Any(s =>
+					s.AdvertId == a.AdvertId
+					&& subjectIds.Contains(s.SubjectId)));
 		}
 
 		var subjects = SplitTerms(query.Subjects);
@@ -230,6 +257,17 @@ public sealed class AdvertSearchService : IAdvertSearchService
 			.Split(',', StringSplitOptions.RemoveEmptyEntries)
 			.Select(term => term.Trim().ToLowerInvariant())
 			.Where(term => term.Length > 0)
+			.Distinct()
+			.ToArray() ?? [];
+	}
+
+	private static long[] SplitLongIds(string? rawIds)
+	{
+		return rawIds?
+			.Split(',', StringSplitOptions.RemoveEmptyEntries)
+			.Select(id => long.TryParse(id.Trim(), out var parsed) ? parsed : (long?)null)
+			.Where(id => id.HasValue)
+			.Select(id => id!.Value)
 			.Distinct()
 			.ToArray() ?? [];
 	}

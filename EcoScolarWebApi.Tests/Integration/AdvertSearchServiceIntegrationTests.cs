@@ -111,6 +111,27 @@ public class AdvertSearchServiceIntegrationTests : IDisposable
 		page.TotalItems.Should().Be(1);
 	}
 
+	[Fact]
+	public async Task SearchSummaries_ByReferenceIds_ReturnsMatchingAdverts()
+	{
+		await SeedCatalogAsync();
+
+		var booksPage = await _service.SearchSummariesAsync(new AdvertSearchQuery
+		{
+			BookCategoryIds = "1"
+		});
+		var tutoringPage = await _service.SearchSummariesAsync(new AdvertSearchQuery
+		{
+			SchoolGradeIds = "2",
+			SubjectIds = "4"
+		});
+
+		booksPage.Items.Should().ContainSingle();
+		booksPage.Items[0].Title.Should().Be("Manuel de Biologie");
+		tutoringPage.Items.Should().ContainSingle();
+		tutoringPage.Items[0].Title.Should().Be("Cours de mathématiques");
+	}
+
 	private async Task SeedCatalogAsync()
 	{
 		var user = new User
