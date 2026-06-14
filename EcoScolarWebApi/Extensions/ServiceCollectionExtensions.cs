@@ -7,6 +7,7 @@ using EcoScolarWebApi.Services.Contracts;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
+using Minio;
 using Stripe;
 
 namespace EcoScolarWebApi.Extensions;
@@ -129,6 +130,26 @@ public static class ServiceCollectionExtensions
 		services.AddScoped<IStripeConnectService, StripeConnectService>();
 		services.AddScoped<IAbuseReportService, AbuseReportService>();
 
+		// MinIO image storage
+		var minioEndpoint = config["Minio:Endpoint"].NullIfEmpty() ?? "localhost:9000";
+		var minioAccessKey = config["Minio:AccessKey"].NullIfEmpty() ?? "ecoscolar";
+		var minioSecretKey = config["Minio:SecretKey"].NullIfEmpty() ?? "ecoscolar_secret_change_me";
+		var minioUseHttps = config.GetValue("Minio:UseHttps", defaultValue: false);
+
+		services.AddMinio(configureClient => configureClient
+			.WithEndpoint(minioEndpoint)
+			.WithCredentials(minioAccessKey, minioSecretKey)
+			.WithSSL(minioUseHttps)
+			.Build());
+
+		services.AddScoped<IImageStorageService, MinioImageStorageService>();
+
         return services;
 	}
+}
+
+internal static class StringExtensions
+{
+    internal static string? NullIfEmpty(this string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value;
 }

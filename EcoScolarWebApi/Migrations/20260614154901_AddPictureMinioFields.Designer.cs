@@ -4,6 +4,7 @@ using EcoScolarWebApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EcoScolarWebApi.Migrations
 {
     [DbContext(typeof(EcoscolarDbContext))]
-    partial class EcoscolarDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260614154901_AddPictureMinioFields")]
+    partial class AddPictureMinioFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,50 +24,6 @@ namespace EcoScolarWebApi.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("EcoScolarWebApi.Models.AbuseReport", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<string>("Message")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Reason")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ReporterUserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<long>("TargetAdvertId")
-                        .HasColumnType("bigint");
-
-                    b.Property<int?>("TargetCommentId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ReporterUserId");
-
-                    b.HasIndex("TargetAdvertId");
-
-                    b.HasIndex("TargetCommentId");
-
-                    b.ToTable("AbuseReports");
-                });
 
             modelBuilder.Entity("EcoScolarWebApi.Models.Advert", b =>
                 {
@@ -279,14 +238,16 @@ namespace EcoScolarWebApi.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("Reason")
-                        .HasColumnType("int");
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Resolution")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<long>("TransactionId")
                         .HasColumnType("bigint");
@@ -1466,32 +1427,6 @@ namespace EcoScolarWebApi.Migrations
                     b.HasIndex("BookCategoryId");
 
                     b.ToTable("Books");
-                });
-
-            modelBuilder.Entity("EcoScolarWebApi.Models.AbuseReport", b =>
-                {
-                    b.HasOne("EcoScolarWebApi.Models.User", "Reporter")
-                        .WithMany()
-                        .HasForeignKey("ReporterUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("EcoScolarWebApi.Models.Advert", "TargetAdvert")
-                        .WithMany()
-                        .HasForeignKey("TargetAdvertId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("EcoScolarWebApi.Models.PublicComment", "TargetComment")
-                        .WithMany()
-                        .HasForeignKey("TargetCommentId")
-                        .OnDelete(DeleteBehavior.NoAction);
-
-                    b.Navigation("Reporter");
-
-                    b.Navigation("TargetAdvert");
-
-                    b.Navigation("TargetComment");
                 });
 
             modelBuilder.Entity("EcoScolarWebApi.Models.Advert", b =>

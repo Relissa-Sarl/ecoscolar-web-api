@@ -54,7 +54,8 @@ public record AdvertReadDto(long Id, string Type, string Title, decimal Price, D
 			_ => throw new InvalidOperationException("Unknown PhysicalItem type")
 		};
 
-		string? primaryImage = (entity as Models.PhysicalItem)?.Pictures?.FirstOrDefault()?.Label;
+		var pic = (entity as Models.PhysicalItem)?.Pictures?.OrderBy(p => p.SortOrder).FirstOrDefault();
+		string? primaryImage = pic?.PublicUrl ?? pic?.Label;
         // BuyerName is populated by the controller after joining with the Transaction table.
 
 		return new AdvertReadDto(

@@ -5,11 +5,11 @@ namespace EcoScolarWebApi.Models;
 [Table("UserLanguages")]
 public class UserLanguage
 {
-    public string UserId { get; set; }
-    public User User { get; set; }
+    public string UserId { get; set; } = string.Empty;
+    public User User { get; set; } = null!;
 
-    public string Label { get; set; }
-    public Language Language { get; set; } 
+    public string Label { get; set; } = string.Empty;
+    public Language Language { get; set; } = null!;
 
-    public string LanguageLevel { get; set; }
+    public string LanguageLevel { get; set; } = string.Empty;
 }

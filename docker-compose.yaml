@@ -7,6 +7,7 @@ services:
     environment:
       ACCEPT_EULA: "Y"
       MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD}
+      MSSQL_TCP_PORT: "1444"
     volumes:
       - mssql-ecoscolar-data:/var/opt/mssql
     networks:
@@ -15,7 +16,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P \"${MSSQL_SA_PASSWORD}\" -Q \"SELECT 1\" || exit 1"
+          "/opt/mssql-tools18/bin/sqlcmd -C -S localhost,1444 -U sa -P \"${MSSQL_SA_PASSWORD}\" -Q \"SELECT 1\" || exit 1"
         ]
       interval: 5s
       timeout: 5s
@@ -32,11 +33,18 @@ services:
         condition: service_healthy
     environment:
       ASPNETCORE_HTTP_PORTS: "8080"
+      ASPNETCORE_ENVIRONMENT: "Production"
       ApplyDatabaseMigrations: "true"
-      ConnectionStrings__Default: "Server=ecoscolar-api-database,1433;Initial Catalog=ecoscolar;User ID=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;Encrypt=True"
+      Features__UseFakeAdvertSearch: "false"
+      ConnectionStrings__Default: "Server=ecoscolar-api-database,1444;Initial Catalog=ecoscolar;User ID=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;Encrypt=True"
       Stripe__SecretKey: ${STRIPE_SECRET_KEY}
       Smtp__Host: ecoscolar-mailpit
       Smtp__Port: 1025
+      Minio__Endpoint: ecoscolar-minio:9000
+      Minio__AccessKey: ${MINIO_ACCESS_KEY}
+      Minio__SecretKey: ${MINIO_SECRET_KEY}
+      Minio__Bucket: ${MINIO_BUCKET}
+      Minio__PublicBaseUrl: ${MINIO_PUBLIC_BASE_URL}
     networks:
       - dmz
       - ecoscolar
@@ -73,6 +81,32 @@ services:
       retries: 5
 
   # -----------------------------
+  # MinIO - S3-compatible local object storage
+  # -----------------------------
+  ecoscolar-minio:
+    image: minio/minio:latest
+    container_name: ecoscolar-minio
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
+    volumes:
+      - minio-ecoscolar-data:/data
+    networks:
+      - ecoscolar
+      - dmz
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # -----------------------------
   # Mailpit - SMTP Server and Web UI for Testing Emails
   # -----------------------------
   ecoscolar-mailpit:
@@ -100,3 +134,4 @@ networks:
 
 volumes:
   mssql-ecoscolar-data:
+  minio-ecoscolar-data:

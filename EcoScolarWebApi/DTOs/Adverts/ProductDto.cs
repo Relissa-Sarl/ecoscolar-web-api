@@ -23,7 +23,7 @@ public record ProductReadDto(long Id, string Title, string Description, decimal 
 			Weight: entity.Weight ?? null,
 			ProductCategoryId: entity.ProductCategoryId ?? null,
 			ProductCategoryLabel: entity.ProductCategory?.Name ?? null,
-			Pictures: entity.Pictures?.Select(p => p.Label).ToList() ?? [],
+			Pictures: entity.Pictures?.OrderBy(p => p.SortOrder).Select(p => p.PublicUrl ?? p.Label).ToList() ?? [],
 			ExpiresInDays: EcoScolarWebApi.Helpers.AdvertExpirationHelper.GetExpiresInDays(entity.CreatedAt)
 		);
 	}
@@ -66,14 +66,10 @@ public record ProductCreateDto(string Title, string Description, decimal Price, 
 			product.Condition = Condition;
 			product.ProductCategoryId = ProductCategoryId;
 			product.Weight = Weight;
-            if (Images.IsNullOrEmpty())
+			if (!Images.IsNullOrEmpty())
 			{
-				product.Pictures.Add(new Picture { Label = "https://picsum.photos/800/600" });
+				product.Pictures = Images!.Select(img => new Picture { Label = img }).ToList();
 			}
-			else
-            {
-                product.Pictures = Images.Select(img => new Picture { Label = img }).ToList();
-            }
 		}
 	}
 }
