@@ -490,6 +490,9 @@ public class AdvertsController : ControllerBase
 		if (existingBook == null) return NotFound();
 		bookDto.MapToEntity(existingBook);
 
+		if (existingBook.Status == AdvertStatus.SOLD || existingBook.Status == AdvertStatus.PAUSED || existingBook.Status == AdvertStatus.EXPIRED || existingBook.Status == AdvertStatus.BLOCKED)
+			return Forbid();
+
 		try
 		{
 			_context.Entry(existingBook).State = EntityState.Modified;
@@ -533,7 +536,10 @@ public class AdvertsController : ControllerBase
 		if (existingProduct == null) return NotFound();
 		productDto.MapToEntity(existingProduct);
 
-		try
+        if (existingProduct.Status == AdvertStatus.SOLD || existingProduct.Status == AdvertStatus.PAUSED || existingProduct.Status == AdvertStatus.EXPIRED || existingProduct.Status == AdvertStatus.BLOCKED)
+            return Forbid();
+
+        try
 		{
 			_context.Entry(existingProduct).State = EntityState.Modified;
 			await _context.SaveChangesAsync();
@@ -575,7 +581,10 @@ public class AdvertsController : ControllerBase
 		if (existingService == null) return NotFound();
 		serviceDto.MapToEntity(existingService);
 
-		try
+        if (existingService.Status == AdvertStatus.SOLD || existingService.Status == AdvertStatus.PAUSED || existingService.Status == AdvertStatus.EXPIRED || existingService.Status == AdvertStatus.BLOCKED)
+            return Forbid();
+
+        try
 		{
 			_context.Entry(existingService).State = EntityState.Modified;
 			await _context.SaveChangesAsync();
