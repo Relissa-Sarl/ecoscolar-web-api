@@ -129,9 +129,9 @@ public static class ServiceCollectionExtensions
 		services.AddScoped<IStripeConnectService, StripeConnectService>();
 
 		// MinIO image storage
-		var minioEndpoint = config["Minio:Endpoint"] ?? "localhost:9000";
-		var minioAccessKey = config["Minio:AccessKey"] ?? "ecoscolar";
-		var minioSecretKey = config["Minio:SecretKey"] ?? "ecoscolar_secret_change_me";
+		var minioEndpoint = config["Minio:Endpoint"].NullIfEmpty() ?? "localhost:9000";
+		var minioAccessKey = config["Minio:AccessKey"].NullIfEmpty() ?? "ecoscolar";
+		var minioSecretKey = config["Minio:SecretKey"].NullIfEmpty() ?? "ecoscolar_secret_change_me";
 		var minioUseHttps = config.GetValue("Minio:UseHttps", defaultValue: false);
 
 		services.AddMinio(configureClient => configureClient
@@ -144,4 +144,10 @@ public static class ServiceCollectionExtensions
 
         return services;
 	}
+}
+
+internal static class StringExtensions
+{
+    internal static string? NullIfEmpty(this string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value;
 }

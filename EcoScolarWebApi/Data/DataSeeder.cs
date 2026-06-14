@@ -326,23 +326,6 @@ public class DataSeeder
 		context.Services.AddRange(services);
 		await context.SaveChangesAsync();
 
-        var pictures = new List<Picture>();
-        foreach (var item in physicalItems.Cast<PhysicalItem>().Concat(books))
-        {
-            var count = faker.Random.Int(1, 3);
-            for (var i = 1; i <= count; i++)
-            {
-                pictures.Add(new Picture
-                {
-                    Label = $"https://picsum.photos/seed/{item.AdvertId}-{i}/800/600",
-                    PhysicalItemId = item.AdvertId
-                });
-            }
-        }
-
-        context.Pictures.AddRange(pictures);
-        await context.SaveChangesAsync();
-
         var publicComments = new List<PublicComment>
         {
             new()

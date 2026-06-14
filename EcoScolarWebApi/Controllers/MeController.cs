@@ -129,7 +129,8 @@ public class MeController : ControllerBase
     {
         if (advert is PhysicalItem physicalItem && physicalItem.Pictures != null && physicalItem.Pictures.Any())
         {
-            return physicalItem.Pictures.First().Label;
+            var pic = physicalItem.Pictures.OrderBy(p => p.SortOrder).First();
+            return pic.PublicUrl ?? pic.Label;
         }
         return null;
     }

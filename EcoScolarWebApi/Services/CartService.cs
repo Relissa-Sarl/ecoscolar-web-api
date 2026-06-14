@@ -35,7 +35,8 @@ namespace EcoScolarWebApi.Services
 
             var dtos = cartItems.Select(c =>
             {
-                var primaryImage = _context.Pictures.FirstOrDefault(p => p.PhysicalItemId == c.AdvertId)?.Label;
+                var pic = _context.Pictures.Where(p => p.PhysicalItemId == c.AdvertId).OrderBy(p => p.SortOrder).FirstOrDefault();
+                var primaryImage = pic?.PublicUrl ?? pic?.Label;
                 
                 string type = c.Advert switch
                 {
@@ -103,10 +104,11 @@ namespace EcoScolarWebApi.Services
             await _context.SaveChangesAsync();
 
             // Get main picture of the advert
-            var primaryImage = await _context.Pictures
+            var primaryPic = await _context.Pictures
                 .Where(p => p.PhysicalItemId == dto.AdvertId)
-                .Select(p => p.Label)
+                .OrderBy(p => p.SortOrder)
                 .FirstOrDefaultAsync();
+            var primaryImage = primaryPic?.PublicUrl ?? primaryPic?.Label;
 
             string type = advert switch
             {
