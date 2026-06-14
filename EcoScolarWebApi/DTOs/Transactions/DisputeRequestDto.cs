@@ -5,5 +5,8 @@ namespace EcoScolarWebApi.DTOs.Transactions;
 public record DisputeRequestDto
 {
     [Required]
-    public string Reason { get; init; } = string.Empty;
+    public EcoScolarWebApi.Enums.DisputeReason Reason { get; init; }
+
+    [Required]
+    public string Description { get; init; } = string.Empty;
 }

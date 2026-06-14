@@ -25,7 +25,7 @@ public class AbuseReport
     public string Message { get; set; } = string.Empty;
 
     [Required]
-    public ReportStatus Status { get; set; } = ReportStatus.Pending;
+    public TicketStatus Status { get; set; } = TicketStatus.Pending;
 
     [Required]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
