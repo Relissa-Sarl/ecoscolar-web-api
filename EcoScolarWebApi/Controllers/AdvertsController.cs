@@ -338,7 +338,7 @@ public class AdvertsController : ControllerBase
 	}
 
 	/// <summary>
-	/// Mock catalogue summaries (T5-1: Books-only filters <c>isbn</c> / <c>q</c>). GET api/v1/adverts/summary
+	/// Catalogue summaries paginés et filtrés. GET api/v1/adverts/summary
 	/// </summary>
 	[HttpGet("summary")]
 	public async Task<IActionResult> GetSummaries(

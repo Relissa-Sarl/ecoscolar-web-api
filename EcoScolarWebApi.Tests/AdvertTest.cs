@@ -1321,17 +1321,24 @@ public class AdvertsControllerTests : IDisposable
     {
         // Arrange
         var query = new AdvertSearchQuery { Q = "Math" };
-        var expectedSummaries = new List<AdvertSummaryDto> { new AdvertSummaryDto { Id = 1 } };
+        var expectedPage = new CatalogSummaryPageDto
+        {
+            Items = new List<AdvertSummaryDto> { new AdvertSummaryDto { Id = 1 } },
+            Page = 1,
+            PageSize = 9,
+            TotalItems = 1,
+            TotalPages = 1
+        };
 
         _searchService.SearchSummariesAsync(query, Arg.Any<CancellationToken>())
-            .Returns(expectedSummaries);
+            .Returns(expectedPage);
 
         // Act
         var result = await _controller.GetSummaries(query, CancellationToken.None);
 
         // Assert
         var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
-        okResult.Value.Should().BeEquivalentTo(expectedSummaries);
+        okResult.Value.Should().BeEquivalentTo(expectedPage);
     }
     #endregion
 

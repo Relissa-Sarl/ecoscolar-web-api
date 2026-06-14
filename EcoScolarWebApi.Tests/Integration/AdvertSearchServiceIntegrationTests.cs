@@ -39,7 +39,7 @@ public class AdvertSearchServiceIntegrationTests : IDisposable
 	{
 		await SeedCatalogAsync();
 
-		var results = (await _service.SearchSummariesAsync(new AdvertSearchQuery { Q = "Biologie" })).ToList();
+		var results = (await _service.SearchSummariesAsync(new AdvertSearchQuery { Q = "Biologie" })).Items.ToList();
 
 		results.Should().HaveCount(1);
 		results[0].Title.Should().Be("Manuel de Biologie");
@@ -51,7 +51,7 @@ public class AdvertSearchServiceIntegrationTests : IDisposable
 	{
 		await SeedCatalogAsync();
 
-		var results = (await _service.SearchSummariesAsync(new AdvertSearchQuery { Isbn = "978-3-16-148410-0" })).ToList();
+		var results = (await _service.SearchSummariesAsync(new AdvertSearchQuery { Isbn = "978-3-16-148410-0" })).Items.ToList();
 
 		results.Should().HaveCount(1);
 		results[0].Title.Should().Be("Manuel de Biologie");
@@ -63,7 +63,7 @@ public class AdvertSearchServiceIntegrationTests : IDisposable
 	{
 		await SeedCatalogAsync();
 
-		var results = (await _service.SearchSummariesAsync(new AdvertSearchQuery { Q = "Calculatrice" })).ToList();
+		var results = (await _service.SearchSummariesAsync(new AdvertSearchQuery { Q = "Calculatrice" })).Items.ToList();
 
 		results.Should().HaveCount(1);
 		results[0].Type.Should().Be(CatalogAdvertTypeCodes.Product);
@@ -75,9 +75,61 @@ public class AdvertSearchServiceIntegrationTests : IDisposable
 	{
 		await SeedCatalogAsync();
 
-		var results = (await _service.SearchSummariesAsync(null)).ToList();
+		var results = (await _service.SearchSummariesAsync(null)).Items.ToList();
 
 		results.Should().HaveCount(3);
+	}
+
+	[Fact]
+	public async Task SearchSummaries_WithPagination_ReturnsRequestedPageMetadata()
+	{
+		await SeedCatalogAsync();
+
+		var page = await _service.SearchSummariesAsync(new AdvertSearchQuery { Page = 2, PageSize = 2 });
+
+		page.Items.Should().HaveCount(1);
+		page.Page.Should().Be(2);
+		page.PageSize.Should().Be(2);
+		page.TotalItems.Should().Be(3);
+		page.TotalPages.Should().Be(2);
+	}
+
+	[Fact]
+	public async Task SearchSummaries_ByTypeAndSort_ReturnsOnlyMatchingAdverts()
+	{
+		await SeedCatalogAsync();
+
+		var page = await _service.SearchSummariesAsync(new AdvertSearchQuery
+		{
+			Type = CatalogAdvertTypeCodes.Service,
+			Sort = "price_desc"
+		});
+
+		page.Items.Should().ContainSingle();
+		page.Items[0].Type.Should().Be(CatalogAdvertTypeCodes.Service);
+		page.Items[0].Title.Should().Be("Cours de mathématiques");
+		page.TotalItems.Should().Be(1);
+	}
+
+	[Fact]
+	public async Task SearchSummaries_ByReferenceIds_ReturnsMatchingAdverts()
+	{
+		await SeedCatalogAsync();
+
+		var booksPage = await _service.SearchSummariesAsync(new AdvertSearchQuery
+		{
+			BookCategoryIds = "1"
+		});
+		var tutoringPage = await _service.SearchSummariesAsync(new AdvertSearchQuery
+		{
+			SchoolGradeIds = "2",
+			SubjectIds = "4"
+		});
+
+		booksPage.Items.Should().ContainSingle();
+		booksPage.Items[0].Title.Should().Be("Manuel de Biologie");
+		tutoringPage.Items.Should().ContainSingle();
+		tutoringPage.Items[0].Title.Should().Be("Cours de mathématiques");
 	}
 
 	private async Task SeedCatalogAsync()
