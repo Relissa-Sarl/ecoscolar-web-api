@@ -146,11 +146,15 @@ public class TransactionsController(EcoscolarDbContext context, UserManager<User
 		if (transaction.BuyerId != user.Id)
 			return Forbid();
 
+		if (transaction.Status != TransactionStatus.SHIPPED)
+			return BadRequest(new { message = "You can only dispute a shipped order." });
+
 		var dispute = new Dispute
 		{
 			TransactionId = transactionId,
 			Reason = request.Reason,
-			Status = "OPEN",
+			Description = request.Description,
+			Status = EcoScolarWebApi.Enums.TicketStatus.Pending,
 			Date = DateTime.UtcNow
 		};
 

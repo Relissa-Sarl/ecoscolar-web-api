@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EcoScolarWebApi.Models;
@@ -13,7 +13,7 @@ public class Dispute
     public long TransactionId { get; set; }
 
     [Required]
-    public string Reason { get; set; } = string.Empty;
+    public EcoScolarWebApi.Enums.DisputeReason Reason { get; set; }
 
     public string? Description { get; set; }
 
@@ -21,7 +21,7 @@ public class Dispute
     public DateTime Date { get; set; } = DateTime.UtcNow;
 
     [Required]
-    public string Status { get; set; } = string.Empty;
+    public EcoScolarWebApi.Enums.TicketStatus Status { get; set; } = EcoScolarWebApi.Enums.TicketStatus.Pending;
 
     public string? Resolution { get; set; }
 

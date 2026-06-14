@@ -3,9 +3,9 @@ using System.Text.Json.Serialization;
 namespace EcoScolarWebApi.Enums;
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
-public enum ReportStatus
+public enum DisputeReason
 {
-    Pending,
-    Reviewed,
-    Resolved
+    ItemNotReceived,
+    NotAsDescribed,
+    Damaged
 }
