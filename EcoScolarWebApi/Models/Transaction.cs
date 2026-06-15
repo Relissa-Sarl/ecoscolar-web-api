@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using EcoScolarWebApi.Enums;
 
@@ -9,6 +9,9 @@ public class Transaction
 {
     [Key]
     public long TransactionId { get; set; }
+
+    [MaxLength(32)]
+    public string? OrderNumber { get; set; }
 
     [Required]
     public long AdvertId { get; set; }
