@@ -5,11 +5,13 @@ using EcoScolarWebApi.DTOs.Transactions;
 using EcoScolarWebApi.Enums;
 using EcoScolarWebApi.Mappers;
 using EcoScolarWebApi.Models;
+using EcoScolarWebApi.Services.Contracts;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using NSubstitute;
 using System;
 using System.Collections.Generic;
@@ -24,6 +26,8 @@ public class TransactionsControllerTests : IDisposable
 	private readonly UserManager<User> _userManagerMock;
 	private readonly EcoscolarDbContext _context;
 	private readonly ReviewMapper _reviewMapper;
+	private readonly IEmailSenderService _emailSenderServiceMock;
+	private readonly IConfiguration _configuration;
 	private readonly TransactionsController _controller;
 
 	public TransactionsControllerTests()
@@ -36,8 +40,11 @@ public class TransactionsControllerTests : IDisposable
 			.Options;
 		_context = new EcoscolarDbContext(options);
 		_reviewMapper = new ReviewMapper();
+		_emailSenderServiceMock = Substitute.For<IEmailSenderService>();
+		_configuration = Substitute.For<IConfiguration>();
+		_configuration["Frontend:BaseUrl"].Returns("http://localhost:3000");
 
-		_controller = new TransactionsController(_context, _userManagerMock, _reviewMapper);
+		_controller = new TransactionsController(_context, _userManagerMock, _reviewMapper, _configuration, _emailSenderServiceMock);
 	}
 
 	public void Dispose()
@@ -445,5 +452,52 @@ public class TransactionsControllerTests : IDisposable
 
 		var transactionsInDb = await _context.Transactions.Where(t => t.AdvertId == 30L).ToListAsync();
 		transactionsInDb.Should().HaveCount(1); // Only 1 transaction created
+	}
+
+	[Fact]
+	public async Task CreateTransactions_ShouldSendEmailToSeller_WhenValidAndSellerHasEmail()
+	{
+		// Arrange
+		var currentUser = new User { Id = "buyer-1" };
+		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(currentUser);
+
+		var seller = new User { Id = "seller-1", UserName = "seller_bob", Email = "seller@example.com" };
+		_context.Users.Add(seller);
+
+		var book = new Book
+		{
+			AdvertId = 50,
+			Title = "Test Book Email",
+			Description = "Test Book Desc",
+			Price = 50m,
+			SellerId = "seller-1",
+			Seller = seller,
+			ISBN = "12345",
+			Author = "Author",
+			Publisher = "Pub",
+			Edition = "1st",
+			WrittenLanguage = LanguageEnum.FR,
+			Status = AdvertStatus.ACTIVE
+		};
+		_context.Products.Add(book);
+		await _context.SaveChangesAsync();
+
+		var request = new CreateTransactionRequestDto 
+		{ 
+			AdvertIds = new List<long> { 50L },
+			StripeSessionId = "session-789"
+		};
+
+		// Act
+		var result = await _controller.CreateTransactions(request);
+
+		// Assert
+		result.Should().BeOfType<OkObjectResult>();
+
+		await _emailSenderServiceMock.Received(1).SendItemSoldEmailAsync(
+			Arg.Is<User>(u => u.Id == "seller-1" && u.Email == "seller@example.com"),
+			Arg.Is<Advert>(a => a.AdvertId == 50 && a.Title == "Test Book Email"),
+			"http://localhost:3000/me/sales?from=profile"
+		);
 	}
 }

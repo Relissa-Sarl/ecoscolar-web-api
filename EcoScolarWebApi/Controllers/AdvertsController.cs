@@ -632,26 +632,6 @@ public class AdvertsController : ControllerBase
 
 		await _context.SaveChangesAsync();
 
-		if (status == AdvertStatus.SOLD && oldStatus != AdvertStatus.SOLD)
-		{
-			if (Adverts.Seller == null)
-			{
-				await _context.Entry(Adverts).Reference(a => a.Seller).LoadAsync();
-			}
-
-			if (Adverts.Seller != null && !string.IsNullOrEmpty(Adverts.Seller.Email))
-			{
-				try
-				{
-					await _emailSenderService.SendItemSoldEmailAsync(Adverts.Seller, Adverts);
-				}
-				catch (Exception ex)
-				{
-					Console.WriteLine($"[Email Error] Failed to send sale notification email: {ex.Message}");
-				}
-			}
-		}
-
 		return NoContent();
 	}
 	#endregion

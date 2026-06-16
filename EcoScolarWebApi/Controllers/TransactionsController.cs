@@ -9,17 +9,19 @@ using EcoScolarWebApi.Services.Contracts;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Buffers.Text;
 
 namespace EcoScolarWebApi.Controllers;
 
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/[controller]")]
 [ApiController]
-public class TransactionsController(EcoscolarDbContext context, UserManager<User> userManager, ReviewMapper reviewMapper, IEmailSenderService emailSenderService) : ControllerBase
+public class TransactionsController(EcoscolarDbContext context, UserManager<User> userManager, ReviewMapper reviewMapper, IConfiguration configuration, IEmailSenderService emailSenderService) : ControllerBase
 {
     private readonly EcoscolarDbContext _context = context;
     private readonly UserManager<User> _userManager = userManager;
     private readonly ReviewMapper _reviewMapper = reviewMapper;
+    private readonly IConfiguration _configuration = configuration;
     private readonly IEmailSenderService _emailSenderService = emailSenderService;
 
     [HttpPost("{transactionId}/reviews")]
@@ -152,7 +154,7 @@ public class TransactionsController(EcoscolarDbContext context, UserManager<User
         {
             TransactionId = transactionId,
             Reason = request.Reason,
-            Status = "OPEN",
+            Status = EcoScolarWebApi.Enums.TicketStatus.Pending,
             Date = DateTime.UtcNow
         };
 
@@ -223,6 +225,7 @@ public class TransactionsController(EcoscolarDbContext context, UserManager<User
 
         await _context.SaveChangesAsync();
 
+        var baseUrl = _configuration["Frontend:BaseUrl"] ?? "http://localhost:3000";
         foreach (var advert in soldAdverts)
         {
             if (advert.Seller == null)
@@ -232,9 +235,10 @@ public class TransactionsController(EcoscolarDbContext context, UserManager<User
 
             if (advert.Seller != null && !string.IsNullOrEmpty(advert.Seller.Email))
             {
+                var allSoldLink = $"{baseUrl.TrimEnd('/')}/me/sales?from=profile";
                 try
                 {
-                    await emailSenderService.SendItemSoldEmailAsync(advert.Seller, advert);
+                    await emailSenderService.SendItemSoldEmailAsync(advert.Seller, advert, allSoldLink);
                 }
                 catch (Exception e)
                 {
