@@ -1321,17 +1321,24 @@ public class AdvertsControllerTests : IDisposable
     {
         // Arrange
         var query = new AdvertSearchQuery { Q = "Math" };
-        var expectedSummaries = new List<AdvertSummaryDto> { new AdvertSummaryDto { Id = 1 } };
+        var expectedPage = new CatalogSummaryPageDto
+        {
+            Items = new List<AdvertSummaryDto> { new AdvertSummaryDto { Id = 1 } },
+            Page = 1,
+            PageSize = 9,
+            TotalItems = 1,
+            TotalPages = 1
+        };
 
         _searchService.SearchSummariesAsync(query, Arg.Any<CancellationToken>())
-            .Returns(expectedSummaries);
+            .Returns(expectedPage);
 
         // Act
         var result = await _controller.GetSummaries(query, CancellationToken.None);
 
         // Assert
         var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
-        okResult.Value.Should().BeEquivalentTo(expectedSummaries);
+        okResult.Value.Should().BeEquivalentTo(expectedPage);
     }
     #endregion
 
@@ -2140,6 +2147,135 @@ public class AdvertsControllerTests : IDisposable
         // Assert
         var notFoundResult = result as NotFoundResult;
         notFoundResult.Should().NotBeNull("The controller did not return a NotFoundResult");
+    }
+
+    [Fact]
+    public async Task UpdateAdvertStatus_AllowsNonOwner_ToTransitionFromPausedToActive()
+    {
+        // Arrange
+        var sellerUser = new User { Id = "seller-123", UserName = "seller_bob", Email = "seller@example.com" };
+        var advert = new Book
+        {
+            AdvertId = 200,
+            Title = "Math Book",
+            Description = "A math book",
+            Price = 15,
+            SellerId = sellerUser.Id,
+            Seller = sellerUser,
+            Status = AdvertStatus.PAUSED,
+            CreatedAt = DateTime.UtcNow,
+            NotificationDate = DateTime.UtcNow,
+            Condition = PhysicalItemCondition.NEW,
+            ISBN = "11111",
+            Author = "Author",
+            Publisher = "Pub",
+            Edition = "1st",
+            WrittenLanguage = LanguageEnum.FR,
+            BookCategoryId = 1
+        };
+        _context.Users.Add(sellerUser);
+        _context.Adverts.Add(advert);
+        await _context.SaveChangesAsync();
+
+        // Log in as a non-owner/buyer
+        MockUser("buyer-123");
+
+        // Act
+        var result = await _controller.UpdateAdvertStatus(200, AdvertStatus.ACTIVE);
+
+        // Assert
+        var noContentResult = result as NoContentResult;
+        noContentResult.Should().NotBeNull("Non-owner should be allowed to revert from PAUSED to ACTIVE");
+
+        var updatedAdvert = await _context.Adverts.FindAsync(200L);
+        updatedAdvert.Should().NotBeNull();
+        updatedAdvert!.Status.Should().Be(AdvertStatus.ACTIVE);
+    }
+
+    [Fact]
+    public async Task UpdateAdvertStatus_ForbidsNonOwner_ToTransitionFromActiveToPaused()
+    {
+        // Arrange
+        var sellerUser = new User { Id = "seller-123", UserName = "seller_bob", Email = "seller@example.com" };
+        var advert = new Book
+        {
+            AdvertId = 201,
+            Title = "Math Book",
+            Description = "A math book",
+            Price = 15,
+            SellerId = sellerUser.Id,
+            Seller = sellerUser,
+            Status = AdvertStatus.ACTIVE,
+            CreatedAt = DateTime.UtcNow,
+            NotificationDate = DateTime.UtcNow,
+            Condition = PhysicalItemCondition.NEW,
+            ISBN = "11111",
+            Author = "Author",
+            Publisher = "Pub",
+            Edition = "1st",
+            WrittenLanguage = LanguageEnum.FR,
+            BookCategoryId = 1
+        };
+        _context.Users.Add(sellerUser);
+        _context.Adverts.Add(advert);
+        await _context.SaveChangesAsync();
+
+        // Log in as a non-owner/buyer
+        MockUser("buyer-123");
+
+        // Act
+        var result = await _controller.UpdateAdvertStatus(201, AdvertStatus.PAUSED);
+
+        // Assert
+        var forbidResult = result as ForbidResult;
+        forbidResult.Should().NotBeNull("Non-owner should not be allowed to transition from ACTIVE to PAUSED");
+
+        var updatedAdvert = await _context.Adverts.FindAsync(201L);
+        updatedAdvert.Should().NotBeNull();
+        updatedAdvert!.Status.Should().Be(AdvertStatus.ACTIVE); // Should remain ACTIVE
+    }
+
+    [Fact]
+    public async Task UpdateAdvertStatus_ForbidsNonOwner_ToTransitionFromPausedToSold()
+    {
+        // Arrange
+        var sellerUser = new User { Id = "seller-123", UserName = "seller_bob", Email = "seller@example.com" };
+        var advert = new Book
+        {
+            AdvertId = 202,
+            Title = "Math Book",
+            Description = "A math book",
+            Price = 15,
+            SellerId = sellerUser.Id,
+            Seller = sellerUser,
+            Status = AdvertStatus.PAUSED,
+            CreatedAt = DateTime.UtcNow,
+            NotificationDate = DateTime.UtcNow,
+            Condition = PhysicalItemCondition.NEW,
+            ISBN = "11111",
+            Author = "Author",
+            Publisher = "Pub",
+            Edition = "1st",
+            WrittenLanguage = LanguageEnum.FR,
+            BookCategoryId = 1
+        };
+        _context.Users.Add(sellerUser);
+        _context.Adverts.Add(advert);
+        await _context.SaveChangesAsync();
+
+        // Log in as a non-owner/buyer
+        MockUser("buyer-123");
+
+        // Act
+        var result = await _controller.UpdateAdvertStatus(202, AdvertStatus.SOLD);
+
+        // Assert
+        var forbidResult = result as ForbidResult;
+        forbidResult.Should().NotBeNull("Non-owner should not be allowed to transition from PAUSED to SOLD");
+
+        var updatedAdvert = await _context.Adverts.FindAsync(202L);
+        updatedAdvert.Should().NotBeNull();
+        updatedAdvert!.Status.Should().Be(AdvertStatus.PAUSED); // Should remain PAUSED
     }
     #endregion
 

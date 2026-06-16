@@ -1,11 +1,11 @@
-﻿using EcoScolarWebApi.Enums;
+using EcoScolarWebApi.Enums;
 using EcoScolarWebApi.Models;
 using Microsoft.IdentityModel.Tokens;
 
 namespace EcoScolarWebApi.DTOs.Adverts;
 
 public record ProductReadDto(long Id, string Title, string Description, decimal Price, DateTime PublicationDate, DateTime NotificationDate, AdvertStatus Status, string UserId, string SellerPseudo,
-	List<string> Pictures, PhysicalItemCondition Condition, decimal? Weight, long? ProductCategoryId, string? ProductCategoryLabel)
+	List<string> Pictures, PhysicalItemCondition Condition, decimal? Weight, long? ProductCategoryId, string? ProductCategoryLabel, int ExpiresInDays)
 {
 	public static ProductReadDto FromEntity(PhysicalItem entity)
 	{
@@ -23,7 +23,8 @@ public record ProductReadDto(long Id, string Title, string Description, decimal 
 			Weight: entity.Weight ?? null,
 			ProductCategoryId: entity.ProductCategoryId ?? null,
 			ProductCategoryLabel: entity.ProductCategory?.Name ?? null,
-			Pictures: entity.Pictures?.Select(p => p.Label).ToList() ?? []
+			Pictures: entity.Pictures?.OrderBy(p => p.SortOrder).Select(p => p.PublicUrl ?? p.Label).ToList() ?? [],
+			ExpiresInDays: EcoScolarWebApi.Helpers.AdvertExpirationHelper.GetExpiresInDays(entity.CreatedAt)
 		);
 	}
 }
@@ -65,14 +66,10 @@ public record ProductCreateDto(string Title, string Description, decimal Price, 
 			product.Condition = Condition;
 			product.ProductCategoryId = ProductCategoryId;
 			product.Weight = Weight;
-            if (Images.IsNullOrEmpty())
+			if (!Images.IsNullOrEmpty())
 			{
-				product.Pictures.Add(new Picture { Label = "https://picsum.photos/800/600" });
+				product.Pictures = Images!.Select(img => new Picture { Label = img }).ToList();
 			}
-			else
-            {
-                product.Pictures = Images.Select(img => new Picture { Label = img }).ToList();
-            }
 		}
 	}
 }

@@ -6,21 +6,21 @@ public class ProductCategoryCreateUpdateDto
 {
 	[Required]
 	[StringLength(100)]
-	public string Name { get; set; }
+	public string Name { get; set; } = string.Empty;
 
     [Required]
     [StringLength(100)]
-    public string NameFr { get; set; }
+    public string NameFr { get; set; } = string.Empty;
 
     [Required]
     [StringLength(100)]
-    public string NameDe { get; set; }
+    public string NameDe { get; set; } = string.Empty;
 
     [Required]
     [StringLength(100)]
-    public string NameIt { get; set; }
+    public string NameIt { get; set; } = string.Empty;
 
     [Required]
 	[StringLength(1000)]
-	public string Description { get; set; }
+	public string Description { get; set; } = string.Empty;
 }

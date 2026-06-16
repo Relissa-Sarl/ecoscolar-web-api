@@ -21,7 +21,8 @@ namespace EcoScolarWebApi.DTOs.Adverts;
 /// <param name="PrimaryImage">The URL of the primary image of the PhysicalItem</param>
 /// <param name="BuyerName">The nickname of the buyer once the advert has been sold. Empty string when the advert has not yet been sold.</param>
 /// <param name="Review">The review details of the advert/transaction if sold and reviewed.</param>
-public record AdvertReadDto(long Id, string Type, string Title, decimal Price, DateTime PublicationDate, DateTime NotificationDate, AdvertStatus Status, string UserId, string SellerPseudo, string? PrimaryImage, string BuyerName, ReviewDto? Review = null, long? TransactionId = null, string? TransactionStatus = null)
+/// <param name="ExpiresInDays">The number of days until the advert expires</param>
+public record AdvertReadDto(long Id, string Type, string Title, decimal Price, DateTime PublicationDate, DateTime NotificationDate, AdvertStatus Status, string UserId, string SellerPseudo, string? PrimaryImage, string BuyerName, int ExpiresInDays, ReviewDto? Review = null, long? TransactionId = null, string? TransactionStatus = null)
 {
 	/// <summary>
 	/// Factory method to create an AdvertReadDto from an PhysicalItem entity.
@@ -53,7 +54,8 @@ public record AdvertReadDto(long Id, string Type, string Title, decimal Price, D
 			_ => throw new InvalidOperationException("Unknown PhysicalItem type")
 		};
 
-		string? primaryImage = (entity as Models.PhysicalItem)?.Pictures?.FirstOrDefault()?.Label;
+		var pic = (entity as Models.PhysicalItem)?.Pictures?.OrderBy(p => p.SortOrder).FirstOrDefault();
+		string? primaryImage = pic?.PublicUrl ?? pic?.Label;
         // BuyerName is populated by the controller after joining with the Transaction table.
 
 		return new AdvertReadDto(
@@ -68,6 +70,7 @@ public record AdvertReadDto(long Id, string Type, string Title, decimal Price, D
 			SellerPseudo: entity.Seller?.Nickname ?? entity.Seller?.UserName ?? "Anonyme",
 			PrimaryImage: primaryImage,
 			BuyerName: buyerName ?? string.Empty,
+			ExpiresInDays: EcoScolarWebApi.Helpers.AdvertExpirationHelper.GetExpiresInDays(entity.CreatedAt),
 			Review: review,
 			TransactionId: null,
 			TransactionStatus: null
@@ -107,6 +110,6 @@ public record AdvertCreateDto(string Title, string Description, decimal Price, s
 		entity.Price = Price;
 		entity.Status = AdvertStatus.ACTIVE;
 		entity.SellerId = UserId;
-		entity.NotificationDate = DateTime.UtcNow.AddMonths(3);
+		entity.NotificationDate = DateTime.UtcNow;
 	}
 }

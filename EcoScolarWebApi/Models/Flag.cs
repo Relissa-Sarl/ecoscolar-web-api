@@ -18,10 +18,10 @@ public class Flag
     // === Foreign Keys ===
 
     [Required]
-    public string ReporterId { get; set; } 
+    public string ReporterId { get; set; } = string.Empty;
 
     [Required]
-    public string FlaggedId { get; set; }
+    public string FlaggedId { get; set; } = string.Empty;
 
     // === Navigation Properties ===
 

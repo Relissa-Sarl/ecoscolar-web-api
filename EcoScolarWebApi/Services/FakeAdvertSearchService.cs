@@ -11,6 +11,10 @@ namespace EcoScolarWebApi.Services;
 /// </summary>
 public class FakeAdvertSearchService : IAdvertSearchService
 {
+	private const int DefaultPage = 1;
+	private const int DefaultPageSize = 9;
+	private const int MaxPageSize = 50;
+
 	private sealed record CatalogMockEntry(AdvertSummaryDto Summary, string Description);
 
 	private static readonly IReadOnlyList<CatalogMockEntry> Catalog = BuildCatalog();
@@ -18,38 +22,37 @@ public class FakeAdvertSearchService : IAdvertSearchService
 	private static readonly IReadOnlyList<AdvertSummaryDto> Summaries =
 		Catalog.Select(e => e.Summary).ToList();
 
-	public Task<IEnumerable<AdvertSummaryDto>> SearchSummariesAsync(
+	public Task<CatalogSummaryPageDto> SearchSummariesAsync(
 		AdvertSearchQuery? query,
 		CancellationToken cancellationToken = default)
 	{
-		if (query == null)
-		{
-			return Task.FromResult<IEnumerable<AdvertSummaryDto>>(Summaries);
-		}
-
 		IEnumerable<AdvertSummaryDto> result = Summaries;
 
-		if (!string.IsNullOrWhiteSpace(query.Isbn))
+		if (query is not null)
 		{
-			var needle = Normalize(query.Isbn);
-			result = result.Where(a =>
-				a.Type == CatalogAdvertTypeCodes.Books
-				&& a.Isbn is not null
-				&& Normalize(a.Isbn).Contains(needle, StringComparison.Ordinal));
-        }
-
-		if (!string.IsNullOrWhiteSpace(query.Q))
-		{
-			var keyword = query.Q.Trim();
-			var normalizedIsbnProbe = Normalize(keyword);
-			result = result.Where(a =>
-				a.Title.Contains(keyword, StringComparison.OrdinalIgnoreCase)
-				|| (a.Type == CatalogAdvertTypeCodes.Books
-					&& a.Isbn is not null
-					&& Normalize(a.Isbn).Contains(normalizedIsbnProbe, StringComparison.Ordinal)));
+			result = ApplyFilters(result, query);
 		}
 
-		return Task.FromResult<IEnumerable<AdvertSummaryDto>>(result.ToList());
+		var pageSize = NormalizePageSize(query?.PageSize);
+		var page = NormalizePage(query?.Page);
+		var sorted = ApplySort(result, query?.Sort).ToList();
+		var totalItems = sorted.Count;
+		var totalPages = Math.Max(1, (int)Math.Ceiling(totalItems / (double)pageSize));
+		page = Math.Min(page, totalPages);
+
+		var items = sorted
+			.Skip((page - 1) * pageSize)
+			.Take(pageSize)
+			.ToList();
+
+		return Task.FromResult(new CatalogSummaryPageDto
+		{
+			Items = items,
+			Page = page,
+			PageSize = pageSize,
+			TotalItems = totalItems,
+			TotalPages = totalPages
+		});
 	}
 
 	public Task<AdvertDetailDto?> GetDetailAsync(long id, CancellationToken cancellationToken = default)
@@ -157,6 +160,85 @@ public class FakeAdvertSearchService : IAdvertSearchService
 				Grade = "Lycée"
 			}, demoDesc)
 		};
+	}
+
+	private static IEnumerable<AdvertSummaryDto> ApplyFilters(IEnumerable<AdvertSummaryDto> result, AdvertSearchQuery query)
+	{
+		if (!string.IsNullOrWhiteSpace(query.Isbn))
+		{
+			var needle = Normalize(query.Isbn);
+			result = result.Where(a =>
+				a.Type == CatalogAdvertTypeCodes.Books
+				&& a.Isbn is not null
+				&& Normalize(a.Isbn).Contains(needle, StringComparison.Ordinal));
+		}
+
+		if (!string.IsNullOrWhiteSpace(query.Q))
+		{
+			var keyword = query.Q.Trim();
+			var normalizedIsbnProbe = Normalize(keyword);
+			result = result.Where(a =>
+				a.Title.Contains(keyword, StringComparison.OrdinalIgnoreCase)
+				|| (a.Type == CatalogAdvertTypeCodes.Books
+					&& a.Isbn is not null
+					&& Normalize(a.Isbn).Contains(normalizedIsbnProbe, StringComparison.Ordinal)));
+		}
+
+		if (!string.IsNullOrWhiteSpace(query.Type))
+		{
+			var type = query.Type.Trim();
+			result = result.Where(a => a.Type.Equals(type, StringComparison.OrdinalIgnoreCase));
+		}
+
+		if (query.MinPrice.HasValue)
+			result = result.Where(a => a.Price >= query.MinPrice.Value);
+
+		if (query.MaxPrice.HasValue)
+			result = result.Where(a => a.Price <= query.MaxPrice.Value);
+
+		var categories = SplitTerms(query.Category);
+		if (categories.Length > 0)
+			result = result.Where(a => a.Category is not null && categories.Contains(a.Category.Trim().ToLowerInvariant()));
+
+		var grades = SplitTerms(query.Grade);
+		if (grades.Length > 0)
+			result = result.Where(a => a.Grade is not null && grades.Contains(a.Grade.Trim().ToLowerInvariant()));
+
+		var subjects = SplitTerms(query.Subjects);
+		if (subjects.Length > 0)
+			result = result.Where(a => a.Subjects is not null && subjects.Contains(a.Subjects.Trim().ToLowerInvariant()));
+
+		return result;
+	}
+
+	private static IEnumerable<AdvertSummaryDto> ApplySort(IEnumerable<AdvertSummaryDto> result, string? sort)
+	{
+		return sort?.Trim().ToLowerInvariant() switch
+		{
+			"price_asc" => result.OrderBy(a => a.Price).ThenByDescending(a => a.Id),
+			"price_desc" => result.OrderByDescending(a => a.Price).ThenByDescending(a => a.Id),
+			_ => result.OrderByDescending(a => a.Id)
+		};
+	}
+
+	private static int NormalizePage(int? page)
+	{
+		return Math.Max(DefaultPage, page ?? DefaultPage);
+	}
+
+	private static int NormalizePageSize(int? pageSize)
+	{
+		return Math.Clamp(pageSize ?? DefaultPageSize, 1, MaxPageSize);
+	}
+
+	private static string[] SplitTerms(string? rawTerms)
+	{
+		return rawTerms?
+			.Split(',', StringSplitOptions.RemoveEmptyEntries)
+			.Select(term => term.Trim().ToLowerInvariant())
+			.Where(term => term.Length > 0)
+			.Distinct()
+			.ToArray() ?? [];
 	}
 
 	private static string Normalize(string? isbnText)

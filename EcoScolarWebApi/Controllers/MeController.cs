@@ -129,7 +129,8 @@ public class MeController : ControllerBase
     {
         if (advert is PhysicalItem physicalItem && physicalItem.Pictures != null && physicalItem.Pictures.Any())
         {
-            return physicalItem.Pictures.First().Label;
+            var pic = physicalItem.Pictures.OrderBy(p => p.SortOrder).First();
+            return pic.PublicUrl ?? pic.Label;
         }
         return null;
     }
@@ -190,6 +191,34 @@ public class MeController : ControllerBase
 
         transaction.Status = TransactionStatus.SHIPPED;
         transaction.ShippedDate = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return Ok();
+    }
+
+    [HttpPost("sales/{advertId}/renew")]
+    public async Task<IActionResult> RenewAdvert(long advertId)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized(new { message = "Invalid session." });
+
+        var advert = await _context.Adverts.FirstOrDefaultAsync(a => a.AdvertId == advertId);
+
+        if (advert == null)
+            return NotFound();
+
+        if (advert.SellerId != userId)
+            return Forbid();
+
+        if (advert.Status == AdvertStatus.SOLD || advert.Status == AdvertStatus.BLOCKED)
+            return BadRequest(new { message = "Cette annonce ne peut pas être renouvelée." });
+
+        advert.CreatedAt = DateTime.UtcNow;
+        advert.NotificationDate = DateTime.UtcNow;
+        advert.Status = AdvertStatus.ACTIVE;
 
         await _context.SaveChangesAsync();
 

@@ -1,10 +1,10 @@
-﻿using EcoScolarWebApi.Enums;
+using EcoScolarWebApi.Enums;
 using EcoScolarWebApi.Models;
 
 namespace EcoScolarWebApi.DTOs.Adverts;
 
 public record BookReadDto(long id, string title, string description, decimal price, DateTime publicationDate, DateTime notificationDate, AdvertStatus status, string userId, string sellerPseudo,
-	List<string> pictures, PhysicalItemCondition condition, long bookCategoryId, string bookCategoryLabel, string isbn, string author, string publisher, string edition, Enums.LanguageEnum writtenLanguage, decimal? weight = null)
+	List<string> pictures, PhysicalItemCondition condition, long bookCategoryId, string bookCategoryLabel, string isbn, string author, string publisher, string edition, Enums.LanguageEnum writtenLanguage, int ExpiresInDays, decimal? weight = null)
 {
 	public static BookReadDto FromEntity(Book entity)
 	{
@@ -27,7 +27,8 @@ public record BookReadDto(long id, string title, string description, decimal pri
 			publisher: entity.Publisher,
 			edition: entity.Edition,
 			writtenLanguage: entity.WrittenLanguage,
-			pictures: entity.Pictures?.Select(p => p.Label).ToList() ?? new List<string>()
+			pictures: entity.Pictures?.OrderBy(p => p.SortOrder).Select(p => p.PublicUrl ?? p.Label).ToList() ?? new List<string>(),
+			ExpiresInDays: EcoScolarWebApi.Helpers.AdvertExpirationHelper.GetExpiresInDays(entity.CreatedAt)
 		);
 	}
 }
