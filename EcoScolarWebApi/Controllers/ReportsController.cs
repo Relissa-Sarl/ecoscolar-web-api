@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using EcoScolarWebApi.DTOs;
 using EcoScolarWebApi.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -6,8 +7,9 @@ using System.Security.Claims;
 
 namespace EcoScolarWebApi.Controllers;
 
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/[controller]")]
 [ApiController]
-[Route("api/[controller]")]
 public class ReportsController(IAbuseReportService reportService) : ControllerBase
 {
     [HttpPost]
