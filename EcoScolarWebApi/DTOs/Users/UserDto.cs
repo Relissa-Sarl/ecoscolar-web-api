@@ -26,7 +26,9 @@ public record UserResponse(
     IEnumerable<SpokenLanguageDto> Languages,
     LocationReadDto? Location = null!,
     string? BirthdayDate = null!,
-    string[] Roles = null!
+    string[] Roles = null!,
+    int BadReviewsCount = 0,
+    bool AlerteTooBadReviews = false
 //double GlobalRating,
 //bool IsBanned,
 //int CurrentSchoolLevelId,

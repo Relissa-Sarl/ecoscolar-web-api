@@ -2,7 +2,6 @@
 using EcoScolarWebApi.Data;
 using EcoScolarWebApi.DTOs.Support;
 using EcoScolarWebApi.Models;
-using EcoScolarWebApi.Services;
 using EcoScolarWebApi.Services.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -20,7 +19,6 @@ namespace EcoScolarWebApi.Controllers
     /// <param name="adminService">The user service for handling user-related operations</param>
     /// <param name="userManager">The user manager for handling identity management tasks</param>
     /// <param name="context">The database context for handling database interactions</param>
-    [Route("api/[controller]")]
     [ApiController]
     [Route("api/v{version:apiVersion}/[controller]")]
     [Authorize]
