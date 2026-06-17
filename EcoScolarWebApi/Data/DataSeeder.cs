@@ -30,7 +30,10 @@ public class DataSeeder
 		// 2. Generate data to test (Albert / Marie)
 		await SeedTestDataAsync(context, userManager);
 
-		// 3. Generate random data for more realistic testing
+		// 3. Seed a user flagged for too many bad reviews (admin panel alert)
+		await SeedTooManyBadReviewsUserAsync(context, userManager);
+
+		// 4. Generate random data for more realistic testing
 		await SeedRandomDataAsync(context, userManager);
 	}
 
@@ -227,6 +230,88 @@ public class DataSeeder
 
 		context.Transactions.AddRange(transactions);
 		await context.SaveChangesAsync();
+	}
+
+	/// <summary>
+	/// Seeds a seller who has received 6 bad reviews (rating &lt; 3) so the admin panel
+	/// flags them with AlerteTooBadReviews (threshold is "more than 5").
+	/// </summary>
+	private static async Task SeedTooManyBadReviewsUserAsync(EcoscolarDbContext context, UserManager<User> userManager)
+	{
+		const int badReviewsToCreate = 6;
+
+		// The flagged seller (receives the bad reviews) and the buyer who leaves them.
+		var badSeller = new User
+		{
+			Id = Guid.NewGuid().ToString(),
+			UserName = "victor@badreviews.ch",
+			Nickname = "nick-victorbad",
+			Email = "victor@badreviews.ch",
+			EmailConfirmed = true,
+			FirstName = "Victor",
+			LastName = "Mauvais"
+		};
+
+		var reviewer = new User
+		{
+			Id = Guid.NewGuid().ToString(),
+			UserName = "judith@reviewer.ch",
+			Nickname = "nick-judithrev",
+			Email = "judith@reviewer.ch",
+			EmailConfirmed = true,
+			FirstName = "Judith",
+			LastName = "Critique"
+		};
+
+		await userManager.CreateAsync(badSeller, "P@ssw0rd!");
+		await userManager.CreateAsync(reviewer, "P@ssw0rd!");
+		await userManager.AddToRoleAsync(badSeller, "User");
+		await userManager.AddToRoleAsync(reviewer, "User");
+
+		var productCategoryId = await context.Set<ProductCategory>().Select(p => p.ProductCategoryId).FirstOrDefaultAsync();
+
+		// One sold advert + one completed transaction + one bad review, repeated 6 times.
+		for (var i = 1; i <= badReviewsToCreate; i++)
+		{
+			var advert = new PhysicalItem
+			{
+				Title = $"Article douteux #{i} de Victor",
+				Description = "Article vendu par Victor qui a généré une mauvaise évaluation.",
+				Price = 20m,
+				CreatedAt = DateTime.UtcNow.AddDays(-30 + i),
+				Status = AdvertStatus.SOLD,
+				SellerId = badSeller.Id,
+				Condition = PhysicalItemCondition.USED,
+				ProductCategoryId = productCategoryId
+			};
+			context.Products.Add(advert);
+			await context.SaveChangesAsync();
+
+			var transaction = new Transaction
+			{
+				AdvertId = advert.AdvertId,
+				BuyerId = reviewer.Id,
+				Date = DateTime.UtcNow.AddDays(-25 + i),
+				Status = TransactionStatus.COMPLETED,
+				PlatformFee = 1.00m,
+				BuyerConsent = true,
+				SellerConsent = true
+			};
+			context.Transactions.Add(transaction);
+			await context.SaveChangesAsync();
+
+			context.Reviews.Add(new Review
+			{
+				Rating = 1,
+				Comment = $"Très déçu (avis #{i}).",
+				Date = DateTime.UtcNow.AddDays(-20 + i),
+				ReviewedRole = ReviewedRole.SELLER,
+				ReviewerId = reviewer.Id,
+				ReviewedId = badSeller.Id,
+				TransactionId = transaction.TransactionId
+			});
+			await context.SaveChangesAsync();
+		}
 	}
 
 	private static async Task SeedRandomDataAsync(EcoscolarDbContext context, UserManager<User> userManager)
