@@ -15,17 +15,27 @@ namespace EcoScolarWebApi.Services
 {
     public class AdminService : IAdminService
     {
+        // A review is considered "bad" when its rating is strictly below this value.
+        private const int DefaultBadReviewRatingThreshold = 3;
+
+        // A user is flagged (AlerteTooBadReviews) when their bad-review count is strictly above this value.
+        private const int DefaultTooManyBadReviewsThreshold = 5;
+
         private readonly UserManager<User> _userManager;            // Seller manager
         private readonly SignInManager<User> _signInManager;        // Sign-in manager
         private readonly EcoscolarDbContext _context;               // Database context
         private readonly UserMapper _userMapper;                    // User mapper for converting between entities and DTOs
+        private readonly int _badReviewRatingThreshold;             // Rating below which a review counts as "bad"
+        private readonly int _tooManyBadReviewsThreshold;           // Bad-review count above which a user is flagged
 
-        public AdminService(UserManager<User> userManager, EcoscolarDbContext dbContext, SignInManager<User> signInManager, UserMapper userMapper)
+        public AdminService(UserManager<User> userManager, EcoscolarDbContext dbContext, SignInManager<User> signInManager, UserMapper userMapper, IConfiguration configuration)
         {
             _userManager = userManager;
             _context = dbContext;
             _signInManager = signInManager;
             _userMapper = userMapper;
+            _badReviewRatingThreshold = configuration.GetValue("BusinessSettings:BadReviewRatingThreshold", DefaultBadReviewRatingThreshold);
+            _tooManyBadReviewsThreshold = configuration.GetValue("BusinessSettings:TooManyBadReviewsThreshold", DefaultTooManyBadReviewsThreshold);
         }
 
         /// <summary>
@@ -40,11 +50,26 @@ namespace EcoScolarWebApi.Services
             var users = await _userManager.Users.
                 Include(u => u.Languages)
                 .ToListAsync();
+
+            // Count, per reviewed user, the reviews received with a rating below the bad-review threshold.
+            // Done as a single grouped aggregate to avoid loading every review into memory.
+            var badReviewCounts = await _context.Reviews
+                .Where(r => r.Rating < _badReviewRatingThreshold)
+                .GroupBy(r => r.ReviewedId)
+                .Select(g => new { ReviewedId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(g => g.ReviewedId, g => g.Count);
+
             var userDtos = new List<UserResponse>();
 
             foreach (var item in users)
             {
-                userDtos.Add(_userMapper.ToResponse(item) with { Roles = (await _userManager.GetRolesAsync(item)).ToArray() });
+                var badReviews = badReviewCounts.GetValueOrDefault(item.Id, 0);
+                userDtos.Add(_userMapper.ToResponse(item) with
+                {
+					Roles = [.. await _userManager.GetRolesAsync(item)],
+                    BadReviewsCount = badReviews,
+                    AlerteTooBadReviews = badReviews > _tooManyBadReviewsThreshold
+                });
             }
             return Result<List<UserResponse>>.Success(userDtos);
         }
@@ -126,16 +151,6 @@ namespace EcoScolarWebApi.Services
                 return Result<UserResponse>.Failure("Unauthorized access.", ErrorType.Unauthorized);
 
             currentUser.IsBanned = !currentUser.IsBanned;
-            //if (currentUser.IsBanned)
-            //{
-            //    await _userManager.SetLockoutEnabledAsync(currentUser, true);
-            //    await _userManager.SetLockoutEndDateAsync(currentUser, DateTime.Today.AddYears(999));
-            //}
-            //else
-            //{
-            //    await _userManager.SetLockoutEnabledAsync(currentUser, false);
-            //    await _userManager.SetLockoutEndDateAsync(currentUser, null);
-            //}
 
             var updateResult = await _userManager.UpdateAsync(currentUser);
             if (!updateResult.Succeeded)
