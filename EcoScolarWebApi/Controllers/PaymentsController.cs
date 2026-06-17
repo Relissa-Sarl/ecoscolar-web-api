@@ -42,7 +42,6 @@ public class PaymentsController : ControllerBase
 	[HttpPost("checkout")]
 	public async Task<IActionResult> Checkout([FromBody] CheckoutRequestDto request)
 	{
-		double price = request.ProductPrice * 100;
         string baseUrl = $"{Request.Scheme}://{Request.Host}";
         if (Request.Headers.TryGetValue("Referer", out var refererHeader) && !string.IsNullOrEmpty(refererHeader))
         {
@@ -63,6 +62,7 @@ public class PaymentsController : ControllerBase
 			: new List<long> { (long)request.ProductId };
 
 		// Check if any product is already sold or currently being paid for (status is SOLD or PAUSED)
+		decimal subtotal = 0;
 		foreach (var pid in productIds)
 		{
 			var advert = await _context.Adverts.FindAsync(pid);
@@ -74,7 +74,15 @@ public class PaymentsController : ControllerBase
 			{
                 return BadRequest(new { code = "ITEM_UNAVAILABLE", error = "Un des articles dans votre panier est en cours de paiement ou déjà vendu." });
             }
+			subtotal += advert.Price;
 		}
+
+		// Calculate total price with fees and VAT
+		decimal shippingCost = request.ShippingMethod == "handToHand" ? 0 : 2;
+		decimal serviceFee = subtotal * 0.1m;
+		decimal taxTva = (subtotal + shippingCost + serviceFee) * 0.081m;
+		decimal total = subtotal + shippingCost + serviceFee + taxTva;
+		long priceInCents = (long)System.Math.Round(total * 100, System.MidpointRounding.AwayFromZero);
 
 		// Update all products status to PAUSED during checkout
 		foreach (var pid in productIds)
@@ -100,7 +108,7 @@ public class PaymentsController : ControllerBase
 					PriceData = new SessionLineItemPriceDataOptions
 					{
                         // 1 franc = 100 cents
-                        UnitAmount = (long)price,
+                        UnitAmount = priceInCents,
 						Currency = "chf",
 						ProductData = new SessionLineItemPriceDataProductDataOptions
 						{

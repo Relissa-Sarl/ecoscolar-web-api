@@ -7,4 +7,5 @@ public class CheckoutRequestDto
     public int ProductId { get; set; }
     public List<long>? ProductIds { get; set; }
     public double ProductPrice { get; set; }
+    public string? ShippingMethod { get; set; }
 }
