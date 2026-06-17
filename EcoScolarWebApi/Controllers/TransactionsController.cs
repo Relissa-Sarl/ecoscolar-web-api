@@ -242,6 +242,28 @@ public class TransactionsController(EcoscolarDbContext context, UserManager<User
 
 		await _context.SaveChangesAsync();
 
+		var baseUrl = _configuration["Frontend:BaseUrl"] ?? "http://localhost:3000";
+		foreach (var advert in soldAdverts)
+		{
+			if (advert.Seller == null)
+			{
+				await _context.Entry(advert).Reference(a => a.Seller).LoadAsync();
+			}
+
+			if (advert.Seller != null && !string.IsNullOrEmpty(advert.Seller.Email))
+			{
+				var allSoldLink = $"{baseUrl.TrimEnd('/')}/me/sales?from=profile";
+				try
+				{
+					await _emailSenderService.SendItemSoldEmailAsync(advert.Seller, advert, allSoldLink);
+				}
+				catch (Exception e)
+				{
+					Console.WriteLine($"Error: Failed to send sale notification email :{e.Message}");
+				}
+			}
+		}
+
 		return Ok(createdTransactions.Select(t => new {
 			t.TransactionId,
 			t.AdvertId,
