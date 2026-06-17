@@ -20,6 +20,14 @@ public class TutoringAdvert : Advert // TODO : Rename in MCD Services -> to Serv
     public Enums.LanguageEnum TeachingLanguage { get; set; } // TODO : Check because we have a Language table, maybe we can use it instead of an enum.
                                                              // A TutoringAdvert can be taught in multiple languages, so maybe we need a many-to-many relationship between TutoringAdvert and Language.
 
+    // === Tutoring sale (Price = hourly rate) ===
+
+    // Maximum number of hours a student can book in a single reservation (drives the booking modal cap).
+    public int MaxHours { get; set; } = 1;
+
+    // Optional minimum number of hours per reservation.
+    public int? MinHours { get; set; }
+
     [ForeignKey("SubjectId")]
     public virtual Subject Subject { get; set; } = null!;
 
