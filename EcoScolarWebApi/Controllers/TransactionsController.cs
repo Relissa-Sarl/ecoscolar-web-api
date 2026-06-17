@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Buffers.Text;
+using System.Security.Cryptography;
 
 namespace EcoScolarWebApi.Controllers;
 
@@ -261,6 +262,82 @@ public class TransactionsController(EcoscolarDbContext context, UserManager<User
             t.StripeSessionId
         }));
     }
+		var existingOrderNumber = await _context.Transactions
+			.Where(t => request.AdvertIds.Contains(t.AdvertId) && t.OrderNumber != null)
+			.Select(t => t.OrderNumber)
+			.FirstOrDefaultAsync();
+
+		var orderNumber = existingOrderNumber ?? await GenerateUniqueOrderNumberAsync();
+
+		var createdTransactions = new List<Transaction>();
+
+		foreach (var advertId in request.AdvertIds)
+		{
+			var existingTransaction = await _context.Transactions
+				.FirstOrDefaultAsync(t => t.AdvertId == advertId);
+
+			if (existingTransaction != null)
+			{
+				if (string.IsNullOrWhiteSpace(existingTransaction.OrderNumber))
+				{
+					existingTransaction.OrderNumber = orderNumber;
+				}
+				createdTransactions.Add(existingTransaction);
+				continue;
+			}
+
+			var advert = await _context.Adverts.FindAsync(advertId);
+			if (advert == null)
+			{
+				return NotFound(new { message = $"Advert with ID {advertId} not found." });
+			}
+
+			var platformFee = Math.Round(advert.Price * 0.05m, 2);
+
+			var newTransaction = new Transaction
+			{
+				AdvertId = advertId,
+				BuyerId = user.Id,
+				Date = DateTime.UtcNow,
+				Status = TransactionStatus.PAID_WAITING_SHIPPING,
+				PlatformFee = platformFee,
+				OrderNumber = orderNumber,
+				StripeSessionId = request.StripeSessionId,
+				BuyerConsent = false,
+				SellerConsent = false
+			};
+
+			advert.Status = AdvertStatus.SOLD;
+			_context.Entry(advert).State = EntityState.Modified;
+
+			_context.Transactions.Add(newTransaction);
+			createdTransactions.Add(newTransaction);
+		}
+
+		await _context.SaveChangesAsync();
+
+		return Ok(createdTransactions.Select(t => new {
+			t.TransactionId,
+			t.AdvertId,
+			t.BuyerId,
+			t.Status,
+			t.Date,
+			t.PlatformFee,
+			t.OrderNumber,
+			t.StripeSessionId
+		}));
+	}
+
+	private async Task<string> GenerateUniqueOrderNumberAsync()
+	{
+		string orderNumber;
+		do
+		{
+			orderNumber = $"ECO-{DateTime.UtcNow:yyyyMMdd}-{RandomNumberGenerator.GetInt32(0, 1_000_000):D6}";
+		}
+		while (await _context.Transactions.AnyAsync(t => t.OrderNumber == orderNumber));
+		return orderNumber;
+	}
 }
 
 public record TransactionUserIdsDto(string BuyerId, string SellerId);

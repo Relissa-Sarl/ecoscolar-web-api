@@ -1,4 +1,4 @@
-using EcoScolarWebApi.Models;
+﻿using EcoScolarWebApi.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -120,6 +120,11 @@ public class EcoscolarDbContext(DbContextOptions<EcoscolarDbContext> options) : 
 				.WithMany()
 				.HasForeignKey(t => t.BuyerId)
 				.OnDelete(DeleteBehavior.Restrict);
+				
+			entity.Property(t => t.OrderNumber)
+				.HasMaxLength(32);
+
+			entity.HasIndex(t => t.OrderNumber);
 		});
 
 		// PublicComment
