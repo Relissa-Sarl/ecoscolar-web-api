@@ -8,6 +8,7 @@ using EcoScolarWebApi.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Cryptography;
 
 namespace EcoScolarWebApi.Controllers;
 
@@ -178,16 +179,26 @@ public class TransactionsController(EcoscolarDbContext context, UserManager<User
 			return BadRequest(new { message = "AdvertIds are required." });
 		}
 
+		var existingOrderNumber = await _context.Transactions
+			.Where(t => request.AdvertIds.Contains(t.AdvertId) && t.OrderNumber != null)
+			.Select(t => t.OrderNumber)
+			.FirstOrDefaultAsync();
+
+		var orderNumber = existingOrderNumber ?? await GenerateUniqueOrderNumberAsync();
+
 		var createdTransactions = new List<Transaction>();
 
 		foreach (var advertId in request.AdvertIds)
 		{
-			// Check if a transaction already exists for this advert
 			var existingTransaction = await _context.Transactions
 				.FirstOrDefaultAsync(t => t.AdvertId == advertId);
 
 			if (existingTransaction != null)
 			{
+				if (string.IsNullOrWhiteSpace(existingTransaction.OrderNumber))
+				{
+					existingTransaction.OrderNumber = orderNumber;
+				}
 				createdTransactions.Add(existingTransaction);
 				continue;
 			}
@@ -198,7 +209,6 @@ public class TransactionsController(EcoscolarDbContext context, UserManager<User
 				return NotFound(new { message = $"Advert with ID {advertId} not found." });
 			}
 
-			// Calculate platform fee (5% of price, rounded to 2 decimal places)
 			var platformFee = Math.Round(advert.Price * 0.05m, 2);
 
 			var newTransaction = new Transaction
@@ -208,12 +218,12 @@ public class TransactionsController(EcoscolarDbContext context, UserManager<User
 				Date = DateTime.UtcNow,
 				Status = TransactionStatus.PAID_WAITING_SHIPPING,
 				PlatformFee = platformFee,
+				OrderNumber = orderNumber,
 				StripeSessionId = request.StripeSessionId,
 				BuyerConsent = false,
 				SellerConsent = false
 			};
 
-			// Update the advert status to SOLD
 			advert.Status = AdvertStatus.SOLD;
 			_context.Entry(advert).State = EntityState.Modified;
 
@@ -230,8 +240,20 @@ public class TransactionsController(EcoscolarDbContext context, UserManager<User
 			t.Status,
 			t.Date,
 			t.PlatformFee,
+			t.OrderNumber,
 			t.StripeSessionId
 		}));
+	}
+
+	private async Task<string> GenerateUniqueOrderNumberAsync()
+	{
+		string orderNumber;
+		do
+		{
+			orderNumber = $"ECO-{DateTime.UtcNow:yyyyMMdd}-{RandomNumberGenerator.GetInt32(0, 1_000_000):D6}";
+		}
+		while (await _context.Transactions.AnyAsync(t => t.OrderNumber == orderNumber));
+		return orderNumber;
 	}
 }
 
