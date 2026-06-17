@@ -35,6 +35,9 @@ public class DataSeeder
 
 		// 4. Generate random data for more realistic testing
 		await SeedRandomDataAsync(context, userManager);
+
+		// 5. Seed a tutoring advert + paid packages in different escrow states
+		await SeedTutoringPackagesAsync(context, userManager);
 	}
 
 	public static async Task SeedIdentityRolesAsync(RoleManager<IdentityRole> roleManager)
@@ -312,6 +315,101 @@ public class DataSeeder
 			});
 			await context.SaveChangesAsync();
 		}
+	}
+
+	/// <summary>
+	/// Seeds a tutoring advert (hourly rate + MaxHours) and two paid packages illustrating the
+	/// escrow flow: one awaiting the tutor's acceptance, one already accepted (awaiting completion).
+	/// Foundation test data for the tutoring sale feature.
+	/// </summary>
+	private static async Task SeedTutoringPackagesAsync(EcoscolarDbContext context, UserManager<User> userManager)
+	{
+		var subjectId = await context.Set<Subject>().Select(s => s.SubjectId).FirstOrDefaultAsync();
+		var schoolGradeId = await context.Set<SchoolGrade>().Select(g => g.SchoolGradeId).FirstOrDefaultAsync();
+		if (subjectId == 0 || schoolGradeId == 0)
+			return; // reference data not seeded → skip gracefully
+
+		var tutor = new User
+		{
+			Id = Guid.NewGuid().ToString(),
+			UserName = "tina@tutorat.ch",
+			Nickname = "nick-tinatutor",
+			Email = "tina@tutorat.ch",
+			EmailConfirmed = true,
+			FirstName = "Tina",
+			LastName = "Tutrice",
+			PhoneNumber = "+41 79 000 00 00"
+		};
+
+		var student = new User
+		{
+			Id = Guid.NewGuid().ToString(),
+			UserName = "simon@eleve.ch",
+			Nickname = "nick-simoneleve",
+			Email = "simon@eleve.ch",
+			EmailConfirmed = true,
+			FirstName = "Simon",
+			LastName = "Élève"
+		};
+
+		await userManager.CreateAsync(tutor, "P@ssw0rd!");
+		await userManager.CreateAsync(student, "P@ssw0rd!");
+		await userManager.AddToRoleAsync(tutor, "User");
+		await userManager.AddToRoleAsync(student, "User");
+
+		var advert = new TutoringAdvert
+		{
+			Title = "Cours d'appui de mathématiques",
+			Description = "Soutien en mathématiques, tarif horaire.",
+			Price = 30m, // hourly rate
+			MaxHours = 10,
+			MinHours = 1,
+			CreatedAt = DateTime.UtcNow.AddDays(-5),
+			NotificationDate = DateTime.UtcNow.AddDays(25),
+			Status = AdvertStatus.ACTIVE, // a tutoring advert stays ACTIVE after a sale
+			SellerId = tutor.Id,
+			SubjectId = subjectId,
+			SchoolGradeId = schoolGradeId,
+			TeachingLanguage = LanguageEnum.FR,
+			StudyLevel = "Secondaire"
+		};
+		context.Services.Add(advert);
+		await context.SaveChangesAsync();
+
+		// Package 1: paid, awaiting the tutor's accept/refuse decision.
+		var waitingAcceptance = new Transaction
+		{
+			AdvertId = advert.AdvertId,
+			BuyerId = student.Id,
+			Date = DateTime.UtcNow.AddDays(-2),
+			Status = TransactionStatus.PAID_WAITING_ACCEPTANCE,
+			Quantity = 5,
+			UnitPrice = 30m,
+			Amount = 157.50m, // 5 * 30 + fee
+			PlatformFee = 7.50m,
+			PackageExpiresAt = DateTime.UtcNow.AddDays(13),
+			BuyerConsent = false,
+			SellerConsent = false
+		};
+
+		// Package 2: accepted by the tutor, awaiting completion confirmation.
+		var waitingCompletion = new Transaction
+		{
+			AdvertId = advert.AdvertId,
+			BuyerId = student.Id,
+			Date = DateTime.UtcNow.AddDays(-4),
+			Status = TransactionStatus.PAID_WAITING_COMPLETION,
+			Quantity = 3,
+			UnitPrice = 30m,
+			Amount = 94.50m, // 3 * 30 + fee
+			PlatformFee = 4.50m,
+			PackageExpiresAt = DateTime.UtcNow.AddDays(11),
+			BuyerConsent = false,
+			SellerConsent = false
+		};
+
+		context.Transactions.AddRange(waitingAcceptance, waitingCompletion);
+		await context.SaveChangesAsync();
 	}
 
 	private static async Task SeedRandomDataAsync(EcoscolarDbContext context, UserManager<User> userManager)
