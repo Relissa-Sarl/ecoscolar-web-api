@@ -116,7 +116,10 @@ public class PaymentsController : ControllerBase
 			{
 				TransferGroup = "COMMANDE_ID_789",
 			},
-
+			Metadata = new Dictionary<string, string>
+			{
+				{ "ProductIds", productIdsQuery }
+			},
             SuccessUrl = $"{baseUrl}/success?productIds={productIdsQuery}",
             CancelUrl = $"{baseUrl}/denied?productIds={productIdsQuery}",
 		};
@@ -155,6 +158,65 @@ public class PaymentsController : ControllerBase
 		catch (StripeException e)
 		{
 			return BadRequest(new { error = e.StripeError.Message });
+		}
+	}
+
+	/// <summary>
+	/// Stripe Webhook endpoint to handle checkout session events (completion, expiration, failure).
+	/// Url: POST /api/v1/payments/webhook
+	/// </summary>
+	[HttpPost("webhook")]
+	public async Task<IActionResult> StripeWebhook()
+	{
+		var json = await new System.IO.StreamReader(HttpContext.Request.Body).ReadToEndAsync();
+		try
+		{
+			var signatureHeader = Request.Headers["Stripe-Signature"];
+			var webhookSecret = _config["Stripe:WebhookSecret"];
+			
+			// Verify webhook signature (recommended for security), fallback if secret is missing
+			Event stripeEvent;
+			if (string.IsNullOrEmpty(webhookSecret))
+			{
+				stripeEvent = EventUtility.ParseEvent(json);
+			}
+			else
+			{
+				stripeEvent = EventUtility.ConstructEvent(json, signatureHeader, webhookSecret);
+			}
+
+			if (stripeEvent.Type == EventTypes.CheckoutSessionExpired ||
+			    stripeEvent.Type == EventTypes.CheckoutSessionAsyncPaymentFailed)
+			{
+				var session = stripeEvent.Data.Object as Session;
+				if (session?.Metadata != null && session.Metadata.TryGetValue("ProductIds", out var productIdsStr))
+				{
+					var productIds = productIdsStr.Split(',', StringSplitOptions.RemoveEmptyEntries)
+						.Select(long.Parse)
+						.ToList();
+
+					foreach (var pid in productIds)
+					{
+						var advert = await _context.Adverts.FindAsync(pid);
+						if (advert != null && advert.Status == AdvertStatus.PAUSED)
+						{
+							advert.Status = AdvertStatus.ACTIVE;
+							_context.Entry(advert).State = EntityState.Modified;
+						}
+					}
+					await _context.SaveChangesAsync();
+				}
+			}
+
+			return Ok();
+		}
+		catch (StripeException e)
+		{
+			return BadRequest(new { error = e.Message });
+		}
+		catch (Exception e)
+		{
+			return BadRequest(new { error = e.Message });
 		}
 	}
 }
