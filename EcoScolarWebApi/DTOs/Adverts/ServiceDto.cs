@@ -4,7 +4,8 @@ using EcoScolarWebApi.Models;
 namespace EcoScolarWebApi.DTOs.Adverts;
 
 public record ServiceReadDto(long Id, string Title, string Description, decimal Price, DateTime PublicationDate, DateTime NotificationDate, AdvertStatus Status, string UserId, string SellerPseudo,
-	long SubjectId, string SubjectLabel, long SchoolGradeId, string SchoolGradeLabel, Enums.LanguageEnum TeachingLanguage, string StudyLevel, int ExpiresInDays)
+	long SubjectId, string SubjectLabel, long SchoolGradeId, string SchoolGradeLabel, Enums.LanguageEnum TeachingLanguage, string StudyLevel, int ExpiresInDays,
+	decimal PricePerHour, int MaxHours, int? MinHours)
 {
 	public static ServiceReadDto FromEntity(TutoringAdvert entity)
 	{
@@ -24,7 +25,11 @@ public record ServiceReadDto(long Id, string Title, string Description, decimal 
 			SchoolGradeLabel: entity.SchoolGrade.Name,
 			TeachingLanguage: entity.TeachingLanguage,
 			StudyLevel: entity.StudyLevel,
-			ExpiresInDays: EcoScolarWebApi.Helpers.AdvertExpirationHelper.GetExpiresInDays(entity.CreatedAt)
+			ExpiresInDays: EcoScolarWebApi.Helpers.AdvertExpirationHelper.GetExpiresInDays(entity.CreatedAt),
+			// Price is the hourly rate for a tutoring advert; PricePerHour makes the contract explicit for the front.
+			PricePerHour: entity.Price,
+			MaxHours: entity.MaxHours,
+			MinHours: entity.MinHours
 		);
 	}
 }
