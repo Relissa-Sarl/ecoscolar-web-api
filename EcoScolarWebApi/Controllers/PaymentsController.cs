@@ -128,7 +128,7 @@ public class PaymentsController : ControllerBase
 			{
 				{ "ProductIds", productIdsQuery }
 			},
-            SuccessUrl = $"{baseUrl}/success?productIds={productIdsQuery}",
+            SuccessUrl = $"{baseUrl}/success?stripeSessionId={{CHECKOUT_SESSION_ID}}&productIds={productIdsQuery}",
             CancelUrl = $"{baseUrl}/denied?productIds={productIdsQuery}",
 		};
 
@@ -217,6 +217,29 @@ public class PaymentsController : ControllerBase
 			}
 
 			return Ok();
+		}
+		catch (StripeException e)
+		{
+			return BadRequest(new { error = e.Message });
+		}
+		catch (Exception e)
+		{
+			return BadRequest(new { error = e.Message });
+		}
+	}
+
+	/// <summary>
+	/// Gets a Stripe Checkout session by its ID.
+	/// Url: GET /api/v1/payments/session/{sessionId}
+	/// </summary>
+	[HttpGet("session/{sessionId}")]
+	public async Task<IActionResult> GetSession(string sessionId)
+	{
+		try
+		{
+			var service = new SessionService();
+			var session = await service.GetAsync(sessionId);
+			return Ok(new { amountTotal = session.AmountTotal });
 		}
 		catch (StripeException e)
 		{
