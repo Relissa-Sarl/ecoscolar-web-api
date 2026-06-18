@@ -280,7 +280,26 @@ public class UsersController(IUserService userService, UserManager<User> userMan
 		};
 	}
 
-	[HttpGet("me/adverts")]
+    [HttpPatch("{id}/report")]
+    public async Task<IActionResult> ReportUserProfile(string id, [FromBody] FlagRequestDto dto)
+	{
+		if (!ModelState.IsValid)
+			return BadRequest(ModelState);
+
+		var result = await _userService.ReportUserAsync(User, id, dto.Reason);
+
+		if (result.IsSuccess)
+			return Ok(new { message = "User reported successfully." });
+
+		return result.ErrorType switch
+		{
+			ErrorType.Unauthorized => Unauthorized(new { result.Errors }),
+			ErrorType.NotFound => NotFound(new { result.Errors }),
+			_ => BadRequest(new { result.Errors })
+		};
+	}
+
+    [HttpGet("me/adverts")]
 	public async Task<IActionResult> GetMyAdverts()
 	{
 		var currentUser = await _userManager.GetUserAsync(User);
@@ -382,7 +401,7 @@ public class UsersController(IUserService userService, UserManager<User> userMan
 		return Ok(new { AdvertId = advertId.ToString(), IsFavorite = isFavorite });
 	}
 
-	private static string ResolveAdvertType(CreateSearchAlertDto dto)
+    private static string ResolveAdvertType(CreateSearchAlertDto dto)
 	{
 		if (!string.IsNullOrWhiteSpace(dto.Isbn) || dto.BookCategoryId.HasValue)
 			return CatalogAdvertTypeCodes.Books;
