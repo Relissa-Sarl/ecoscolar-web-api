@@ -214,6 +214,77 @@ public class MeControllerTests : IDisposable
     }
 
     [Fact]
+    public async Task GetMySales_ShouldExposePaidWaitingAcceptance_ForTutoringPackage()
+    {
+        var sellerId = "tutor-1";
+        SetUserContext(sellerId);
+
+        var seller = new User { Id = sellerId, Nickname = "Tina" };
+        var buyer = new User { Id = "student-1", Nickname = "Simon" };
+        _context.Users.AddRange(seller, buyer);
+
+        var tutoringAdvert = new TutoringAdvert
+        {
+            AdvertId = 10,
+            Title = "Cours de maths",
+            Description = "Soutien",
+            Price = 30m,
+            SellerId = sellerId,
+            Seller = seller,
+            Status = AdvertStatus.ACTIVE,
+            StudyLevel = "Secondaire",
+            SubjectId = 1,
+            SchoolGradeId = 1,
+            TeachingLanguage = LanguageEnum.FR,
+            MaxHours = 10
+        };
+
+        var waitingAcceptance = new Transaction
+        {
+            TransactionId = 501,
+            BuyerId = buyer.Id,
+            Buyer = buyer,
+            AdvertId = tutoringAdvert.AdvertId,
+            Advert = tutoringAdvert,
+            Date = DateTime.UtcNow,
+            Status = TransactionStatus.PAID_WAITING_ACCEPTANCE,
+            Quantity = 5,
+            UnitPrice = 30m,
+            Amount = 157.50m,
+            PlatformFee = 7.50m
+        };
+
+        var waitingCompletion = new Transaction
+        {
+            TransactionId = 502,
+            BuyerId = buyer.Id,
+            Buyer = buyer,
+            AdvertId = tutoringAdvert.AdvertId,
+            Advert = tutoringAdvert,
+            Date = DateTime.UtcNow.AddDays(-1),
+            Status = TransactionStatus.PAID_WAITING_COMPLETION,
+            Quantity = 3,
+            UnitPrice = 30m,
+            Amount = 94.50m,
+            PlatformFee = 4.50m
+        };
+
+        _context.Adverts.Add(tutoringAdvert);
+        _context.Transactions.AddRange(waitingAcceptance, waitingCompletion);
+        await _context.SaveChangesAsync();
+
+        var result = await _controller.GetMySales();
+
+        var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+        var sales = okResult.Value.Should().BeAssignableTo<IEnumerable<AdvertReadDto>>().Subject.ToList();
+
+        sales.Should().HaveCount(2);
+        sales.Should().OnlyContain(s => s.Type == "SERVICE");
+        sales.Should().Contain(s => s.TransactionId == 501 && s.TransactionStatus == TransactionStatus.PAID_WAITING_ACCEPTANCE.ToString());
+        sales.Should().Contain(s => s.TransactionId == 502 && s.TransactionStatus == TransactionStatus.PAID_WAITING_COMPLETION.ToString());
+    }
+
+    [Fact]
     public async Task GetMyPurchases_ShouldIncludeReview_WhenReviewExists()
     {
         // Arrange

@@ -76,58 +76,102 @@ public class MeController : ControllerBase
         if (string.IsNullOrEmpty(userId))
             return Unauthorized(new { message = "Invalid session." });
 
-        var sales = await _context.Adverts
+        var adverts = await _context.Adverts
             .Where(a => a.SellerId == userId)
             .Include(a => a.Seller)
-            // Left join with transactions to get the buyer if sold
-            .Select(a => new
-            {
-                Advert = a,
-                Transaction = _context.Transactions.Include(t => t.Buyer).FirstOrDefault(t => t.AdvertId == a.AdvertId)
-            })
             .ToListAsync();
 
-        // We need to fetch pictures separately to avoid complex queries or cartesian explosions
-        var physicalItemIds = sales.Select(s => s.Advert).OfType<PhysicalItem>().Select(item => item.AdvertId).ToList();
-        if (physicalItemIds.Any())
+        var physicalItemIds = adverts.OfType<PhysicalItem>().Select(item => item.AdvertId).ToList();
+        if (physicalItemIds.Count > 0)
         {
             await _context.Pictures
                 .Where(p => physicalItemIds.Contains(p.PhysicalItemId))
                 .LoadAsync();
         }
 
-        var transactionIds = sales
-            .Where(s => s.Transaction != null)
-            .Select(s => s.Transaction!.TransactionId)
-            .ToList();
+        var advertIds = adverts.Select(a => a.AdvertId).ToList();
+        var transactions = await _context.Transactions
+            .Include(t => t.Buyer)
+            .Where(t => advertIds.Contains(t.AdvertId) && t.Status != TransactionStatus.PENDING)
+            .ToListAsync();
 
+        var transactionsByAdvert = transactions
+            .GroupBy(t => t.AdvertId)
+            .ToDictionary(g => g.Key, g => g.AsEnumerable());
+
+        var transactionIds = transactions.Select(t => t.TransactionId).ToList();
         var reviews = await _context.Reviews
             .Where(r => transactionIds.Contains(r.TransactionId) && r.ReviewedRole == ReviewedRole.SELLER)
             .ToDictionaryAsync(r => r.TransactionId);
 
-        var dtos = sales.Select(s =>
+        var dtos = new List<AdvertReadDto>();
+        foreach (var advert in adverts)
         {
-            ReviewDto? reviewDto = null;
-            if (s.Transaction != null && reviews.TryGetValue(s.Transaction.TransactionId, out var review))
+            var advertTransactions = transactionsByAdvert.GetValueOrDefault(advert.AdvertId) ?? [];
+
+            // Tutoring: one card per active package (several students can book the same advert).
+            if (advert is TutoringAdvert)
             {
-                reviewDto = new ReviewDto(review.Rating, review.Comment);
+                var activePackages = advertTransactions
+                    .Where(t => t.Status is not TransactionStatus.CANCELLED and not TransactionStatus.COMPLETED)
+                    .OrderByDescending(t => SellerTransactionPriority(t.Status))
+                    .ThenByDescending(t => t.Date)
+                    .ToList();
+
+                if (activePackages.Count == 0)
+                {
+                    dtos.Add(AdvertReadDto.FromEntity(advert));
+                    continue;
+                }
+
+                foreach (var activePackage in activePackages)
+                {
+                    dtos.Add(MapSaleDto(advert, activePackage, reviews));
+                }
+
+                continue;
             }
 
-            var dto = AdvertReadDto.FromEntity(s.Advert, reviewDto);
-            if (s.Transaction != null)
-            {
-                dto = dto with
-                {
-                    BuyerName = s.Transaction.Buyer?.Nickname ?? s.Transaction.Buyer?.UserName ?? "Anonyme",
-                    TransactionId = s.Transaction.TransactionId,
-                    TransactionStatus = s.Transaction.Status.ToString()
-                };
-            }
-            return dto;
-        }).ToList();
+            var transaction = advertTransactions
+                .OrderByDescending(t => t.Date)
+                .FirstOrDefault();
+
+            dtos.Add(MapSaleDto(advert, transaction, reviews));
+        }
 
         return Ok(dtos);
     }
+
+    private static AdvertReadDto MapSaleDto(
+        Advert advert,
+        Transaction? transaction,
+        IReadOnlyDictionary<long, Review> reviews)
+    {
+        ReviewDto? reviewDto = null;
+        if (transaction != null && reviews.TryGetValue(transaction.TransactionId, out var review))
+            reviewDto = new ReviewDto(review.Rating, review.Comment);
+
+        var dto = AdvertReadDto.FromEntity(advert, reviewDto);
+        if (transaction == null)
+            return dto;
+
+        return dto with
+        {
+            BuyerName = transaction.Buyer?.Nickname ?? transaction.Buyer?.UserName ?? "Anonyme",
+            TransactionId = transaction.TransactionId,
+            TransactionStatus = transaction.Status.ToString()
+        };
+    }
+
+    private static int SellerTransactionPriority(TransactionStatus status) => status switch
+    {
+        TransactionStatus.PAID_WAITING_ACCEPTANCE => 100,
+        TransactionStatus.PAID_WAITING_COMPLETION => 90,
+        TransactionStatus.DISPUTED => 80,
+        TransactionStatus.PAID_WAITING_SHIPPING => 70,
+        TransactionStatus.SHIPPED => 60,
+        _ => 0
+    };
 
     private static string? GetPrimaryImage(Advert advert)
     {
