@@ -18,6 +18,7 @@ namespace EcoScolarWebApi.Services.Contracts
         Task<Result<SupportTicketMessageAdminDto>> AddTicketMessage(ClaimsPrincipal user, int ticketId, SupportTicketMessageRequestDto request);
         Task<Result<AdvertReadDto>> BlockAdvert(ClaimsPrincipal user, long advertId);
         Task<Result<List<AbuseReportAdminDto>>> GetAllAbuses(ClaimsPrincipal user);
+        Task<Result<IEnumerable<FlaggedUserDto>>> GetFlaggedUsers(ClaimsPrincipal user);
         Task<Result<AbuseReportAdminDto>> ChangeAbuseStatus(ClaimsPrincipal user, int abuseId, AbuseStatusRequestDto status);
         Task<Result> DeleteAbuse(ClaimsPrincipal user, int abuseId);
     }

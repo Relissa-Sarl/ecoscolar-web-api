@@ -214,11 +214,11 @@ public class UserService : IUserService
         if (!flaggedUserExists)
             return Result<bool>.Failure("User to report not found.", ErrorType.NotFound);
 
-        var alreadyReported = await _context.Flags
-            .AnyAsync(f => f.ReporterId == reporterId && f.FlaggedId == flaggedUserId);
+        //var alreadyReported = await _context.Flags
+        //    .AnyAsync(f => f.ReporterId == reporterId && f.FlaggedId == flaggedUserId);
 
-        if (alreadyReported)
-            return Result<bool>.Failure("You have already reported this user.");
+        //if (alreadyReported)
+        //    return Result<bool>.Failure("You have already reported this user.");
 
         var flag = new Flag
         {
