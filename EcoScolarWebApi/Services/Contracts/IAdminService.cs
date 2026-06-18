@@ -3,6 +3,7 @@ using EcoScolarWebApi.DTOs;
 using EcoScolarWebApi.DTOs.Adverts;
 using EcoScolarWebApi.DTOs.Support;
 using EcoScolarWebApi.DTOs.Users;
+using EcoScolarWebApi.Enums;
 using EcoScolarWebApi.Models;
 using System.Security.Claims;
 
@@ -17,5 +18,7 @@ namespace EcoScolarWebApi.Services.Contracts
         Task<Result<SupportTicketMessageAdminDto>> AddTicketMessage(ClaimsPrincipal user, int ticketId, SupportTicketMessageRequestDto request);
         Task<Result<AdvertReadDto>> BlockAdvert(ClaimsPrincipal user, long advertId);
         Task<Result<List<AbuseReportAdminDto>>> GetAllAbuses(ClaimsPrincipal user);
+        Task<Result<AbuseReportAdminDto>> ChangeAbuseStatus(ClaimsPrincipal user, int abuseId, AbuseStatusRequestDto status);
+        Task<Result> DeleteAbuse(ClaimsPrincipal user, int abuseId);
     }
 }
