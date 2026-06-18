@@ -48,11 +48,15 @@ public record ServiceReadDto(long Id, string Title, string Description, decimal 
 public record ServiceCreateDto(string Title, string Description, decimal PricePerHour, string UserId, long SubjectId, long SchoolGradeId, Enums.LanguageEnum TeachingLanguage, string StudyLevel, int? MinHours, int MaxHours)
 	: AdvertCreateDto(Title, Description, PricePerHour, UserId)
 {
-	/// <summary>
-	/// Converts the ServiceCreateDto to an AdvertServices entity.
-	/// </summary>
-	/// <returns>The AdvertServices entity</returns>
-	public new TutoringAdvert ToEntity()
+	public int CleanMinHours { get; init; } = Math.Clamp(MinHours ?? 1, 1, 8);
+
+    public int CleanMaxHours { get; init; } = Math.Clamp(MaxHours, Math.Clamp(MinHours ?? 1, 1, 8), 8);
+
+    /// <summary>
+    /// Converts the ServiceCreateDto to an AdvertServices entity.
+    /// </summary>
+    /// <returns>The AdvertServices entity</returns>
+    public new TutoringAdvert ToEntity()
 	{
 		var service = new TutoringAdvert();
 		this.MapToEntity(service);
@@ -72,8 +76,8 @@ public record ServiceCreateDto(string Title, string Description, decimal PricePe
 			service.SchoolGradeId = SchoolGradeId;
 			service.TeachingLanguage = TeachingLanguage;
 			service.StudyLevel = StudyLevel;
-			service.MinHours = MinHours;
-			service.MaxHours = MaxHours;
+			service.MinHours = CleanMinHours;
+			service.MaxHours = CleanMaxHours;
 		}
 	}
 }
