@@ -240,5 +240,42 @@ namespace EcoScolarWebApi.Services
 
             return Result<IEnumerable<FlaggedUserDto>>.Success(flaggedUsers);
         }
+        
+        public async Task<Result<AbuseReportAdminDto>> ChangeAbuseStatus(ClaimsPrincipal user, int abuseId, AbuseStatusRequestDto status)
+        {
+            if (!user.IsInRole("Admin"))
+                return Result<AbuseReportAdminDto>.Failure("Unauthorized access.", ErrorType.Unauthorized);
+
+            var currentAbuse = _context.AbuseReports
+                .Include(s => s.Reporter)
+                .Include(s => s.TargetAdvert)
+                .ThenInclude(a => a!.Seller)
+                .Include(a => a.TargetComment)
+                .ThenInclude(c => c!.Author)
+                .FirstOrDefault(a => a.Id == abuseId);
+
+            if (currentAbuse == null)
+                return Result<AbuseReportAdminDto>.Failure("Abuse report not found.", ErrorType.NotFound);
+
+            currentAbuse.Status = status.Status;
+
+            await _context.SaveChangesAsync();
+
+            return Result<AbuseReportAdminDto>.Success(_abuseReportMapper.ToAbuseReportAdminDto(currentAbuse));
+        }
+
+        public async Task<Result> DeleteAbuse(ClaimsPrincipal user, int abuseId)
+        {
+            if (!user.IsInRole("Admin"))
+                return Result.Failure("Unauthorized access.", ErrorType.Unauthorized);
+
+            AbuseReport? abuse = await _context.AbuseReports.FindAsync(abuseId);
+            if (abuse == null)
+                return Result.Failure("Abuse resport not found.", ErrorType.NotFound);
+
+            _context.AbuseReports.Remove(abuse);
+            await _context.SaveChangesAsync();
+            return Result.Success();
+        }
     }
 }

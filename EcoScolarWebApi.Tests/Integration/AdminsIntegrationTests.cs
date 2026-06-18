@@ -4,19 +4,30 @@ using EcoScolarWebApi.Models;
 using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
 using System.Net;
 using System.Net.Http.Json;
 using Xunit;
 
 namespace EcoScolarWebApi.Tests.Integration;
 
-public class AdminsIntegrationTests : IClassFixture<AuthInMemoryWebApplicationFactory>
+public class AdminsIntegrationTests : IClassFixture<AuthInMemoryWebApplicationFactory>, IAsyncLifetime
 {
     private readonly AuthInMemoryWebApplicationFactory _factory;
 
     public AdminsIntegrationTests(AuthInMemoryWebApplicationFactory factory)
     {
         _factory = factory;
+    }
+
+    public Task InitializeAsync() => Task.CompletedTask;
+
+    public Task DisposeAsync()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<EcoscolarDbContext>();
+        db.Database.EnsureDeleted();
+        return Task.CompletedTask;
     }
 
     private async Task<(HttpClient client, User user)> CreateAdminClientAsync()
@@ -174,4 +185,146 @@ public class AdminsIntegrationTests : IClassFixture<AuthInMemoryWebApplicationFa
 
     // Minimal projection of UserResponse limited to the fields exercised by this test.
     private sealed record UserResponseProbe(string Id, int BadReviewsCount, bool AlerteTooBadReviews);
+
+    [Fact]
+    public async Task GetAllSupports_AsAdmin_ReturnsOk()
+    {
+        var (client, _) = await CreateAdminClientAsync();
+
+        var response = await client.GetAsync("/api/v1/admins/supports");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task AddTicketMessage_AsAdmin_ReturnsCreated()
+    {
+        var (client, _) = await CreateAdminClientAsync();
+
+        int ticketId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<EcoscolarDbContext>();
+            var ticket = new EcoScolarWebApi.Models.SupportTicket
+            {
+                Email = "user@example.com",
+                Subject = "Test Ticket",
+                Message = "Help me",
+                CreatedAt = DateTime.UtcNow
+            };
+            db.SupportTickets.Add(ticket);
+            await db.SaveChangesAsync();
+            ticketId = ticket.Id;
+        }
+
+        var response = await client.PostAsJsonAsync($"/api/v1/admins/supports/{ticketId}/message", new { Message = "Support response" });
+
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+    }
+
+    [Fact]
+    public async Task BanUser_AsAdmin_ReturnsOk()
+    {
+        var (client, _) = await CreateAdminClientAsync();
+        string userIdToBan;
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+            var user = new User { UserName = "toban@example.com", Email = "toban@example.com", FirstName = "To", LastName = "Ban" };
+            await userManager.CreateAsync(user, "Password123!");
+            userIdToBan = user.Id;
+        }
+
+        var response = await client.PatchAsync($"/api/v1/admins/{userIdToBan}/ban", null);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task BlockAdvert_AsAdmin_ReturnsOk()
+    {
+        var (client, _) = await CreateAdminClientAsync();
+        long advertId;
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<EcoscolarDbContext>();
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+            
+            var seller = new User { UserName = "seller@example.com", Email = "seller@example.com", FirstName = "Seller", LastName = "User" };
+            await userManager.CreateAsync(seller, "Password123!");
+            
+            var advert = new EcoScolarWebApi.Models.PhysicalItem { Title = "Test Advert", Description = "Test Description", SellerId = seller.Id, Seller = seller, Status = AdvertStatus.ACTIVE, CreatedAt = DateTime.UtcNow };
+            db.Products.Add(advert);
+            await db.SaveChangesAsync();
+            advertId = advert.AdvertId;
+        }
+
+        var response = await client.PatchAsync($"/api/v1/admins/{advertId}/block", null);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task GetAllAbuses_AsAdmin_ReturnsOk()
+    {
+        var (client, _) = await CreateAdminClientAsync();
+
+        var response = await client.GetAsync("/api/v1/admins/abuses");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task ChangeAbuseStatus_AsAdmin_ReturnsOk()
+    {
+        var (client, _) = await CreateAdminClientAsync();
+        int abuseId;
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<EcoscolarDbContext>();
+            var abuse = new EcoScolarWebApi.Models.AbuseReport { Reason = ReportReason.INAPPROPRIATE_ADVERT, CreatedAt = DateTime.UtcNow, Status = Enums.TicketStatus.PENDING };
+            db.AbuseReports.Add(abuse);
+            await db.SaveChangesAsync();
+            abuseId = abuse.Id;
+        }
+
+        // Test if the report exists in a NEW scope
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<EcoscolarDbContext>();
+            var exists = await db.AbuseReports.AnyAsync<EcoScolarWebApi.Models.AbuseReport>(a => a.Id == abuseId);
+            // This MUST be true
+        }
+
+        var statusDto = new { Status = Enums.TicketStatus.REVIEWED };
+        var response = await client.PatchAsJsonAsync($"/api/v1/admins/abuses/{abuseId}/status", statusDto);
+
+        // Capture response content for debugging
+        var content = await response.Content.ReadAsStringAsync();
+        
+        response.StatusCode.Should().Be(HttpStatusCode.OK, $"Response content: {content}");
+    }
+
+    [Fact]
+    public async Task DeleteFlag_AsAdmin_ReturnsOk()
+    {
+        var (client, _) = await CreateAdminClientAsync();
+        int abuseId;
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<EcoscolarDbContext>();
+            var abuse = new EcoScolarWebApi.Models.AbuseReport { Reason = ReportReason.INAPPROPRIATE_ADVERT, CreatedAt = DateTime.UtcNow, Status = Enums.TicketStatus.PENDING };
+            db.AbuseReports.Add(abuse);
+            await db.SaveChangesAsync();
+            abuseId = abuse.Id;
+        }
+
+        var response = await client.DeleteAsync($"/api/v1/admins/abuses/{abuseId}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
 }
