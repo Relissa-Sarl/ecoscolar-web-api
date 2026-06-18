@@ -22,23 +22,21 @@ Authorization: Bearer <JWT_TOKEN>
 
 # Payments
 
+# Server-priced checkout (P2): advert ids only, no price. Requires auth.
 POST {{EcoscolarWebApi_HostAddress}}payments/checkout
 Content-Type: application/json
+Authorization: Bearer <JWT_TOKEN>
 
 {
-  "productPrice": 9.99
+  "productIds": [1, 2],
+  "shippingMethod": "handToHand"
 }
 
 ###
 
-POST {{EcoscolarWebApi_HostAddress}}payments/create-transfer
-Content-Type: application/json
-
-{
-  "amount": 1000,
-  "connectedAccountId": "acct_123456789",
-  "transferGroup": "COMMANDE_ID_789"
-}
+# Stripe webhook (P4): called by Stripe, not manually. Signature verified against Stripe:WebhookSecret.
+# Locally: stripe listen --forward-to localhost:5001/api/v1/payments/webhook
+POST {{EcoscolarWebApi_HostAddress}}payments/webhook
 
 ###
 
