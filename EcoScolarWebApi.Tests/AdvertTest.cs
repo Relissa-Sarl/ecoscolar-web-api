@@ -1,3 +1,4 @@
+using Xunit;
 using EcoScolarWebApi.Controllers;
 using EcoScolarWebApi.Data;
 using EcoScolarWebApi.DTOs.Adverts;
@@ -20,7 +21,7 @@ public class AdvertsControllerTests : IDisposable
 {
     private readonly EcoscolarDbContext _context;
     private readonly AdvertsController _controller;
-    private readonly IAdvertSearchService _searchService; 
+    private readonly IAdvertSearchService _searchService;
     private readonly IEmailSenderService _emailSenderServiceMock;
     private readonly UserManager<User> _userManagerMock;
     private readonly UsersController _usersController;
@@ -58,12 +59,12 @@ public class AdvertsControllerTests : IDisposable
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
         _context = new EcoscolarDbContext(options);
-		_userServiceMock = Substitute.For<IUserService>();
+        _userServiceMock = Substitute.For<IUserService>();
         _reviewMapper = Substitute.For<ReviewMapper>();
 
         // Simulate the dependency injection of context and store into the AdvertsController
         _usersController = new UsersController(_userServiceMock, _userManagerMock, _context, _reviewMapper, Substitute.For<IStripeConnectService>());
-		_controller = new AdvertsController(_context, _searchService, _emailSenderServiceMock);
+        _controller = new AdvertsController(_context, _searchService, _emailSenderServiceMock);
 
         var claims = new List<Claim>
         {
@@ -104,7 +105,7 @@ public class AdvertsControllerTests : IDisposable
 
         var adverts = new List<Advert>
         {
-            new Book 
+            new Book
             {
                 AdvertId = 1,
                 Title = "Book Title",
@@ -1472,7 +1473,7 @@ public class AdvertsControllerTests : IDisposable
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-        var Category = new ProductCategory{ ProductCategoryId = 1, Name = "Guitare", NameFr = "Guitare", NameDe = "Gitarre", NameIt = "Chitarra", Description = "Guitares" };
+        var Category = new ProductCategory { ProductCategoryId = 1, Name = "Guitare", NameFr = "Guitare", NameDe = "Gitarre", NameIt = "Chitarra", Description = "Guitares" };
         _context.Set<ProductCategory>().Add(Category);
         await _context.SaveChangesAsync();
 

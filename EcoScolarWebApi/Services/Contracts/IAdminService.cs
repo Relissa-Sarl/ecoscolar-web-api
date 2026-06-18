@@ -9,7 +9,7 @@ using System.Security.Claims;
 
 namespace EcoScolarWebApi.Services.Contracts
 {
-    
+
     public interface IAdminService
     {
         Task<Result<List<UserResponse>>> GetAllUsers(ClaimsPrincipal user);

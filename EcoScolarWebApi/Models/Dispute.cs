@@ -28,5 +28,5 @@ public class Dispute
     // === Navigation Properties ===
 
     [ForeignKey(nameof(TransactionId))]
-    public virtual Transaction? Transaction { get; set; } 
+    public virtual Transaction? Transaction { get; set; }
 }

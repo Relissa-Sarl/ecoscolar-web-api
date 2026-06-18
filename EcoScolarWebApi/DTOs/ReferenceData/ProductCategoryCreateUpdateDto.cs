@@ -4,9 +4,9 @@ namespace EcoScolarWebApi.DTOs.ReferenceData;
 
 public class ProductCategoryCreateUpdateDto
 {
-	[Required]
-	[StringLength(100)]
-	public string Name { get; set; } = string.Empty;
+    [Required]
+    [StringLength(100)]
+    public string Name { get; set; } = string.Empty;
 
     [Required]
     [StringLength(100)]
@@ -21,6 +21,6 @@ public class ProductCategoryCreateUpdateDto
     public string NameIt { get; set; } = string.Empty;
 
     [Required]
-	[StringLength(1000)]
-	public string Description { get; set; } = string.Empty;
+    [StringLength(1000)]
+    public string Description { get; set; } = string.Empty;
 }

@@ -1,3 +1,4 @@
+using Xunit;
 using System.Security.Claims;
 using EcoScolarWebApi.Commun;
 using EcoScolarWebApi.Data;
@@ -17,17 +18,17 @@ namespace EcoScolarWebApi.Tests.Integration;
 /// </summary>
 public class UserServiceIntegrationTests : IDisposable
 {
-	private readonly ServiceProvider _provider;
-	private readonly EcoscolarDbContext _context;
-	private readonly UserManager<User> _userManager;
-	private readonly UserService _userService;
-	private readonly UserMapper _userMapper;
+    private readonly ServiceProvider _provider;
+    private readonly EcoscolarDbContext _context;
+    private readonly UserManager<User> _userManager;
+    private readonly UserService _userService;
+    private readonly UserMapper _userMapper;
 
     public UserServiceIntegrationTests()
-	{
-		_provider = IntegrationTestIdentityHelper.CreateIdentityProvider(out _context);
-		_userManager = _provider.GetRequiredService<UserManager<User>>();
-		var roleManager = _provider.GetRequiredService<RoleManager<IdentityRole>>();
+    {
+        _provider = IntegrationTestIdentityHelper.CreateIdentityProvider(out _context);
+        _userManager = _provider.GetRequiredService<UserManager<User>>();
+        var roleManager = _provider.GetRequiredService<RoleManager<IdentityRole>>();
         if (!roleManager.RoleExistsAsync("User").Result)
         {
             roleManager.CreateAsync(new IdentityRole("User")).Wait();
@@ -35,131 +36,131 @@ public class UserServiceIntegrationTests : IDisposable
         var signInManager = _provider.GetRequiredService<SignInManager<User>>();
         _userMapper = new UserMapper();
         _userService = new UserService(_userManager, _context, signInManager, _userMapper);
-	}
+    }
 
-	[Fact]
-	public async Task GetCurrentUserProfileAsync_ReturnsEmail_WhenUserExists()
-	{
-		const string email = "profile.service@example.com";
-		var user = await CreateUserAsync(email);
-		var principal = CreatePrincipal(user.Id);
+    [Fact]
+    public async Task GetCurrentUserProfileAsync_ReturnsEmail_WhenUserExists()
+    {
+        const string email = "profile.service@example.com";
+        var user = await CreateUserAsync(email);
+        var principal = CreatePrincipal(user.Id);
 
-		var result = await _userService.GetCurrentUserProfileAsync(principal);
+        var result = await _userService.GetCurrentUserProfileAsync(principal);
 
-		result.IsSuccess.Should().BeTrue();
-		result.Data!.Email.Should().Be(email);
-	}
+        result.IsSuccess.Should().BeTrue();
+        result.Data!.Email.Should().Be(email);
+    }
 
-	[Fact]
-	public async Task GetCurrentUserProfileAsync_ReturnsUnauthorized_WhenPrincipalIsEmpty()
-	{
-		var result = await _userService.GetCurrentUserProfileAsync(new ClaimsPrincipal());
+    [Fact]
+    public async Task GetCurrentUserProfileAsync_ReturnsUnauthorized_WhenPrincipalIsEmpty()
+    {
+        var result = await _userService.GetCurrentUserProfileAsync(new ClaimsPrincipal());
 
-		result.IsSuccess.Should().BeFalse();
-		result.ErrorType.Should().Be(ErrorType.Unauthorized);
-	}
+        result.IsSuccess.Should().BeFalse();
+        result.ErrorType.Should().Be(ErrorType.Unauthorized);
+    }
 
-	[Fact]
-	public async Task UpdateProfileAsync_SetsOnboardedAndLocation()
-	{
-		const string email = "update.service@example.com";
-		var user = await CreateUserAsync(email);
-		var principal = CreatePrincipal(user.Id);
+    [Fact]
+    public async Task UpdateProfileAsync_SetsOnboardedAndLocation()
+    {
+        const string email = "update.service@example.com";
+        var user = await CreateUserAsync(email);
+        var principal = CreatePrincipal(user.Id);
 
-		var dto = new UserUpdateDto(
-			Nickname: "nick",
-			FirstName: "First",
-			LastName: "Last",
-			PostalCode: "1000",
-			BirthdayDate: "2001-06-01",
+        var dto = new UserUpdateDto(
+            Nickname: "nick",
+            FirstName: "First",
+            LastName: "Last",
+            PostalCode: "1000",
+            BirthdayDate: "2001-06-01",
             Languages: [
-				new SpokenLanguageDto("FR", "Native"),
-				new SpokenLanguageDto("DE", "Intermediate")
-			]
-		);
+                new SpokenLanguageDto("FR", "Native"),
+                new SpokenLanguageDto("DE", "Intermediate")
+            ]
+        );
 
-		var result = await _userService.UpdateProfileAsync(principal, dto);
+        var result = await _userService.UpdateProfileAsync(principal, dto);
 
-		result.IsSuccess.Should().BeTrue();
-		result.Data!.Nickname.Should().Be("nick");
-		result.Data.FirstName.Should().Be("First");
-		result.Data.LastName.Should().Be("Last");
-		result.Data.IsOnboarded.Should().BeTrue();
-		result.Data.Location!.PostalCode.Should().Be("1000");
-		result.Data.Languages.Should().HaveCount(2);
+        result.IsSuccess.Should().BeTrue();
+        result.Data!.Nickname.Should().Be("nick");
+        result.Data.FirstName.Should().Be("First");
+        result.Data.LastName.Should().Be("Last");
+        result.Data.IsOnboarded.Should().BeTrue();
+        result.Data.Location!.PostalCode.Should().Be("1000");
+        result.Data.Languages.Should().HaveCount(2);
 
-		var reloaded = await _userManager.FindByEmailAsync(email);
-		reloaded!.IsOnboarded.Should().BeTrue();
-		reloaded.Nickname.Should().Be("nick");
-	}
+        var reloaded = await _userManager.FindByEmailAsync(email);
+        reloaded!.IsOnboarded.Should().BeTrue();
+        reloaded.Nickname.Should().Be("nick");
+    }
 
-	[Fact]
-	public async Task UpdateProfileAsync_ReturnsBadRequest_WhenPostalCodeInvalid()
-	{
-		var user = await CreateUserAsync("invalid.postal@example.com");
-		var principal = CreatePrincipal(user.Id);
+    [Fact]
+    public async Task UpdateProfileAsync_ReturnsBadRequest_WhenPostalCodeInvalid()
+    {
+        var user = await CreateUserAsync("invalid.postal@example.com");
+        var principal = CreatePrincipal(user.Id);
 
-		var dto = new UserUpdateDto(
-			Nickname: "nick",
-			FirstName: "A",
-			LastName: "B",
-			PostalCode: "0000",
-			BirthdayDate: "2000-01-01",
+        var dto = new UserUpdateDto(
+            Nickname: "nick",
+            FirstName: "A",
+            LastName: "B",
+            PostalCode: "0000",
+            BirthdayDate: "2000-01-01",
             Languages: [new SpokenLanguageDto("FR", "Native")]
-		);
+        );
 
-		var result = await _userService.UpdateProfileAsync(principal, dto);
+        var result = await _userService.UpdateProfileAsync(principal, dto);
 
-		result.IsSuccess.Should().BeFalse();
-		result.Errors.Should().Contain("InvalidPostalCode");
-	}
+        result.IsSuccess.Should().BeFalse();
+        result.Errors.Should().Contain("InvalidPostalCode");
+    }
 
-	[Fact]
-	public async Task GetPublicProfileAsync_ReturnsNickname_WhenUserIsOnboarded()
-	{
-		var user = await CreateUserAsync("public.service@example.com");
-		var principal = CreatePrincipal(user.Id);
+    [Fact]
+    public async Task GetPublicProfileAsync_ReturnsNickname_WhenUserIsOnboarded()
+    {
+        var user = await CreateUserAsync("public.service@example.com");
+        var principal = CreatePrincipal(user.Id);
 
-		await _userService.UpdateProfileAsync(principal, new UserUpdateDto(
-			Nickname: "public_nick",
-			FirstName: "Pub",
-			LastName: "Lic",
-			PostalCode: "1820",
-			BirthdayDate: "1998-03-03",
+        await _userService.UpdateProfileAsync(principal, new UserUpdateDto(
+            Nickname: "public_nick",
+            FirstName: "Pub",
+            LastName: "Lic",
+            PostalCode: "1820",
+            BirthdayDate: "1998-03-03",
             Languages: [new SpokenLanguageDto("IT", "Native")]
-		));
+        ));
 
-		var result = await _userService.GetPublicProfileAsync(user.Id);
+        var result = await _userService.GetPublicProfileAsync(user.Id);
 
-		result.IsSuccess.Should().BeTrue();
-		result.Data!.Nickname.Should().Be("public_nick");
-	}
+        result.IsSuccess.Should().BeTrue();
+        result.Data!.Nickname.Should().Be("public_nick");
+    }
 
-	[Fact]
-	public async Task GetPublicProfileAsync_ReturnsNotFound_WhenUserNotOnboarded()
-	{
-		var user = await CreateUserAsync("not.onboarded@example.com");
+    [Fact]
+    public async Task GetPublicProfileAsync_ReturnsNotFound_WhenUserNotOnboarded()
+    {
+        var user = await CreateUserAsync("not.onboarded@example.com");
 
-		var result = await _userService.GetPublicProfileAsync(user.Id);
+        var result = await _userService.GetPublicProfileAsync(user.Id);
 
-		result.IsSuccess.Should().BeFalse();
-		result.ErrorType.Should().Be(ErrorType.NotFound);
-	}
+        result.IsSuccess.Should().BeFalse();
+        result.ErrorType.Should().Be(ErrorType.NotFound);
+    }
 
-	private async Task<User> CreateUserAsync(string email)
-	{
-		var user = new User { UserName = email, Email = email };
-		(await _userManager.CreateAsync(user, "Password123!")).Succeeded.Should().BeTrue();
-		return user;
-	}
+    private async Task<User> CreateUserAsync(string email)
+    {
+        var user = new User { UserName = email, Email = email };
+        (await _userManager.CreateAsync(user, "Password123!")).Succeeded.Should().BeTrue();
+        return user;
+    }
 
-	private static ClaimsPrincipal CreatePrincipal(string userId) =>
-		new(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, userId)], "TestAuth"));
+    private static ClaimsPrincipal CreatePrincipal(string userId) =>
+        new(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, userId)], "TestAuth"));
 
-	public void Dispose()
-	{
-		_context.Database.EnsureDeleted();
-		_context.Dispose();
-		_provider.Dispose();
-	}
+    public void Dispose()
+    {
+        _context.Database.EnsureDeleted();
+        _context.Dispose();
+        _provider.Dispose();
+    }
 }

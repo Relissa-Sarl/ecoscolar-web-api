@@ -70,8 +70,8 @@ public class AdvertExpirationService : BackgroundService
         // Using a safe margin, if NotificationDate < CreatedAt + 23 days, it means we haven't sent the warning
         var advertsToNotify = await context.Adverts
             .Include(a => a.Seller)
-            .Where(a => a.Status == AdvertStatus.ACTIVE 
-                     && a.CreatedAt <= thresholdNotify 
+            .Where(a => a.Status == AdvertStatus.ACTIVE
+                     && a.CreatedAt <= thresholdNotify
                      && a.CreatedAt > thresholdExpire
                      && a.NotificationDate < a.CreatedAt.AddDays(notifyThresholdDays))
             .ToListAsync(stoppingToken);
@@ -79,7 +79,7 @@ public class AdvertExpirationService : BackgroundService
         if (advertsToNotify.Count > 0)
         {
             _logger.LogInformation($"Found {advertsToNotify.Count} adverts to notify for expiration warning.");
-            
+
             var baseUrl = _configuration["Frontend:BaseUrl"] ?? "http://localhost:3000";
 
             foreach (var advert in advertsToNotify)
@@ -89,7 +89,7 @@ public class AdvertExpirationService : BackgroundService
                     var renewLink = $"{baseUrl.TrimEnd('/')}/me/sales?renew={advert.AdvertId}";
                     await emailSender.SendAdvertExpirationWarningAsync(advert.Seller, advert, renewLink);
                 }
-                
+
                 advert.NotificationDate = DateTime.UtcNow;
             }
         }

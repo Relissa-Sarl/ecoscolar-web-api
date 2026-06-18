@@ -51,8 +51,8 @@ public class AutoConfirmReceiptService : BackgroundService
         var transactionsToConfirm = await context.Transactions
             .Include(t => t.Advert)
                 .ThenInclude(a => a.Seller)
-            .Where(t => t.Status == TransactionStatus.SHIPPED 
-                     && t.ShippedDate.HasValue 
+            .Where(t => t.Status == TransactionStatus.SHIPPED
+                     && t.ShippedDate.HasValue
                      && t.ShippedDate.Value <= thresholdDate)
             .ToListAsync(stoppingToken);
 

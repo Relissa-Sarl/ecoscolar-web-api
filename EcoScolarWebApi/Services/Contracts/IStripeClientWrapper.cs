@@ -7,7 +7,7 @@ namespace EcoScolarWebApi.Services.Contracts;
 /// </summary>
 public interface IStripeClientWrapper
 {
-	Task<Stripe.V2.Core.Account> CreateAccountAsync(Stripe.V2.Core.AccountCreateOptions options);
-	Task<Stripe.V2.Core.AccountLink> CreateAccountLinkAsync(Stripe.V2.Core.AccountLinkCreateOptions options);
-	Task<Stripe.V2.Core.Account> GetAccountAsync(string accountId, Stripe.V2.Core.AccountGetOptions options);
+    Task<Stripe.V2.Core.Account> CreateAccountAsync(Stripe.V2.Core.AccountCreateOptions options);
+    Task<Stripe.V2.Core.AccountLink> CreateAccountLinkAsync(Stripe.V2.Core.AccountLinkCreateOptions options);
+    Task<Stripe.V2.Core.Account> GetAccountAsync(string accountId, Stripe.V2.Core.AccountGetOptions options);
 }
