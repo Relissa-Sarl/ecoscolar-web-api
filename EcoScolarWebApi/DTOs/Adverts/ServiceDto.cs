@@ -4,34 +4,34 @@ using EcoScolarWebApi.Models;
 namespace EcoScolarWebApi.DTOs.Adverts;
 
 public record ServiceReadDto(long Id, string Title, string Description, decimal Price, DateTime PublicationDate, DateTime NotificationDate, AdvertStatus Status, string UserId, string SellerPseudo,
-	long SubjectId, string SubjectLabel, long SchoolGradeId, string SchoolGradeLabel, Enums.LanguageEnum TeachingLanguage, string StudyLevel, int ExpiresInDays,
-	decimal PricePerHour, int MaxHours, int? MinHours)
+    long SubjectId, string SubjectLabel, long SchoolGradeId, string SchoolGradeLabel, Enums.LanguageEnum TeachingLanguage, string StudyLevel, int ExpiresInDays,
+    decimal PricePerHour, int MaxHours, int? MinHours)
 {
-	public static ServiceReadDto FromEntity(TutoringAdvert entity)
-	{
-		return new ServiceReadDto(
-			Id: entity.AdvertId,
-			Title: entity.Title,
-			Description: entity.Description,
-			Price: entity.Price,
-			PublicationDate: entity.CreatedAt,
-			NotificationDate: entity.NotificationDate,
-			Status: entity.Status,
-			UserId: entity.SellerId,
-			SellerPseudo: entity.Seller?.Nickname ?? "Anonyme",
-			SubjectId: entity.SubjectId,
-			SubjectLabel: entity.Subject.Name,
-			SchoolGradeId: entity.SchoolGradeId,
-			SchoolGradeLabel: entity.SchoolGrade.Name,
-			TeachingLanguage: entity.TeachingLanguage,
-			StudyLevel: entity.StudyLevel,
-			ExpiresInDays: EcoScolarWebApi.Helpers.AdvertExpirationHelper.GetExpiresInDays(entity.CreatedAt),
-			// Price is the hourly rate for a tutoring advert; PricePerHour makes the contract explicit for the front.
-			PricePerHour: entity.Price,
-			MaxHours: entity.MaxHours,
-			MinHours: entity.MinHours
-		);
-	}
+    public static ServiceReadDto FromEntity(TutoringAdvert entity)
+    {
+        return new ServiceReadDto(
+            Id: entity.AdvertId,
+            Title: entity.Title,
+            Description: entity.Description,
+            Price: entity.Price,
+            PublicationDate: entity.CreatedAt,
+            NotificationDate: entity.NotificationDate,
+            Status: entity.Status,
+            UserId: entity.SellerId,
+            SellerPseudo: entity.Seller?.Nickname ?? "Anonyme",
+            SubjectId: entity.SubjectId,
+            SubjectLabel: entity.Subject.Name,
+            SchoolGradeId: entity.SchoolGradeId,
+            SchoolGradeLabel: entity.SchoolGrade.Name,
+            TeachingLanguage: entity.TeachingLanguage,
+            StudyLevel: entity.StudyLevel,
+            ExpiresInDays: EcoScolarWebApi.Helpers.AdvertExpirationHelper.GetExpiresInDays(entity.CreatedAt),
+            // Price is the hourly rate for a tutoring advert; PricePerHour makes the contract explicit for the front.
+            PricePerHour: entity.Price,
+            MaxHours: entity.MaxHours,
+            MinHours: entity.MinHours
+        );
+    }
 }
 
 /// <summary>
@@ -46,9 +46,9 @@ public record ServiceReadDto(long Id, string Title, string Description, decimal 
 /// <param name="TeachingLanguage">The language in which the service will be taught</param>
 /// <param name="StudyLevel">The specific study level related to the service PhysicalItem</param>
 public record ServiceCreateDto(string Title, string Description, decimal PricePerHour, string UserId, long SubjectId, long SchoolGradeId, Enums.LanguageEnum TeachingLanguage, string StudyLevel, int? MinHours, int MaxHours)
-	: AdvertCreateDto(Title, Description, PricePerHour, UserId)
+    : AdvertCreateDto(Title, Description, PricePerHour, UserId)
 {
-	public int CleanMinHours { get; init; } = Math.Clamp(MinHours ?? 1, 1, 8);
+    public int CleanMinHours { get; init; } = Math.Clamp(MinHours ?? 1, 1, 8);
 
     public int CleanMaxHours { get; init; } = Math.Clamp(MaxHours, Math.Clamp(MinHours ?? 1, 1, 8), 8);
 
@@ -57,27 +57,27 @@ public record ServiceCreateDto(string Title, string Description, decimal PricePe
     /// </summary>
     /// <returns>The AdvertServices entity</returns>
     public new TutoringAdvert ToEntity()
-	{
-		var service = new TutoringAdvert();
-		this.MapToEntity(service);
-		return service;
-	}
+    {
+        var service = new TutoringAdvert();
+        this.MapToEntity(service);
+        return service;
+    }
 
-	/// <summary>
-	/// Maps the properties of the ServiceCreateDto to an existing service entity, specifically to an AdvertServices entity.
-	/// </summary>
-	/// <param name="entity">The service entity to map to</param>
-	public override void MapToEntity(Advert entity)
-	{
-		base.MapToEntity(entity);
-		if (entity is TutoringAdvert service)
-		{
-			service.SubjectId = SubjectId;
-			service.SchoolGradeId = SchoolGradeId;
-			service.TeachingLanguage = TeachingLanguage;
-			service.StudyLevel = StudyLevel;
-			service.MinHours = CleanMinHours;
-			service.MaxHours = CleanMaxHours;
-		}
-	}
+    /// <summary>
+    /// Maps the properties of the ServiceCreateDto to an existing service entity, specifically to an AdvertServices entity.
+    /// </summary>
+    /// <param name="entity">The service entity to map to</param>
+    public override void MapToEntity(Advert entity)
+    {
+        base.MapToEntity(entity);
+        if (entity is TutoringAdvert service)
+        {
+            service.SubjectId = SubjectId;
+            service.SchoolGradeId = SchoolGradeId;
+            service.TeachingLanguage = TeachingLanguage;
+            service.StudyLevel = StudyLevel;
+            service.MinHours = CleanMinHours;
+            service.MaxHours = CleanMaxHours;
+        }
+    }
 }

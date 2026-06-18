@@ -102,18 +102,18 @@ public class PaymentsController : ControllerBase
         switch (stripeEvent.Type)
         {
             case "checkout.session.completed":
-            {
-                var session = (Session)stripeEvent.Data.Object;
-                await _paymentService.ConfirmCheckoutSessionAsync(session.Id, session.PaymentIntentId);
-                break;
-            }
+                {
+                    var session = (Session)stripeEvent.Data.Object;
+                    await _paymentService.ConfirmCheckoutSessionAsync(session.Id, session.PaymentIntentId);
+                    break;
+                }
             case "checkout.session.expired":
             case "checkout.session.async_payment_failed":
-            {
-                var session = (Session)stripeEvent.Data.Object;
-                await _paymentService.CancelCheckoutSessionAsync(session.Id);
-                break;
-            }
+                {
+                    var session = (Session)stripeEvent.Data.Object;
+                    await _paymentService.CancelCheckoutSessionAsync(session.Id);
+                    break;
+                }
             default:
                 _logger.LogInformation("Unhandled Stripe event type {EventType}.", stripeEvent.Type);
                 break;

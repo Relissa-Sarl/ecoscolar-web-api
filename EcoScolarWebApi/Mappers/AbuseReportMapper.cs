@@ -28,6 +28,6 @@ public partial class AbuseReportMapper
     [MapProperty(nameof(AbuseReport.TargetComment) + "." + nameof(PublicComment.Author) + "." + nameof(User.Email), nameof(AbuseReportAdminDto.AuthorEmail))]
     [MapProperty(nameof(AbuseReport.TargetComment) + "." + nameof(PublicComment.Author) + "." + nameof(User.Id), nameof(AbuseReportAdminDto.AuthorId))]
     public partial AbuseReportAdminDto ToAbuseReportAdminDto(AbuseReport report);
-    
+
     public partial IQueryable<AbuseReportAdminDto> ProjectToAbuseReportAdminDtos(IQueryable<AbuseReport> query);
 }

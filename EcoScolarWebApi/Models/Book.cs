@@ -24,7 +24,7 @@ public class Book : PhysicalItem
 
     [Required]
     public Enums.LanguageEnum WrittenLanguage { get; set; }
-    
+
     [Required]
     public long BookCategoryId { get; set; }
 

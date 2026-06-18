@@ -1,3 +1,4 @@
+using Xunit;
 using EcoScolarWebApi.Commun;
 using EcoScolarWebApi.Data;
 using EcoScolarWebApi.Enums;

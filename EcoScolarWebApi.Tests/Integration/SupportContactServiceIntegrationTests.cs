@@ -1,3 +1,4 @@
+using Xunit;
 using System.Security.Claims;
 using EcoScolarWebApi.Commun;
 using EcoScolarWebApi.Data;

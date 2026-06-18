@@ -27,9 +27,9 @@ public class PublicComment
     [Required]
     public string AuthorId { get; set; } = default!;
 
-	// === Navigation Properties ===
+    // === Navigation Properties ===
 
-	[ForeignKey(nameof(AdvertId))]
+    [ForeignKey(nameof(AdvertId))]
     public virtual Advert Advert { get; set; } = default!;
 
     [ForeignKey(nameof(AuthorId))]

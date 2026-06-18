@@ -1,3 +1,4 @@
+using Xunit;
 using System.Security.Claims;
 using EcoScolarWebApi.Commun;
 using EcoScolarWebApi.DTOs.Stripe;
@@ -16,353 +17,353 @@ namespace EcoScolarWebApi.Tests.Unit.Services;
 
 public class StripeConnectServiceTests
 {
-	private readonly UserManager<User> _userManagerMock;
-	private readonly IConfiguration _configurationMock;
-	private readonly IStripeClientWrapper _stripeClientWrapperMock;
-	private readonly StripeConnectService _service;
-	private readonly ClaimsPrincipal _principal;
+    private readonly UserManager<User> _userManagerMock;
+    private readonly IConfiguration _configurationMock;
+    private readonly IStripeClientWrapper _stripeClientWrapperMock;
+    private readonly StripeConnectService _service;
+    private readonly ClaimsPrincipal _principal;
 
-	public StripeConnectServiceTests()
-	{
-		var store = Substitute.For<IUserStore<User>>();
-		_userManagerMock = Substitute.For<UserManager<User>>(store, null!, null!, null!, null!, null!, null!, null!, null!);
-		_configurationMock = Substitute.For<IConfiguration>();
-		_stripeClientWrapperMock = Substitute.For<IStripeClientWrapper>();
-		
-		_configurationMock["Stripe:SecretKey"].Returns("sk_test_mock");
-		
-		_service = new StripeConnectService(_userManagerMock, _configurationMock, _stripeClientWrapperMock);
-		_principal = new ClaimsPrincipal();
-	}
+    public StripeConnectServiceTests()
+    {
+        var store = Substitute.For<IUserStore<User>>();
+        _userManagerMock = Substitute.For<UserManager<User>>(store, null!, null!, null!, null!, null!, null!, null!, null!);
+        _configurationMock = Substitute.For<IConfiguration>();
+        _stripeClientWrapperMock = Substitute.For<IStripeClientWrapper>();
 
-	#region CreateOnboardingLinkAsync Tests
+        _configurationMock["Stripe:SecretKey"].Returns("sk_test_mock");
 
-	[Fact]
-	public async Task CreateOnboardingLinkAsync_ShouldReturnNotFound_WhenUserDoesNotExist()
-	{
-		// Arrange
-		_userManagerMock.GetUserAsync(_principal).Returns((User?)null);
+        _service = new StripeConnectService(_userManagerMock, _configurationMock, _stripeClientWrapperMock);
+        _principal = new ClaimsPrincipal();
+    }
 
-		// Act
-		var result = await _service.CreateOnboardingLinkAsync(_principal, "http://frontend");
+    #region CreateOnboardingLinkAsync Tests
 
-		// Assert
-		result.IsSuccess.Should().BeFalse();
-		result.ErrorType.Should().Be(ErrorType.NotFound);
-		result.Errors.Should().Contain("User not found.");
-	}
+    [Fact]
+    public async Task CreateOnboardingLinkAsync_ShouldReturnNotFound_WhenUserDoesNotExist()
+    {
+        // Arrange
+        _userManagerMock.GetUserAsync(_principal).Returns((User?)null);
 
-	[Fact]
-	public async Task CreateOnboardingLinkAsync_ShouldReturnBadRequest_WhenUserEmailIsMissing()
-	{
-		// Arrange
-		var user = new User { Id = "user-123", Email = null };
-		_userManagerMock.GetUserAsync(_principal).Returns(user);
+        // Act
+        var result = await _service.CreateOnboardingLinkAsync(_principal, "http://frontend");
 
-		// Act
-		var result = await _service.CreateOnboardingLinkAsync(_principal, "http://frontend");
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.ErrorType.Should().Be(ErrorType.NotFound);
+        result.Errors.Should().Contain("User not found.");
+    }
 
-		// Assert
-		result.IsSuccess.Should().BeFalse();
-		result.ErrorType.Should().Be(ErrorType.BadRequest);
-		result.Errors.Should().Contain("The user has no email address.");
-	}
+    [Fact]
+    public async Task CreateOnboardingLinkAsync_ShouldReturnBadRequest_WhenUserEmailIsMissing()
+    {
+        // Arrange
+        var user = new User { Id = "user-123", Email = null };
+        _userManagerMock.GetUserAsync(_principal).Returns(user);
 
-	[Fact]
-	public async Task CreateOnboardingLinkAsync_ShouldCreateStripeAccountAndUpdateUser_WhenStripeAccountIdIsNull()
-	{
-		// Arrange
-		var user = new User { Id = "user-123", Email = "test@example.com" };
-		_userManagerMock.GetUserAsync(_principal).Returns(user);
+        // Act
+        var result = await _service.CreateOnboardingLinkAsync(_principal, "http://frontend");
 
-		var fakeAccount = new Stripe.V2.Core.Account { Id = "acct_created" };
-		_stripeClientWrapperMock.CreateAccountAsync(Arg.Any<Stripe.V2.Core.AccountCreateOptions>())
-			.Returns(fakeAccount);
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.ErrorType.Should().Be(ErrorType.BadRequest);
+        result.Errors.Should().Contain("The user has no email address.");
+    }
 
-		_userManagerMock.UpdateAsync(user).Returns(IdentityResult.Success);
+    [Fact]
+    public async Task CreateOnboardingLinkAsync_ShouldCreateStripeAccountAndUpdateUser_WhenStripeAccountIdIsNull()
+    {
+        // Arrange
+        var user = new User { Id = "user-123", Email = "test@example.com" };
+        _userManagerMock.GetUserAsync(_principal).Returns(user);
 
-		var fakeLink = new Stripe.V2.Core.AccountLink { Url = "https://stripe.com/onboard" };
-		_stripeClientWrapperMock.CreateAccountLinkAsync(Arg.Any<Stripe.V2.Core.AccountLinkCreateOptions>())
-			.Returns(fakeLink);
+        var fakeAccount = new Stripe.V2.Core.Account { Id = "acct_created" };
+        _stripeClientWrapperMock.CreateAccountAsync(Arg.Any<Stripe.V2.Core.AccountCreateOptions>())
+            .Returns(fakeAccount);
 
-		// Act
-		var result = await _service.CreateOnboardingLinkAsync(_principal, "http://frontend");
+        _userManagerMock.UpdateAsync(user).Returns(IdentityResult.Success);
 
-		// Assert
-		result.IsSuccess.Should().BeTrue();
-		result.Data!.Url.Should().Be("https://stripe.com/onboard");
-		user.StripeAccountId.Should().Be("acct_created");
-		await _stripeClientWrapperMock.Received(1).CreateAccountAsync(Arg.Any<Stripe.V2.Core.AccountCreateOptions>());
-		await _userManagerMock.Received(1).UpdateAsync(user);
-		await _stripeClientWrapperMock.Received(1).CreateAccountLinkAsync(Arg.Is<Stripe.V2.Core.AccountLinkCreateOptions>(opts => opts.Account == "acct_created"));
-	}
+        var fakeLink = new Stripe.V2.Core.AccountLink { Url = "https://stripe.com/onboard" };
+        _stripeClientWrapperMock.CreateAccountLinkAsync(Arg.Any<Stripe.V2.Core.AccountLinkCreateOptions>())
+            .Returns(fakeLink);
 
-	[Fact]
-	public async Task CreateOnboardingLinkAsync_ShouldReuseStripeAccountId_WhenStripeAccountIdIsAlreadySet()
-	{
-		// Arrange
-		var user = new User { Id = "user-123", Email = "test@example.com", StripeAccountId = "acct_existing" };
-		_userManagerMock.GetUserAsync(_principal).Returns(user);
+        // Act
+        var result = await _service.CreateOnboardingLinkAsync(_principal, "http://frontend");
 
-		var fakeLink = new Stripe.V2.Core.AccountLink { Url = "https://stripe.com/onboard" };
-		_stripeClientWrapperMock.CreateAccountLinkAsync(Arg.Any<Stripe.V2.Core.AccountLinkCreateOptions>())
-			.Returns(fakeLink);
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data!.Url.Should().Be("https://stripe.com/onboard");
+        user.StripeAccountId.Should().Be("acct_created");
+        await _stripeClientWrapperMock.Received(1).CreateAccountAsync(Arg.Any<Stripe.V2.Core.AccountCreateOptions>());
+        await _userManagerMock.Received(1).UpdateAsync(user);
+        await _stripeClientWrapperMock.Received(1).CreateAccountLinkAsync(Arg.Is<Stripe.V2.Core.AccountLinkCreateOptions>(opts => opts.Account == "acct_created"));
+    }
 
-		// Act
-		var result = await _service.CreateOnboardingLinkAsync(_principal, "http://frontend");
+    [Fact]
+    public async Task CreateOnboardingLinkAsync_ShouldReuseStripeAccountId_WhenStripeAccountIdIsAlreadySet()
+    {
+        // Arrange
+        var user = new User { Id = "user-123", Email = "test@example.com", StripeAccountId = "acct_existing" };
+        _userManagerMock.GetUserAsync(_principal).Returns(user);
 
-		// Assert
-		result.IsSuccess.Should().BeTrue();
-		result.Data!.Url.Should().Be("https://stripe.com/onboard");
-		user.StripeAccountId.Should().Be("acct_existing");
-		await _stripeClientWrapperMock.DidNotReceive().CreateAccountAsync(Arg.Any<Stripe.V2.Core.AccountCreateOptions>());
-		await _userManagerMock.DidNotReceive().UpdateAsync(Arg.Any<User>());
-		await _stripeClientWrapperMock.Received(1).CreateAccountLinkAsync(Arg.Is<Stripe.V2.Core.AccountLinkCreateOptions>(opts => opts.Account == "acct_existing"));
-	}
+        var fakeLink = new Stripe.V2.Core.AccountLink { Url = "https://stripe.com/onboard" };
+        _stripeClientWrapperMock.CreateAccountLinkAsync(Arg.Any<Stripe.V2.Core.AccountLinkCreateOptions>())
+            .Returns(fakeLink);
 
-	[Fact]
-	public async Task CreateOnboardingLinkAsync_ShouldReturnInternalError_WhenUserManagerUpdateFails()
-	{
-		// Arrange
-		var user = new User { Id = "user-123", Email = "test@example.com" };
-		_userManagerMock.GetUserAsync(_principal).Returns(user);
+        // Act
+        var result = await _service.CreateOnboardingLinkAsync(_principal, "http://frontend");
 
-		var fakeAccount = new Stripe.V2.Core.Account { Id = "acct_created" };
-		_stripeClientWrapperMock.CreateAccountAsync(Arg.Any<Stripe.V2.Core.AccountCreateOptions>())
-			.Returns(fakeAccount);
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data!.Url.Should().Be("https://stripe.com/onboard");
+        user.StripeAccountId.Should().Be("acct_existing");
+        await _stripeClientWrapperMock.DidNotReceive().CreateAccountAsync(Arg.Any<Stripe.V2.Core.AccountCreateOptions>());
+        await _userManagerMock.DidNotReceive().UpdateAsync(Arg.Any<User>());
+        await _stripeClientWrapperMock.Received(1).CreateAccountLinkAsync(Arg.Is<Stripe.V2.Core.AccountLinkCreateOptions>(opts => opts.Account == "acct_existing"));
+    }
 
-		var errors = new[] { new IdentityError { Description = "Database lock failure." } };
-		_userManagerMock.UpdateAsync(user).Returns(IdentityResult.Failed(errors));
+    [Fact]
+    public async Task CreateOnboardingLinkAsync_ShouldReturnInternalError_WhenUserManagerUpdateFails()
+    {
+        // Arrange
+        var user = new User { Id = "user-123", Email = "test@example.com" };
+        _userManagerMock.GetUserAsync(_principal).Returns(user);
 
-		// Act
-		var result = await _service.CreateOnboardingLinkAsync(_principal, "http://frontend");
+        var fakeAccount = new Stripe.V2.Core.Account { Id = "acct_created" };
+        _stripeClientWrapperMock.CreateAccountAsync(Arg.Any<Stripe.V2.Core.AccountCreateOptions>())
+            .Returns(fakeAccount);
 
-		// Assert
-		result.IsSuccess.Should().BeFalse();
-		result.ErrorType.Should().Be(ErrorType.InternalError);
-		result.Errors.Should().Contain("Database lock failure.");
-	}
+        var errors = new[] { new IdentityError { Description = "Database lock failure." } };
+        _userManagerMock.UpdateAsync(user).Returns(IdentityResult.Failed(errors));
 
-	[Fact]
-	public async Task CreateOnboardingLinkAsync_ShouldReturnInternalError_WhenStripeExceptionThrown()
-	{
-		// Arrange
-		var user = new User { Id = "user-123", Email = "test@example.com", StripeAccountId = "acct_existing" };
-		_userManagerMock.GetUserAsync(_principal).Returns(user);
+        // Act
+        var result = await _service.CreateOnboardingLinkAsync(_principal, "http://frontend");
 
-		var exception = new StripeException("Stripe API down");
-		_stripeClientWrapperMock.CreateAccountLinkAsync(Arg.Any<Stripe.V2.Core.AccountLinkCreateOptions>())
-			.Returns(Task.FromException<Stripe.V2.Core.AccountLink>(exception));
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.ErrorType.Should().Be(ErrorType.InternalError);
+        result.Errors.Should().Contain("Database lock failure.");
+    }
 
-		// Act
-		var result = await _service.CreateOnboardingLinkAsync(_principal, "http://frontend");
+    [Fact]
+    public async Task CreateOnboardingLinkAsync_ShouldReturnInternalError_WhenStripeExceptionThrown()
+    {
+        // Arrange
+        var user = new User { Id = "user-123", Email = "test@example.com", StripeAccountId = "acct_existing" };
+        _userManagerMock.GetUserAsync(_principal).Returns(user);
 
-		// Assert
-		result.IsSuccess.Should().BeFalse();
-		result.ErrorType.Should().Be(ErrorType.InternalError);
-		result.Errors.Should().Contain("Stripe API down");
-	}
+        var exception = new StripeException("Stripe API down");
+        _stripeClientWrapperMock.CreateAccountLinkAsync(Arg.Any<Stripe.V2.Core.AccountLinkCreateOptions>())
+            .Returns(Task.FromException<Stripe.V2.Core.AccountLink>(exception));
 
-	#endregion
+        // Act
+        var result = await _service.CreateOnboardingLinkAsync(_principal, "http://frontend");
 
-	#region GetStatusAsync Tests
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.ErrorType.Should().Be(ErrorType.InternalError);
+        result.Errors.Should().Contain("Stripe API down");
+    }
 
-	[Fact]
-	public async Task GetStatusAsync_ShouldReturnNotFound_WhenUserDoesNotExist()
-	{
-		// Arrange
-		_userManagerMock.GetUserAsync(_principal).Returns((User?)null);
+    #endregion
 
-		// Act
-		var result = await _service.GetStatusAsync(_principal);
+    #region GetStatusAsync Tests
 
-		// Assert
-		result.IsSuccess.Should().BeFalse();
-		result.ErrorType.Should().Be(ErrorType.NotFound);
-		result.Errors.Should().Contain("User not found.");
-	}
+    [Fact]
+    public async Task GetStatusAsync_ShouldReturnNotFound_WhenUserDoesNotExist()
+    {
+        // Arrange
+        _userManagerMock.GetUserAsync(_principal).Returns((User?)null);
 
-	[Fact]
-	public async Task GetStatusAsync_ShouldReturnSuccessWithNotOnboarded_WhenStripeAccountIdIsNull()
-	{
-		// Arrange
-		var user = new User { Id = "user-123", StripeAccountId = null, IsStripeOnboarded = false };
-		_userManagerMock.GetUserAsync(_principal).Returns(user);
+        // Act
+        var result = await _service.GetStatusAsync(_principal);
 
-		// Act
-		var result = await _service.GetStatusAsync(_principal);
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.ErrorType.Should().Be(ErrorType.NotFound);
+        result.Errors.Should().Contain("User not found.");
+    }
 
-		// Assert
-		result.IsSuccess.Should().BeTrue();
-		result.Data!.IsStripeOnboarded.Should().BeFalse();
-		result.Data!.StripeAccountId.Should().BeNull();
-		await _stripeClientWrapperMock.DidNotReceive().GetAccountAsync(Arg.Any<string>(), Arg.Any<Stripe.V2.Core.AccountGetOptions>());
-	}
+    [Fact]
+    public async Task GetStatusAsync_ShouldReturnSuccessWithNotOnboarded_WhenStripeAccountIdIsNull()
+    {
+        // Arrange
+        var user = new User { Id = "user-123", StripeAccountId = null, IsStripeOnboarded = false };
+        _userManagerMock.GetUserAsync(_principal).Returns(user);
 
-	[Fact]
-	public async Task GetStatusAsync_ShouldReturnSuccessWithOnboarded_WhenUserIsAlreadyMarkedOnboarded()
-	{
-		// Arrange
-		var user = new User { Id = "user-123", StripeAccountId = "acct_123", IsStripeOnboarded = true };
-		_userManagerMock.GetUserAsync(_principal).Returns(user);
+        // Act
+        var result = await _service.GetStatusAsync(_principal);
 
-		// Act
-		var result = await _service.GetStatusAsync(_principal);
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data!.IsStripeOnboarded.Should().BeFalse();
+        result.Data!.StripeAccountId.Should().BeNull();
+        await _stripeClientWrapperMock.DidNotReceive().GetAccountAsync(Arg.Any<string>(), Arg.Any<Stripe.V2.Core.AccountGetOptions>());
+    }
 
-		// Assert
-		result.IsSuccess.Should().BeTrue();
-		result.Data!.IsStripeOnboarded.Should().BeTrue();
-		result.Data!.StripeAccountId.Should().Be("acct_123");
-		await _stripeClientWrapperMock.DidNotReceive().GetAccountAsync(Arg.Any<string>(), Arg.Any<Stripe.V2.Core.AccountGetOptions>());
-	}
+    [Fact]
+    public async Task GetStatusAsync_ShouldReturnSuccessWithOnboarded_WhenUserIsAlreadyMarkedOnboarded()
+    {
+        // Arrange
+        var user = new User { Id = "user-123", StripeAccountId = "acct_123", IsStripeOnboarded = true };
+        _userManagerMock.GetUserAsync(_principal).Returns(user);
 
-	[Fact]
-	public async Task GetStatusAsync_ShouldSyncStatusWithStripe_WhenNotOnboardedAndStripeStatusIsActive()
-	{
-		// Arrange
-		var user = new User { Id = "user-123", StripeAccountId = "acct_123", IsStripeOnboarded = false };
-		_userManagerMock.GetUserAsync(_principal).Returns(user);
+        // Act
+        var result = await _service.GetStatusAsync(_principal);
 
-		var fakeAccount = new Stripe.V2.Core.Account
-		{
-			Configuration = new AccountConfiguration
-			{
-				Recipient = new AccountConfigurationRecipient
-				{
-					Capabilities = new AccountConfigurationRecipientCapabilities
-					{
-						StripeBalance = new AccountConfigurationRecipientCapabilitiesStripeBalance
-						{
-							StripeTransfers = new AccountConfigurationRecipientCapabilitiesStripeBalanceStripeTransfers
-							{
-								Status = "active"
-							}
-						}
-					}
-				}
-			}
-		};
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data!.IsStripeOnboarded.Should().BeTrue();
+        result.Data!.StripeAccountId.Should().Be("acct_123");
+        await _stripeClientWrapperMock.DidNotReceive().GetAccountAsync(Arg.Any<string>(), Arg.Any<Stripe.V2.Core.AccountGetOptions>());
+    }
 
-		_stripeClientWrapperMock.GetAccountAsync("acct_123", Arg.Any<Stripe.V2.Core.AccountGetOptions>())
-			.Returns(fakeAccount);
+    [Fact]
+    public async Task GetStatusAsync_ShouldSyncStatusWithStripe_WhenNotOnboardedAndStripeStatusIsActive()
+    {
+        // Arrange
+        var user = new User { Id = "user-123", StripeAccountId = "acct_123", IsStripeOnboarded = false };
+        _userManagerMock.GetUserAsync(_principal).Returns(user);
 
-		_userManagerMock.UpdateAsync(user).Returns(IdentityResult.Success);
+        var fakeAccount = new Stripe.V2.Core.Account
+        {
+            Configuration = new AccountConfiguration
+            {
+                Recipient = new AccountConfigurationRecipient
+                {
+                    Capabilities = new AccountConfigurationRecipientCapabilities
+                    {
+                        StripeBalance = new AccountConfigurationRecipientCapabilitiesStripeBalance
+                        {
+                            StripeTransfers = new AccountConfigurationRecipientCapabilitiesStripeBalanceStripeTransfers
+                            {
+                                Status = "active"
+                            }
+                        }
+                    }
+                }
+            }
+        };
 
-		// Act
-		var result = await _service.GetStatusAsync(_principal);
+        _stripeClientWrapperMock.GetAccountAsync("acct_123", Arg.Any<Stripe.V2.Core.AccountGetOptions>())
+            .Returns(fakeAccount);
 
-		// Assert
-		result.IsSuccess.Should().BeTrue();
-		result.Data!.IsStripeOnboarded.Should().BeTrue();
-		result.Data!.StripeAccountId.Should().Be("acct_123");
-		user.IsStripeOnboarded.Should().BeTrue();
-		await _stripeClientWrapperMock.Received(1).GetAccountAsync("acct_123", Arg.Any<Stripe.V2.Core.AccountGetOptions>());
-		await _userManagerMock.Received(1).UpdateAsync(user);
-	}
+        _userManagerMock.UpdateAsync(user).Returns(IdentityResult.Success);
 
-	[Fact]
-	public async Task GetStatusAsync_ShouldKeepStatusNotOnboarded_WhenNotOnboardedAndStripeStatusIsNotActive()
-	{
-		// Arrange
-		var user = new User { Id = "user-123", StripeAccountId = "acct_123", IsStripeOnboarded = false };
-		_userManagerMock.GetUserAsync(_principal).Returns(user);
+        // Act
+        var result = await _service.GetStatusAsync(_principal);
 
-		var fakeAccount = new Stripe.V2.Core.Account
-		{
-			Configuration = new AccountConfiguration
-			{
-				Recipient = new AccountConfigurationRecipient
-				{
-					Capabilities = new AccountConfigurationRecipientCapabilities
-					{
-						StripeBalance = new AccountConfigurationRecipientCapabilitiesStripeBalance
-						{
-							StripeTransfers = new AccountConfigurationRecipientCapabilitiesStripeBalanceStripeTransfers
-							{
-								Status = "inactive"
-							}
-						}
-					}
-				}
-			}
-		};
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data!.IsStripeOnboarded.Should().BeTrue();
+        result.Data!.StripeAccountId.Should().Be("acct_123");
+        user.IsStripeOnboarded.Should().BeTrue();
+        await _stripeClientWrapperMock.Received(1).GetAccountAsync("acct_123", Arg.Any<Stripe.V2.Core.AccountGetOptions>());
+        await _userManagerMock.Received(1).UpdateAsync(user);
+    }
 
-		_stripeClientWrapperMock.GetAccountAsync("acct_123", Arg.Any<Stripe.V2.Core.AccountGetOptions>())
-			.Returns(fakeAccount);
+    [Fact]
+    public async Task GetStatusAsync_ShouldKeepStatusNotOnboarded_WhenNotOnboardedAndStripeStatusIsNotActive()
+    {
+        // Arrange
+        var user = new User { Id = "user-123", StripeAccountId = "acct_123", IsStripeOnboarded = false };
+        _userManagerMock.GetUserAsync(_principal).Returns(user);
 
-		// Act
-		var result = await _service.GetStatusAsync(_principal);
+        var fakeAccount = new Stripe.V2.Core.Account
+        {
+            Configuration = new AccountConfiguration
+            {
+                Recipient = new AccountConfigurationRecipient
+                {
+                    Capabilities = new AccountConfigurationRecipientCapabilities
+                    {
+                        StripeBalance = new AccountConfigurationRecipientCapabilitiesStripeBalance
+                        {
+                            StripeTransfers = new AccountConfigurationRecipientCapabilitiesStripeBalanceStripeTransfers
+                            {
+                                Status = "inactive"
+                            }
+                        }
+                    }
+                }
+            }
+        };
 
-		// Assert
-		result.IsSuccess.Should().BeTrue();
-		result.Data!.IsStripeOnboarded.Should().BeFalse();
-		result.Data!.StripeAccountId.Should().Be("acct_123");
-		user.IsStripeOnboarded.Should().BeFalse();
-		await _stripeClientWrapperMock.Received(1).GetAccountAsync("acct_123", Arg.Any<Stripe.V2.Core.AccountGetOptions>());
-		await _userManagerMock.DidNotReceive().UpdateAsync(Arg.Any<User>());
-	}
+        _stripeClientWrapperMock.GetAccountAsync("acct_123", Arg.Any<Stripe.V2.Core.AccountGetOptions>())
+            .Returns(fakeAccount);
 
-	[Fact]
-	public async Task GetStatusAsync_ShouldReturnInternalError_WhenUserManagerUpdateFails()
-	{
-		// Arrange
-		var user = new User { Id = "user-123", StripeAccountId = "acct_123", IsStripeOnboarded = false };
-		_userManagerMock.GetUserAsync(_principal).Returns(user);
+        // Act
+        var result = await _service.GetStatusAsync(_principal);
 
-		var fakeAccount = new Stripe.V2.Core.Account
-		{
-			Configuration = new AccountConfiguration
-			{
-				Recipient = new AccountConfigurationRecipient
-				{
-					Capabilities = new AccountConfigurationRecipientCapabilities
-					{
-						StripeBalance = new AccountConfigurationRecipientCapabilitiesStripeBalance
-						{
-							StripeTransfers = new AccountConfigurationRecipientCapabilitiesStripeBalanceStripeTransfers
-							{
-								Status = "active"
-							}
-						}
-					}
-				}
-			}
-		};
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data!.IsStripeOnboarded.Should().BeFalse();
+        result.Data!.StripeAccountId.Should().Be("acct_123");
+        user.IsStripeOnboarded.Should().BeFalse();
+        await _stripeClientWrapperMock.Received(1).GetAccountAsync("acct_123", Arg.Any<Stripe.V2.Core.AccountGetOptions>());
+        await _userManagerMock.DidNotReceive().UpdateAsync(Arg.Any<User>());
+    }
 
-		_stripeClientWrapperMock.GetAccountAsync("acct_123", Arg.Any<Stripe.V2.Core.AccountGetOptions>())
-			.Returns(fakeAccount);
+    [Fact]
+    public async Task GetStatusAsync_ShouldReturnInternalError_WhenUserManagerUpdateFails()
+    {
+        // Arrange
+        var user = new User { Id = "user-123", StripeAccountId = "acct_123", IsStripeOnboarded = false };
+        _userManagerMock.GetUserAsync(_principal).Returns(user);
 
-		var errors = new[] { new IdentityError { Description = "Database write error." } };
-		_userManagerMock.UpdateAsync(user).Returns(IdentityResult.Failed(errors));
+        var fakeAccount = new Stripe.V2.Core.Account
+        {
+            Configuration = new AccountConfiguration
+            {
+                Recipient = new AccountConfigurationRecipient
+                {
+                    Capabilities = new AccountConfigurationRecipientCapabilities
+                    {
+                        StripeBalance = new AccountConfigurationRecipientCapabilitiesStripeBalance
+                        {
+                            StripeTransfers = new AccountConfigurationRecipientCapabilitiesStripeBalanceStripeTransfers
+                            {
+                                Status = "active"
+                            }
+                        }
+                    }
+                }
+            }
+        };
 
-		// Act
-		var result = await _service.GetStatusAsync(_principal);
+        _stripeClientWrapperMock.GetAccountAsync("acct_123", Arg.Any<Stripe.V2.Core.AccountGetOptions>())
+            .Returns(fakeAccount);
 
-		// Assert
-		result.IsSuccess.Should().BeFalse();
-		result.ErrorType.Should().Be(ErrorType.InternalError);
-		result.Errors.Should().Contain("Database write error.");
-	}
+        var errors = new[] { new IdentityError { Description = "Database write error." } };
+        _userManagerMock.UpdateAsync(user).Returns(IdentityResult.Failed(errors));
 
-	[Fact]
-	public async Task GetStatusAsync_ShouldReturnInternalError_WhenStripeExceptionThrown()
-	{
-		// Arrange
-		var user = new User { Id = "user-123", StripeAccountId = "acct_123", IsStripeOnboarded = false };
-		_userManagerMock.GetUserAsync(_principal).Returns(user);
+        // Act
+        var result = await _service.GetStatusAsync(_principal);
 
-		var exception = new StripeException("Connection refused");
-		_stripeClientWrapperMock.GetAccountAsync("acct_123", Arg.Any<Stripe.V2.Core.AccountGetOptions>())
-			.Returns(Task.FromException<Stripe.V2.Core.Account>(exception));
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.ErrorType.Should().Be(ErrorType.InternalError);
+        result.Errors.Should().Contain("Database write error.");
+    }
 
-		// Act
-		var result = await _service.GetStatusAsync(_principal);
+    [Fact]
+    public async Task GetStatusAsync_ShouldReturnInternalError_WhenStripeExceptionThrown()
+    {
+        // Arrange
+        var user = new User { Id = "user-123", StripeAccountId = "acct_123", IsStripeOnboarded = false };
+        _userManagerMock.GetUserAsync(_principal).Returns(user);
 
-		// Assert
-		result.IsSuccess.Should().BeFalse();
-		result.ErrorType.Should().Be(ErrorType.InternalError);
-		result.Errors.Should().Contain("Connection refused");
-	}
+        var exception = new StripeException("Connection refused");
+        _stripeClientWrapperMock.GetAccountAsync("acct_123", Arg.Any<Stripe.V2.Core.AccountGetOptions>())
+            .Returns(Task.FromException<Stripe.V2.Core.Account>(exception));
 
-	#endregion
+        // Act
+        var result = await _service.GetStatusAsync(_principal);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.ErrorType.Should().Be(ErrorType.InternalError);
+        result.Errors.Should().Contain("Connection refused");
+    }
+
+    #endregion
 }

@@ -23,7 +23,7 @@ public class LanguagesController : ControllerBase
 
     // GET: api/v1/Languages
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<LanguageResponse>>> GetLanguages()    
+    public async Task<ActionResult<IEnumerable<LanguageResponse>>> GetLanguages()
     {
         var languages = await _context.Languages.ToListAsync();
         return Ok(_mapper.ToResponseList(languages));

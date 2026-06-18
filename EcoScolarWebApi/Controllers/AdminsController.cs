@@ -188,7 +188,7 @@ namespace EcoScolarWebApi.Controllers
                 _ => BadRequest(new { result.Errors })
             };
         }
-        
+
         [HttpPatch("abuses/{id}/status")]
         public async Task<IActionResult> ChangeAbuseStatus(int id, [FromBody] AbuseStatusRequestDto status)
         {

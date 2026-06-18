@@ -8,7 +8,7 @@ public enum TransactionStatus
     [EnumMember(Value = "PENDING")]
     [JsonPropertyName("PENDING")]
     PENDING,
-    
+
     [EnumMember(Value = "PAID_WAITING_SHIPPING")]
     [JsonPropertyName("PAID_WAITING_SHIPPING")]
     PAID_WAITING_SHIPPING,
