@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EcoScolarWebApi.Migrations
 {
     [DbContext(typeof(EcoscolarDbContext))]
-    [Migration("20260618081251_all")]
-    partial class all
+    [Migration("20260618190000_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
