@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -17,11 +18,20 @@ namespace EcoScolarWebApi.Tests.Integration;
 public class AuthInMemoryWebApplicationFactory : WebApplicationFactory<global::Program>
 {
 	private readonly string _keysPath = Path.Combine(Path.GetTempPath(), "ecoscolar-auth-tests", Guid.NewGuid().ToString("N"));
+	private readonly string _databaseName = $"EcoScolarAuthTests_{Guid.NewGuid():N}";
 	private bool _seeded;
 
 	protected override void ConfigureWebHost(IWebHostBuilder builder)
 	{
 		builder.UseEnvironment("Testing");
+
+		builder.ConfigureAppConfiguration((context, configBuilder) =>
+		{
+			configBuilder.AddInMemoryCollection(new Dictionary<string, string?>
+			{
+				{ "InMemoryDatabaseName", _databaseName }
+			});
+		});
 
 		builder.ConfigureLogging(logging => logging.ClearProviders());
 
