@@ -1,350 +1,108 @@
+using EcoScolarWebApi.Commun;
 using EcoScolarWebApi.Controllers;
-using EcoScolarWebApi.Data;
 using EcoScolarWebApi.DTOs.Stripe;
-using EcoScolarWebApi.Enums;
 using EcoScolarWebApi.Models;
+using EcoScolarWebApi.Services.Contracts;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
 
 namespace EcoScolarWebApi.Tests.Unit.Controllers;
 
-public class PaymentsControllerTests : IDisposable
+/// <summary>
+/// The controller is a thin delegator to <see cref="IPaymentService"/>; the checkout business
+/// logic (server-side pricing, pausing, idempotent webhook) is covered by PaymentServiceTests.
+/// These tests only verify the HTTP mapping.
+/// </summary>
+public class PaymentsControllerTests
 {
-	private readonly EcoscolarDbContext _context;
-	private readonly IConfiguration _configMock;
-	private readonly PaymentsController _controller;
+    private const string BuyerId = "buyer-1";
 
-	public PaymentsControllerTests()
-	{
-		var options = new DbContextOptionsBuilder<EcoscolarDbContext>()
-			.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-			.Options;
-		_context = new EcoscolarDbContext(options);
-		_configMock = Substitute.For<IConfiguration>();
-		_configMock["Stripe:SecretKey"].Returns("sk_test_mock");
-		_configMock["Stripe:WebhookSecret"].Returns((string?)null);
+    private readonly IPaymentService _paymentService;
+    private readonly UserManager<User> _userManager;
+    private readonly PaymentsController _controller;
 
-		_controller = new PaymentsController(_configMock, _context);
+    public PaymentsControllerTests()
+    {
+        _paymentService = Substitute.For<IPaymentService>();
 
-		// Set up a default HttpContext with required properties
-		var httpContext = new DefaultHttpContext();
-		httpContext.Request.Scheme = "https";
-		httpContext.Request.Host = new HostString("localhost", 5001);
-		_controller.ControllerContext = new ControllerContext
-		{
-			HttpContext = httpContext
-		};
-	}
+        var store = Substitute.For<IUserStore<User>>();
+        _userManager = Substitute.For<UserManager<User>>(store, null!, null!, null!, null!, null!, null!, null!, null!);
+        _userManager.GetUserId(Arg.Any<System.Security.Claims.ClaimsPrincipal>()).Returns(BuyerId);
 
-	public void Dispose()
-	{
-		_context.Database.EnsureDeleted();
-		_context.Dispose();
-		GC.SuppressFinalize(this);
-	}
+        var config = Substitute.For<IConfiguration>();
 
-	#region Checkout Tests
+        _controller = new PaymentsController(config, _paymentService, _userManager, Substitute.For<ILogger<PaymentsController>>())
+        {
+            ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    Request = { Scheme = "https", Host = new HostString("localhost", 5001) }
+                }
+            }
+        };
+    }
 
-	[Fact]
-	public async Task Checkout_ShouldReturnNotFound_WhenProductDoesNotExist()
-	{
-		// Arrange
-		var request = new CheckoutRequestDto
-		{
-			ProductIds = new List<long> { 999L },
-			ProductPrice = 10.0,
-			ShippingMethod = "handToHand"
-		};
+    private CheckoutRequestDto Request() => new() { ProductIds = new List<long> { 1L }, ShippingMethod = "handToHand" };
 
-		// Act
-		var result = await _controller.Checkout(request);
+    [Fact]
+    public async Task Checkout_ReturnsOk_WhenServiceSucceeds()
+    {
+        _paymentService.CreateCheckoutSessionAsync(Arg.Any<CheckoutRequestDto>(), BuyerId, Arg.Any<string>())
+            .Returns(Result<CheckoutSessionResultDto>.Success(new CheckoutSessionResultDto("https://stripe.test/checkout", "ECO-1")));
 
-		// Assert
-		result.Should().BeOfType<NotFoundObjectResult>();
-	}
+        var result = await _controller.Checkout(Request());
 
-	[Fact]
-	public async Task Checkout_ShouldReturnBadRequest_WhenProductIsSold()
-	{
-		// Arrange
-		var book = new Book
-		{
-			AdvertId = 1,
-			Title = "Sold Book",
-			Description = "Already sold",
-			Price = 20m,
-			SellerId = "seller-1",
-			ISBN = "12345",
-			Author = "Author",
-			Publisher = "Pub",
-			Edition = "1st",
-			WrittenLanguage = LanguageEnum.FR,
-			Status = AdvertStatus.SOLD
-		};
-		_context.Products.Add(book);
-		await _context.SaveChangesAsync();
+        result.Should().BeOfType<OkObjectResult>();
+    }
 
-		var request = new CheckoutRequestDto
-		{
-			ProductIds = new List<long> { 1L },
-			ProductPrice = 20.0,
-			ShippingMethod = "handToHand"
-		};
+    [Fact]
+    public async Task Checkout_ReturnsUnauthorized_WhenNoAuthenticatedUser()
+    {
+        _userManager.GetUserId(Arg.Any<System.Security.Claims.ClaimsPrincipal>()).Returns((string?)null);
 
-		// Act
-		var result = await _controller.Checkout(request);
+        var result = await _controller.Checkout(Request());
 
-		// Assert
-		result.Should().BeOfType<BadRequestObjectResult>();
-	}
+        result.Should().BeOfType<UnauthorizedResult>();
+    }
 
-	[Fact]
-	public async Task Checkout_ShouldReturnBadRequest_WhenProductIsPaused()
-	{
-		// Arrange
-		var book = new Book
-		{
-			AdvertId = 2,
-			Title = "Paused Book",
-			Description = "Being paid for",
-			Price = 30m,
-			SellerId = "seller-1",
-			ISBN = "12345",
-			Author = "Author",
-			Publisher = "Pub",
-			Edition = "1st",
-			WrittenLanguage = LanguageEnum.FR,
-			Status = AdvertStatus.PAUSED
-		};
-		_context.Products.Add(book);
-		await _context.SaveChangesAsync();
+    [Fact]
+    public async Task Checkout_ReturnsNotFound_WhenServiceReturnsNotFound()
+    {
+        _paymentService.CreateCheckoutSessionAsync(Arg.Any<CheckoutRequestDto>(), BuyerId, Arg.Any<string>())
+            .Returns(Result<CheckoutSessionResultDto>.Failure("missing", ErrorType.NotFound));
 
-		var request = new CheckoutRequestDto
-		{
-			ProductIds = new List<long> { 2L },
-			ProductPrice = 30.0,
-			ShippingMethod = "handToHand"
-		};
+        var result = await _controller.Checkout(Request());
 
-		// Act
-		var result = await _controller.Checkout(request);
+        result.Should().BeOfType<NotFoundObjectResult>();
+    }
 
-		// Assert
-		result.Should().BeOfType<BadRequestObjectResult>();
-	}
+    [Fact]
+    public async Task Checkout_ReturnsConflict_WhenServiceReturnsConflict()
+    {
+        _paymentService.CreateCheckoutSessionAsync(Arg.Any<CheckoutRequestDto>(), BuyerId, Arg.Any<string>())
+            .Returns(Result<CheckoutSessionResultDto>.Failure("unavailable", ErrorType.Conflict));
 
-	[Fact]
-	public async Task Checkout_ShouldReturnNotFound_WhenOneOfMultipleProductsMissing()
-	{
-		// Arrange
-		var book = new Book
-		{
-			AdvertId = 3,
-			Title = "Existing Book",
-			Description = "A book",
-			Price = 15m,
-			SellerId = "seller-1",
-			ISBN = "12345",
-			Author = "Author",
-			Publisher = "Pub",
-			Edition = "1st",
-			WrittenLanguage = LanguageEnum.FR,
-			Status = AdvertStatus.ACTIVE
-		};
-		_context.Products.Add(book);
-		await _context.SaveChangesAsync();
+        var result = await _controller.Checkout(Request());
 
-		var request = new CheckoutRequestDto
-		{
-			ProductIds = new List<long> { 3L, 999L },
-			ProductPrice = 15.0,
-			ShippingMethod = "handToHand"
-		};
+        result.Should().BeOfType<ConflictObjectResult>();
+    }
 
-		// Act
-		var result = await _controller.Checkout(request);
+    [Fact]
+    public async Task Checkout_ReturnsBadGateway_WhenServiceReturnsInternalError()
+    {
+        _paymentService.CreateCheckoutSessionAsync(Arg.Any<CheckoutRequestDto>(), BuyerId, Arg.Any<string>())
+            .Returns(Result<CheckoutSessionResultDto>.Failure("stripe down", ErrorType.InternalError));
 
-		// Assert
-		result.Should().BeOfType<NotFoundObjectResult>();
-	}
+        var result = await _controller.Checkout(Request());
 
-	[Fact]
-	public async Task Checkout_ShouldFallbackToProductId_WhenProductIdsIsEmpty()
-	{
-		// Arrange — single product not found via fallback ProductId
-		var request = new CheckoutRequestDto
-		{
-			ProductId = 999,
-			ProductIds = new List<long>(),
-			ProductPrice = 10.0,
-			ShippingMethod = "handToHand"
-		};
-
-		// Act
-		var result = await _controller.Checkout(request);
-
-		// Assert
-		result.Should().BeOfType<NotFoundObjectResult>();
-	}
-
-	#endregion
-
-	#region Shipping cost calculation
-
-	[Fact]
-	public async Task Checkout_ShouldUseZeroShipping_ForHandToHand()
-	{
-		// Arrange — We can verify the logic by checking product status changes
-		var book = new Book
-		{
-			AdvertId = 10,
-			Title = "HTH Book",
-			Description = "Hand to hand delivery",
-			Price = 100m,
-			SellerId = "seller-1",
-			ISBN = "12345",
-			Author = "Author",
-			Publisher = "Pub",
-			Edition = "1st",
-			WrittenLanguage = LanguageEnum.FR,
-			Status = AdvertStatus.ACTIVE
-		};
-		_context.Products.Add(book);
-		await _context.SaveChangesAsync();
-
-		var request = new CheckoutRequestDto
-		{
-			ProductIds = new List<long> { 10L },
-			ProductPrice = 100.0,
-			ShippingMethod = "handToHand"
-		};
-
-		// Act — This will fail at Stripe session creation (no real Stripe key),
-		// but the validation and status update should have run
-		try
-		{
-			await _controller.Checkout(request);
-		}
-		catch
-		{
-			// Expected: Stripe call fails in unit test context
-		}
-
-		// Assert — Product should have been paused (validation passed)
-		var advertInDb = await _context.Adverts.FindAsync(10L);
-		advertInDb!.Status.Should().Be(AdvertStatus.PAUSED);
-	}
-
-	#endregion
-
-	#region Product status management during checkout
-
-	[Fact]
-	public async Task Checkout_ShouldSetProductStatusToPaused_WhenValidRequest()
-	{
-		// Arrange
-		var book = new Book
-		{
-			AdvertId = 20,
-			Title = "Active Book",
-			Description = "Should be paused",
-			Price = 50m,
-			SellerId = "seller-1",
-			ISBN = "12345",
-			Author = "Author",
-			Publisher = "Pub",
-			Edition = "1st",
-			WrittenLanguage = LanguageEnum.FR,
-			Status = AdvertStatus.ACTIVE
-		};
-		_context.Products.Add(book);
-		await _context.SaveChangesAsync();
-
-		var request = new CheckoutRequestDto
-		{
-			ProductIds = new List<long> { 20L },
-			ProductPrice = 50.0,
-			ShippingMethod = "handToHand"
-		};
-
-		// Act
-		try
-		{
-			await _controller.Checkout(request);
-		}
-		catch
-		{
-			// Expected: Stripe call fails in unit test context
-		}
-
-		// Assert
-		var advertInDb = await _context.Adverts.FindAsync(20L);
-		advertInDb!.Status.Should().Be(AdvertStatus.PAUSED);
-	}
-
-	[Fact]
-	public async Task Checkout_ShouldSetMultipleProductsToPaused()
-	{
-		// Arrange
-		var book1 = new Book
-		{
-			AdvertId = 30,
-			Title = "Book 1",
-			Description = "First",
-			Price = 25m,
-			SellerId = "seller-1",
-			ISBN = "11111",
-			Author = "A1",
-			Publisher = "P1",
-			Edition = "1st",
-			WrittenLanguage = LanguageEnum.FR,
-			Status = AdvertStatus.ACTIVE
-		};
-		var book2 = new Book
-		{
-			AdvertId = 31,
-			Title = "Book 2",
-			Description = "Second",
-			Price = 35m,
-			SellerId = "seller-2",
-			ISBN = "22222",
-			Author = "A2",
-			Publisher = "P2",
-			Edition = "2nd",
-			WrittenLanguage = LanguageEnum.FR,
-			Status = AdvertStatus.ACTIVE
-		};
-		_context.Products.AddRange(book1, book2);
-		await _context.SaveChangesAsync();
-
-		var request = new CheckoutRequestDto
-		{
-			ProductIds = new List<long> { 30L, 31L },
-			ProductPrice = 60.0,
-			ShippingMethod = "postal"
-		};
-
-		// Act
-		try
-		{
-			await _controller.Checkout(request);
-		}
-		catch
-		{
-			// Expected: Stripe call fails in unit test context
-		}
-
-		// Assert
-		var advert1 = await _context.Adverts.FindAsync(30L);
-		var advert2 = await _context.Adverts.FindAsync(31L);
-		advert1!.Status.Should().Be(AdvertStatus.PAUSED);
-		advert2!.Status.Should().Be(AdvertStatus.PAUSED);
-	}
-
-	#endregion
+        var objectResult = result.Should().BeOfType<ObjectResult>().Subject;
+        objectResult.StatusCode.Should().Be(StatusCodes.Status502BadGateway);
+    }
 }

@@ -1559,12 +1559,14 @@ public class AdvertsControllerTests : IDisposable
         var serviceCreateDto = new ServiceCreateDto(
             Title: "New Service",
             Description: "Description of the new service",
-            Price: 20m,
+            PricePerHour: 20m,
             UserId: existingUser.Id,
             SubjectId: 1,
             SchoolGradeId: 1,
             TeachingLanguage: LanguageEnum.FR,
-            StudyLevel: "Diplôme en Mathématiques"
+            StudyLevel: "Diplôme en Mathématiques",
+            MinHours: 1,
+            MaxHours: 8
         );
 
         // Act
@@ -1597,12 +1599,14 @@ public class AdvertsControllerTests : IDisposable
         var serviceCreateDto = new ServiceCreateDto(
             Title: "", // Invalid
             Description: "Description of the new service",
-            Price: 20m,
+            PricePerHour: 20m,
             UserId: existingUser.Id,
             SubjectId: 1,
             SchoolGradeId: 1,
             TeachingLanguage: LanguageEnum.FR,
-            StudyLevel: "Diplôme en Mathématiques"
+            StudyLevel: "Diplôme en Mathématiques",
+            MinHours: 1,
+            MaxHours: 8
         );
 
         // FORCE VALIDATION ERROR
@@ -1978,13 +1982,14 @@ public class AdvertsControllerTests : IDisposable
         var serviceUpdateDto = new ServiceCreateDto(
             Title: "Lesson de français",
             Description: "Cours de français pour lycéens",
-            Price: 40m,
+            PricePerHour: 40m,
             UserId: existingUser.Id,
             SubjectId: 2,
             SchoolGradeId: 1,
             TeachingLanguage: LanguageEnum.FR,
-            StudyLevel: "Diplôme en Langue Française"
-
+            StudyLevel: "Diplôme en Langue Française",
+            MinHours: 1,
+            MaxHours: 8
         );
 
         // Act
@@ -2036,13 +2041,14 @@ public class AdvertsControllerTests : IDisposable
         var serviceUpdateDto = new ServiceCreateDto(
             Title: "", // Invalid
             Description: "Cours de français pour lycéens",
-            Price: 40m,
+            PricePerHour: 40m,
             UserId: existingUser.Id,
             SubjectId: 1,
             SchoolGradeId: 1,
             TeachingLanguage: LanguageEnum.FR,
-            StudyLevel: "Diplôme en Langue Française"
-
+            StudyLevel: "Diplôme en Langue Française",
+            MinHours: 1,
+            MaxHours: 8
         );
 
         _controller.ModelState.AddModelError("Title", "The Title field is required.");
@@ -2067,13 +2073,14 @@ public class AdvertsControllerTests : IDisposable
         var serviceUpdateDto = new ServiceCreateDto(
             Title: "Lesson de français",
             Description: "Cours de français pour lycéens",
-            Price: 40m,
+            PricePerHour: 40m,
             UserId: existingUser.Id,
             SubjectId: 1,
             SchoolGradeId: 1,
             TeachingLanguage: LanguageEnum.FR,
-            StudyLevel: "Diplôme en Langue Française"
-
+            StudyLevel: "Diplôme en Langue Française",
+            MinHours: 1,
+            MaxHours: 8
         );
 
         // Act

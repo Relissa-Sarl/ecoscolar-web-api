@@ -133,6 +133,7 @@ public static class ServiceCollectionExtensions
 		services.AddSingleton<IShippingFeeCalculator, ShippingFeeCalculator>();
 		services.AddSingleton<IStripeCheckoutClient, StripeCheckoutClient>();
 		services.AddScoped<IPaymentService, PaymentService>();
+		services.AddScoped<ITutoringReservationService, TutoringReservationService>();
 
 		// MinIO image storage
 		var minioEndpoint = config["Minio:Endpoint"].NullIfEmpty() ?? "localhost:9000";

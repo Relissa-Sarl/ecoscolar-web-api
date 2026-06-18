@@ -75,7 +75,7 @@ public class ReportsControllerTests
 			ReporterUserId = "user-123",
 			Reason = ReportReason.INAPPROPRIATE_ADVERT,
 			Message = "Offensive content",
-			Status = TicketStatus.Pending,
+			Status = TicketStatus.PENDING,
 			CreatedAt = DateTime.UtcNow
 		};
 
@@ -117,7 +117,7 @@ public class ReportsControllerTests
 				ReporterUserId = "user-456",
 				Reason = ReportReason.INAPPROPRIATE_COMMENT,
 				Message = "Rude comment",
-				Status = TicketStatus.Pending,
+				Status = TicketStatus.PENDING,
 				CreatedAt = DateTime.UtcNow
 			});
 
