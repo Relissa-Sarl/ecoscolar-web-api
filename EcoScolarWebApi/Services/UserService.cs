@@ -199,4 +199,38 @@ public class UserService : IUserService
 
         return Result<bool>.Success(true);
     }
+
+    public async Task<Result<bool>> ReportUserAsync(ClaimsPrincipal userPrincipal, string flaggedUserId, string reason)
+    {
+        var reporterId = _userManager.GetUserId(userPrincipal);
+
+        if (string.IsNullOrEmpty(reporterId))
+            return Result<bool>.Failure("SESSION_INVALID", ErrorType.Unauthorized);
+
+        if (reporterId == flaggedUserId)
+            return Result<bool>.Failure("You cannot report yourself.");
+
+        var flaggedUserExists = await _userManager.Users.AnyAsync(u => u.Id == flaggedUserId);
+        if (!flaggedUserExists)
+            return Result<bool>.Failure("User to report not found.", ErrorType.NotFound);
+
+        var alreadyReported = await _context.Flags
+            .AnyAsync(f => f.ReporterId == reporterId && f.FlaggedId == flaggedUserId);
+
+        if (alreadyReported)
+            return Result<bool>.Failure("You have already reported this user.");
+
+        var flag = new Flag
+        {
+            ReporterId = reporterId,
+            FlaggedId = flaggedUserId,
+            Reason = reason,
+            Date = DateTime.UtcNow
+        };
+
+        _context.Flags.Add(flag);
+        await _context.SaveChangesAsync();
+
+        return Result<bool>.Success(true);
+    }
 }
