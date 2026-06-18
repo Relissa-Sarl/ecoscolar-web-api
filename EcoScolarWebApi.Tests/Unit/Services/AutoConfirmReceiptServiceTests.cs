@@ -2,6 +2,7 @@ using EcoScolarWebApi.Data;
 using EcoScolarWebApi.Enums;
 using EcoScolarWebApi.Models;
 using EcoScolarWebApi.Services;
+using EcoScolarWebApi.Services.Contracts;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -26,6 +27,8 @@ public class AutoConfirmReceiptServiceTests : IDisposable
 
 		var services = new ServiceCollection();
 		services.AddScoped(_ => new EcoscolarDbContext(_dbOptions));
+		// Payout is exercised in PayoutServiceTests; here we only assert the auto-confirm behaviour.
+		services.AddScoped(_ => Substitute.For<IPayoutService>());
 		_serviceProvider = services.BuildServiceProvider();
 
 		_configuration = new ConfigurationBuilder()

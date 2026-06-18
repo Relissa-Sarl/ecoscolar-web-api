@@ -132,7 +132,9 @@ public static class ServiceCollectionExtensions
 		services.AddSingleton<IPlatformFeeCalculator, PlatformFeeCalculator>();
 		services.AddSingleton<IShippingFeeCalculator, ShippingFeeCalculator>();
 		services.AddSingleton<IStripeCheckoutClient, StripeCheckoutClient>();
+		services.AddSingleton<IStripeTransferClient, StripeTransferClient>();
 		services.AddScoped<IPaymentService, PaymentService>();
+		services.AddScoped<IPayoutService, SellerPayoutService>();
 		services.AddScoped<ITutoringReservationService, TutoringReservationService>();
 		services.AddScoped<ITutoringTransactionService, TutoringTransactionService>();
 
