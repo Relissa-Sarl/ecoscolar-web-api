@@ -14,23 +14,22 @@ namespace EcoScolarWebApi.Services;
 /// </summary>
 public class PaymentService : IPaymentService
 {
-    // Swiss VAT applied to the order total, kept from the original checkout to avoid a buyer-facing pricing regression.
-    private const decimal VatRate = 0.081m;
-    private const decimal ShippingCost = 2m;
-
     private readonly EcoscolarDbContext _context;
     private readonly IPlatformFeeCalculator _feeCalculator;
+    private readonly IShippingFeeCalculator _shippingFeeCalculator;
     private readonly IStripeCheckoutClient _checkoutClient;
     private readonly ILogger<PaymentService> _logger;
 
     public PaymentService(
         EcoscolarDbContext context,
         IPlatformFeeCalculator feeCalculator,
+        IShippingFeeCalculator shippingFeeCalculator,
         IStripeCheckoutClient checkoutClient,
         ILogger<PaymentService> logger)
     {
         _context = context;
         _feeCalculator = feeCalculator;
+        _shippingFeeCalculator = shippingFeeCalculator;
         _checkoutClient = checkoutClient;
         _logger = logger;
     }
@@ -73,11 +72,11 @@ public class PaymentService : IPaymentService
         }
 
         // Order total charged to the buyer (escrowed on the platform account).
+        // The platform is not subject to VAT, so none is applied.
         var subtotal = lines.Sum(l => l.UnitPrice);
         var totalFee = lines.Sum(l => l.Fee);
-        var shipping = request.ShippingMethod == "handToHand" ? 0m : ShippingCost;
-        var vat = Math.Round((subtotal + shipping + totalFee) * VatRate, 2, MidpointRounding.AwayFromZero);
-        var grandTotal = subtotal + shipping + totalFee + vat;
+        var shipping = _shippingFeeCalculator.CalculateFee(request.ShippingMethod);
+        var grandTotal = subtotal + shipping + totalFee;
         var amountInCents = (long)Math.Round(grandTotal * 100, MidpointRounding.AwayFromZero);
 
         var orderNumber = await GenerateUniqueOrderNumberAsync();

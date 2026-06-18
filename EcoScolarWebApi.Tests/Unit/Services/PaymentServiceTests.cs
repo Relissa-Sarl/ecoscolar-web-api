@@ -41,7 +41,7 @@ public class PaymentServiceTests : IDisposable
         _checkoutClient.CreateSessionAsync(Arg.Any<SessionCreateOptions>(), Arg.Any<CancellationToken>())
             .Returns(new Session { Id = "cs_test_123", Url = "https://stripe.test/checkout" });
 
-        _service = new PaymentService(_context, _feeCalculator, _checkoutClient, Substitute.For<ILogger<PaymentService>>());
+        _service = new PaymentService(_context, _feeCalculator, new ShippingFeeCalculator(), _checkoutClient, Substitute.For<ILogger<PaymentService>>());
     }
 
     public void Dispose()
