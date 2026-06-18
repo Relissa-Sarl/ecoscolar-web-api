@@ -110,14 +110,14 @@ public sealed class AdvertSearchService : IAdvertSearchService
 			.AsNoTracking()
 			.Include(s => s.Subject)
 			.Include(s => s.SchoolGrade)
-			.FirstOrDefaultAsync(s => s.AdvertId == id, cancellationToken);
+            .FirstOrDefaultAsync(s => s.AdvertId == id, cancellationToken);
 		if (serviceDetail != null)
 			return ToDetailFromService(serviceDetail);
 
 		var productDetail = await _context.Products
 			.AsNoTracking()
 			.Include(p => p.Pictures)
-			.Where(p =>
+            .Where(p =>
 				p.AdvertId == id
 				&& !_context.Set<Book>().Any(Books => Books.AdvertId == p.AdvertId))
 			.FirstOrDefaultAsync(cancellationToken);
@@ -367,7 +367,8 @@ public sealed class AdvertSearchService : IAdvertSearchService
 			Type = CatalogAdvertTypeCodes.Books,
 			Isbn = string.IsNullOrWhiteSpace(b.ISBN) ? null : b.ISBN,
 			Category = b.BookCategory?.Name,
-			Subjects = null,
+			Status = b.Status,
+            Subjects = null,
 			Grade = null,
 			Price = b.Price,
 			Description = b.Description ?? string.Empty,
@@ -386,7 +387,8 @@ public sealed class AdvertSearchService : IAdvertSearchService
 			Type = CatalogAdvertTypeCodes.Service,
 			Isbn = null,
 			Category = null,
-			Subjects = s.Subject?.Name,
+            Status = s.Status,
+            Subjects = s.Subject?.Name,
 			Grade = s.SchoolGrade?.Name,
 			Price = s.Price,
 			Description = s.Description ?? string.Empty,
@@ -407,7 +409,8 @@ public sealed class AdvertSearchService : IAdvertSearchService
 			Type = CatalogAdvertTypeCodes.Product,
 			Isbn = null,
 			Category = null,
-			Subjects = null,
+            Status = p.Status,
+            Subjects = null,
 			Grade = null,
 			Price = p.Price,
 			Description = p.Description ?? string.Empty,
