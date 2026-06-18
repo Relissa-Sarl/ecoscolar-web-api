@@ -102,6 +102,11 @@ public class TransactionsController(EcoscolarDbContext context, UserManager<User
         if (transaction.BuyerId != user.Id)
             return Forbid();
 
+        // Tutoring packages are confirmed/released through their own flow (/tutoring/transactions),
+        // never via the physical-goods receipt confirmation (which would wrongly mark the advert SOLD).
+        if (transaction.Advert is TutoringAdvert)
+            return BadRequest(new { message = "Les cours d'appui se confirment via leur propre flux (/tutoring/transactions)." });
+
         transaction.Status = TransactionStatus.COMPLETED;
         if (transaction.Advert != null)
         {
