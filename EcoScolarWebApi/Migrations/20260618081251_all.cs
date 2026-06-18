@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace EcoScolarWebApi.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class all : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -536,15 +536,24 @@ namespace EcoScolarWebApi.Migrations
                 {
                     TransactionId = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+                    OrderNumber = table.Column<string>(type: "nvarchar(32)", maxLength: 32, nullable: true),
                     AdvertId = table.Column<long>(type: "bigint", nullable: false),
                     Date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ExpirationReservationTime = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    ShippedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     PlatformFee = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     BuyerConsent = table.Column<bool>(type: "bit", nullable: false),
                     SellerConsent = table.Column<bool>(type: "bit", nullable: false),
                     ReminderDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     StripeSessionId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Quantity = table.Column<int>(type: "int", nullable: false),
+                    UnitPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Amount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    StripePaymentIntentId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    StripeTransferId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    TutorConfirmedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    PackageExpiresAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     BuyerId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
@@ -572,7 +581,9 @@ namespace EcoScolarWebApi.Migrations
                     StudyLevel = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     SubjectId = table.Column<long>(type: "bigint", nullable: false),
                     SchoolGradeId = table.Column<long>(type: "bigint", nullable: false),
-                    TeachingLanguage = table.Column<int>(type: "int", nullable: false)
+                    TeachingLanguage = table.Column<int>(type: "int", nullable: false),
+                    MaxHours = table.Column<int>(type: "int", nullable: false),
+                    MinHours = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -681,6 +692,10 @@ namespace EcoScolarWebApi.Migrations
                     PictureId = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Label = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    ObjectKey = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    ContentType = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    PublicUrl = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    SortOrder = table.Column<int>(type: "int", nullable: false),
                     PhysicalItemId = table.Column<long>(type: "bigint", nullable: false)
                 },
                 constraints: table =>
@@ -695,16 +710,52 @@ namespace EcoScolarWebApi.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "AbuseReports",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TargetAdvertId = table.Column<long>(type: "bigint", nullable: false),
+                    TargetCommentId = table.Column<int>(type: "int", nullable: true),
+                    ReporterUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Reason = table.Column<int>(type: "int", nullable: false),
+                    Message = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AbuseReports", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_AbuseReports_Adverts_TargetAdvertId",
+                        column: x => x.TargetAdvertId,
+                        principalTable: "Adverts",
+                        principalColumn: "AdvertId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_AbuseReports_AspNetUsers_ReporterUserId",
+                        column: x => x.ReporterUserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_AbuseReports_PublicComments_TargetCommentId",
+                        column: x => x.TargetCommentId,
+                        principalTable: "PublicComments",
+                        principalColumn: "CommentId");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Disputes",
                 columns: table => new
                 {
                     DisputeId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     TransactionId = table.Column<long>(type: "bigint", nullable: false),
-                    Reason = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Reason = table.Column<int>(type: "int", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Date = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
-                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false),
                     Resolution = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
@@ -831,6 +882,21 @@ namespace EcoScolarWebApi.Migrations
                     { 11L, "ECO", "Economics and Law", "Wirtschaft und Recht", "Économie et droit", "Economia e diritto" },
                     { 12L, "INFO", "Computer Science", "Informatik", "Informatique", "Informatica" }
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AbuseReports_ReporterUserId",
+                table: "AbuseReports",
+                column: "ReporterUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AbuseReports_TargetAdvertId",
+                table: "AbuseReports",
+                column: "TargetAdvertId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AbuseReports_TargetCommentId",
+                table: "AbuseReports",
+                column: "TargetCommentId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Adverts_SellerId",
@@ -998,6 +1064,11 @@ namespace EcoScolarWebApi.Migrations
                 column: "BuyerId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Transactions_OrderNumber",
+                table: "Transactions",
+                column: "OrderNumber");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_TutoringAdverts_SchoolGradeId",
                 table: "TutoringAdverts",
                 column: "SchoolGradeId");
@@ -1026,6 +1097,9 @@ namespace EcoScolarWebApi.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "AbuseReports");
+
             migrationBuilder.DropTable(
                 name: "AspNetRoleClaims");
 
@@ -1060,9 +1134,6 @@ namespace EcoScolarWebApi.Migrations
                 name: "PriceOffers");
 
             migrationBuilder.DropTable(
-                name: "PublicComments");
-
-            migrationBuilder.DropTable(
                 name: "Reviews");
 
             migrationBuilder.DropTable(
@@ -1079,6 +1150,9 @@ namespace EcoScolarWebApi.Migrations
 
             migrationBuilder.DropTable(
                 name: "UserLanguages");
+
+            migrationBuilder.DropTable(
+                name: "PublicComments");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");

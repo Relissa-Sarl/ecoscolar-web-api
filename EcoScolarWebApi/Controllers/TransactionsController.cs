@@ -5,9 +5,11 @@ using EcoScolarWebApi.DTOs.Transactions;
 using EcoScolarWebApi.Enums;
 using EcoScolarWebApi.Mappers;
 using EcoScolarWebApi.Models;
+using EcoScolarWebApi.Services.Contracts;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Buffers.Text;
 using System.Security.Cryptography;
 
 namespace EcoScolarWebApi.Controllers;
@@ -15,92 +17,94 @@ namespace EcoScolarWebApi.Controllers;
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/[controller]")]
 [ApiController]
-public class TransactionsController(EcoscolarDbContext context, UserManager<User> userManager, ReviewMapper reviewMapper) : ControllerBase
+public class TransactionsController(EcoscolarDbContext context, UserManager<User> userManager, ReviewMapper reviewMapper, IConfiguration configuration, IEmailSenderService emailSenderService) : ControllerBase
 {
-	private readonly EcoscolarDbContext _context = context;
-	private readonly UserManager<User> _userManager = userManager;
-	private readonly ReviewMapper _reviewMapper = reviewMapper;
+    private readonly EcoscolarDbContext _context = context;
+    private readonly UserManager<User> _userManager = userManager;
+    private readonly ReviewMapper _reviewMapper = reviewMapper;
+    private readonly IConfiguration _configuration = configuration;
+    private readonly IEmailSenderService _emailSenderService = emailSenderService;
 
-	[HttpPost("{transactionId}/reviews")]
-	public async Task<ActionResult<IEnumerable<ReviewResponseDTO>>> CreateReview(long transactionId, [FromBody] ReviewRequestDTO review)
-	{
-		var transactionUserIds = await _context.Transactions
-			.Where(t => t.TransactionId == transactionId)
-			.Select(t => new TransactionUserIdsDto(t.BuyerId, t.Advert.SellerId))
-			.FirstOrDefaultAsync();
+    [HttpPost("{transactionId}/reviews")]
+    public async Task<ActionResult<IEnumerable<ReviewResponseDTO>>> CreateReview(long transactionId, [FromBody] ReviewRequestDTO review)
+    {
+        var transactionUserIds = await _context.Transactions
+            .Where(t => t.TransactionId == transactionId)
+            .Select(t => new TransactionUserIdsDto(t.BuyerId, t.Advert.SellerId))
+            .FirstOrDefaultAsync();
 
-		// If the transaction doesn't exist, return 404 Not Found
-		if (transactionUserIds is null)
-			return NotFound();
+        // If the transaction doesn't exist, return 404 Not Found
+        if (transactionUserIds is null)
+            return NotFound();
 
-		var user = await _userManager.GetUserAsync(User);
-		if (user is null)
-			return Unauthorized();
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+            return Unauthorized();
 
-		string? reviewedUserId = null;
-		ReviewedRole reviewedRole;
+        string? reviewedUserId = null;
+        ReviewedRole reviewedRole;
 
         // Check if the current user is either the buyer or the seller in this transaction
         if (user.Id == transactionUserIds.BuyerId)
-		{
-			reviewedUserId = transactionUserIds.SellerId;
-			reviewedRole = ReviewedRole.SELLER;
-		}
-		else if (user.Id == transactionUserIds.SellerId)
-		{
-			reviewedUserId = transactionUserIds.BuyerId;
-			reviewedRole = ReviewedRole.BUYER;
-		}
-		else
-			return Forbid();
+        {
+            reviewedUserId = transactionUserIds.SellerId;
+            reviewedRole = ReviewedRole.SELLER;
+        }
+        else if (user.Id == transactionUserIds.SellerId)
+        {
+            reviewedUserId = transactionUserIds.BuyerId;
+            reviewedRole = ReviewedRole.BUYER;
+        }
+        else
+            return Forbid();
 
-		var alreadyReviewed = await _context.Reviews.AnyAsync(r => r.TransactionId == transactionId && r.ReviewerId == user.Id);
-		if (alreadyReviewed)
-			return Conflict(new { message = "A review already exists for this transaction from the current user." });
+        var alreadyReviewed = await _context.Reviews.AnyAsync(r => r.TransactionId == transactionId && r.ReviewerId == user.Id);
+        if (alreadyReviewed)
+            return Conflict(new { message = "A review already exists for this transaction from the current user." });
 
-		var newReview = new Review
-		{
-			Comment = review.Comment,
-			Rating = review.Rating,
-			ReviewerId = user.Id,
-			ReviewedId = reviewedUserId,
-			TransactionId = transactionId,
-			ReviewedRole = reviewedRole
-		};
+        var newReview = new Review
+        {
+            Comment = review.Comment,
+            Rating = review.Rating,
+            ReviewerId = user.Id,
+            ReviewedId = reviewedUserId,
+            TransactionId = transactionId,
+            ReviewedRole = reviewedRole
+        };
 
-		_context.Reviews.Add(newReview);
-		await _context.SaveChangesAsync();
+        _context.Reviews.Add(newReview);
+        await _context.SaveChangesAsync();
 
-		// Reload the review of the transaction (bidirectional reviews)
-		var reviews = await _reviewMapper.ProjectToReviewResponseDTOs(
-							_context.Reviews.Where(r => r.TransactionId == transactionId))
-							.ToListAsync();
+        // Reload the review of the transaction (bidirectional reviews)
+        var reviews = await _reviewMapper.ProjectToReviewResponseDTOs(
+                            _context.Reviews.Where(r => r.TransactionId == transactionId))
+                            .ToListAsync();
 
-		return CreatedAtAction(nameof(CreateReview), new { transactionId }, reviews);
-	}
+        return CreatedAtAction(nameof(CreateReview), new { transactionId }, reviews);
+    }
 
-	[HttpPut("{transactionId}/confirm-receipt")]
-	public async Task<IActionResult> ConfirmReceipt(long transactionId)
-	{
-		var user = await _userManager.GetUserAsync(User);
-		if (user is null)
-			return Unauthorized();
+    [HttpPut("{transactionId}/confirm-receipt")]
+    public async Task<IActionResult> ConfirmReceipt(long transactionId)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+            return Unauthorized();
 
-		var transaction = await _context.Transactions
-			.Include(t => t.Advert)
+        var transaction = await _context.Transactions
+            .Include(t => t.Advert)
                 .ThenInclude(a => a.Seller)
-			.FirstOrDefaultAsync(t => t.TransactionId == transactionId);
+            .FirstOrDefaultAsync(t => t.TransactionId == transactionId);
 
-		if (transaction is null)
-			return NotFound();
+        if (transaction is null)
+            return NotFound();
 
-		if (transaction.BuyerId != user.Id)
-			return Forbid();
+        if (transaction.BuyerId != user.Id)
+            return Forbid();
 
-		transaction.Status = TransactionStatus.COMPLETED;
-		if (transaction.Advert != null)
-		{
-			transaction.Advert.Status = AdvertStatus.SOLD;
+        transaction.Status = TransactionStatus.COMPLETED;
+        if (transaction.Advert != null)
+        {
+            transaction.Advert.Status = AdvertStatus.SOLD;
 
             // Trigger Stripe transfer if the seller has a connected account
             if (!string.IsNullOrEmpty(transaction.Advert.Seller?.StripeAccountId))
@@ -124,28 +128,28 @@ public class TransactionsController(EcoscolarDbContext context, UserManager<User
                     Console.WriteLine($"Stripe transfer failed: {ex.Message}");
                 }
             }
-		}
+        }
 
-		await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync();
 
-		return NoContent();
-	}
+        return NoContent();
+    }
 
-	[HttpPost("{transactionId}/dispute")]
-	public async Task<IActionResult> DisputePurchase(long transactionId, [FromBody] EcoScolarWebApi.DTOs.Transactions.DisputeRequestDto request)
-	{
-		var user = await _userManager.GetUserAsync(User);
-		if (user is null)
-			return Unauthorized();
+    [HttpPost("{transactionId}/dispute")]
+    public async Task<IActionResult> DisputePurchase(long transactionId, [FromBody] EcoScolarWebApi.DTOs.Transactions.DisputeRequestDto request)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+            return Unauthorized();
 
-		var transaction = await _context.Transactions
-			.FirstOrDefaultAsync(t => t.TransactionId == transactionId);
+        var transaction = await _context.Transactions
+            .FirstOrDefaultAsync(t => t.TransactionId == transactionId);
 
-		if (transaction is null)
-			return NotFound();
+        if (transaction is null)
+            return NotFound();
 
-		if (transaction.BuyerId != user.Id)
-			return Forbid();
+        if (transaction.BuyerId != user.Id)
+            return Forbid();
 
 		var isService = await _context.Transactions
 			.Where(t => t.TransactionId == transactionId)
@@ -164,29 +168,29 @@ public class TransactionsController(EcoscolarDbContext context, UserManager<User
 			TransactionId = transactionId,
 			Reason = request.Reason,
 			Description = request.Description,
-			Status = EcoScolarWebApi.Enums.TicketStatus.Pending,
+			Status = EcoScolarWebApi.Enums.TicketStatus.PENDING,
 			Date = DateTime.UtcNow
 		};
 
-		transaction.Status = TransactionStatus.DISPUTED;
-		
-		_context.Disputes.Add(dispute);
-		await _context.SaveChangesAsync();
+        transaction.Status = TransactionStatus.DISPUTED;
 
-		return Ok();
-	}
+        _context.Disputes.Add(dispute);
+        await _context.SaveChangesAsync();
 
-	[HttpPost]
-	public async Task<IActionResult> CreateTransactions([FromBody] CreateTransactionRequestDto request)
-	{
-		var user = await _userManager.GetUserAsync(User);
-		if (user is null)
-			return Unauthorized();
+        return Ok();
+    }
 
-		if (request.AdvertIds == null || request.AdvertIds.Count == 0)
-		{
-			return BadRequest(new { message = "AdvertIds are required." });
-		}
+    [HttpPost]
+    public async Task<IActionResult> CreateTransactions([FromBody] CreateTransactionRequestDto request)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+            return Unauthorized();
+
+        if (request.AdvertIds == null || request.AdvertIds.Count == 0)
+        {
+            return BadRequest(new { message = "AdvertIds are required." });
+        }
 
 		var existingOrderNumber = await _context.Transactions
 			.Where(t => request.AdvertIds.Contains(t.AdvertId) && t.OrderNumber != null)
@@ -195,12 +199,14 @@ public class TransactionsController(EcoscolarDbContext context, UserManager<User
 
 		var orderNumber = existingOrderNumber ?? await GenerateUniqueOrderNumberAsync();
 
-		var createdTransactions = new List<Transaction>();
+        var createdTransactions = new List<Transaction>();
+        var soldAdverts = new List<Advert>();
 
-		foreach (var advertId in request.AdvertIds)
-		{
-			var existingTransaction = await _context.Transactions
-				.FirstOrDefaultAsync(t => t.AdvertId == advertId);
+        foreach (var advertId in request.AdvertIds)
+        {
+            // Check if a transaction already exists for this advert
+            var existingTransaction = await _context.Transactions
+                .FirstOrDefaultAsync(t => t.AdvertId == advertId);
 
 			if (existingTransaction != null)
 			{
@@ -212,18 +218,19 @@ public class TransactionsController(EcoscolarDbContext context, UserManager<User
 				continue;
 			}
 
-			var advert = await _context.Adverts.FindAsync(advertId);
-			if (advert == null)
-			{
-				return NotFound(new { message = $"Advert with ID {advertId} not found." });
-			}
+            var advert = await _context.Adverts.FindAsync(advertId);
+            if (advert == null)
+            {
+                return NotFound(new { message = $"Advert with ID {advertId} not found." });
+            }
 
+            if (advert is TutoringAdvert)
+            {
+                return BadRequest(new { message = "Les prestations de tutorat doivent etre reservees via l endpoint /tutoring/{advertId}/reserve." });
+            }
 
-			if (advert is TutoringAdvert)
-			{
-				return BadRequest(new { message = "Les prestations de tutorat doivent etre reservees via l endpoint /tutoring/{advertId}/reserve." });
-			}
-			var platformFee = Math.Round(advert.Price * 0.05m, 2);
+            // Calculate platform fee (5% of price, rounded to 2 decimal places)
+            var platformFee = Math.Round(advert.Price * 0.05m, 2);
 
 			var newTransaction = new Transaction
 			{
@@ -238,14 +245,38 @@ public class TransactionsController(EcoscolarDbContext context, UserManager<User
 				SellerConsent = false,
 			};
 
-			advert.Status = AdvertStatus.SOLD;
-			_context.Entry(advert).State = EntityState.Modified;
+            // Update the advert status to SOLD
+            advert.Status = AdvertStatus.SOLD;
+            _context.Entry(advert).State = EntityState.Modified;
 
-			_context.Transactions.Add(newTransaction);
-			createdTransactions.Add(newTransaction);
-		}
+            _context.Transactions.Add(newTransaction);
+            createdTransactions.Add(newTransaction);
+            soldAdverts.Add(advert);
+        }
 
 		await _context.SaveChangesAsync();
+
+		var baseUrl = _configuration["Frontend:BaseUrl"] ?? "http://localhost:3000";
+		foreach (var advert in soldAdverts)
+		{
+			if (advert.Seller == null)
+			{
+				await _context.Entry(advert).Reference(a => a.Seller).LoadAsync();
+			}
+
+			if (advert.Seller != null && !string.IsNullOrEmpty(advert.Seller.Email))
+			{
+				var allSoldLink = $"{baseUrl.TrimEnd('/')}/me/sales?from=profile";
+				try
+				{
+					await _emailSenderService.SendItemSoldEmailAsync(advert.Seller, advert, allSoldLink);
+				}
+				catch (Exception e)
+				{
+					Console.WriteLine($"Error: Failed to send sale notification email :{e.Message}");
+				}
+			}
+		}
 
 		return Ok(createdTransactions.Select(t => new {
 			t.TransactionId,

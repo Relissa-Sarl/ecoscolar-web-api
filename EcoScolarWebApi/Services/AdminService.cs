@@ -1,5 +1,6 @@
 ﻿using EcoScolarWebApi.Commun;
 using EcoScolarWebApi.Data;
+using EcoScolarWebApi.DTOs;
 using EcoScolarWebApi.DTOs.Adverts;
 using EcoScolarWebApi.DTOs.Support;
 using EcoScolarWebApi.DTOs.Users;
@@ -25,15 +26,17 @@ namespace EcoScolarWebApi.Services
         private readonly SignInManager<User> _signInManager;        // Sign-in manager
         private readonly EcoscolarDbContext _context;               // Database context
         private readonly UserMapper _userMapper;                    // User mapper for converting between entities and DTOs
+        private readonly AbuseReportMapper _abuseReportMapper;
         private readonly int _badReviewRatingThreshold;             // Rating below which a review counts as "bad"
         private readonly int _tooManyBadReviewsThreshold;           // Bad-review count above which a user is flagged
 
-        public AdminService(UserManager<User> userManager, EcoscolarDbContext dbContext, SignInManager<User> signInManager, UserMapper userMapper, IConfiguration configuration)
+        public AdminService(UserManager<User> userManager, EcoscolarDbContext dbContext, SignInManager<User> signInManager, UserMapper userMapper, AbuseReportMapper abuseReportMapper, IConfiguration configuration)
         {
             _userManager = userManager;
             _context = dbContext;
             _signInManager = signInManager;
             _userMapper = userMapper;
+            _abuseReportMapper = abuseReportMapper;
             _badReviewRatingThreshold = configuration.GetValue("BusinessSettings:BadReviewRatingThreshold", DefaultBadReviewRatingThreshold);
             _tooManyBadReviewsThreshold = configuration.GetValue("BusinessSettings:TooManyBadReviewsThreshold", DefaultTooManyBadReviewsThreshold);
         }
@@ -183,6 +186,96 @@ namespace EcoScolarWebApi.Services
 
             AdvertReadDto advertReadDto = AdvertReadDto.FromEntity(currentAdvert);
             return Result<AdvertReadDto>.Success(advertReadDto);
+        }
+
+        public async Task<Result<List<AbuseReportAdminDto>>> GetAllAbuses(ClaimsPrincipal user)
+        {
+            if (!user.IsInRole("Admin"))
+                return Result<List<AbuseReportAdminDto>>.Failure("Unauthorized access.", ErrorType.Unauthorized);
+
+            var abuses = await _context.AbuseReports
+                .Include(s => s.Reporter)
+                .Include(s => s.TargetAdvert)
+                .ThenInclude(a => a!.Seller)
+                .Include(a => a.TargetComment)
+                .ThenInclude(c => c!.Author)
+                .OrderByDescending(t => t.CreatedAt)
+                .ToListAsync();
+            return Result<List<AbuseReportAdminDto>>.Success(abuses.Select(a => _abuseReportMapper.ToAbuseReportAdminDto(a)).ToList());
+        }
+
+        public async Task<Result<IEnumerable<FlaggedUserDto>>> GetFlaggedUsers(ClaimsPrincipal user)
+        {
+            if (!user.IsInRole("Admin"))
+                return Result<IEnumerable<FlaggedUserDto>>.Failure("Unauthorized access.", ErrorType.Unauthorized);
+
+            var flags = await _context.Flags
+                .Include(f => f.Flagged)
+                .Include(f => f.Reporter)
+                .OrderByDescending(f => f.Date)
+                .ToListAsync();
+
+            var flaggedUsers = flags
+                .GroupBy(f => f.FlaggedId)
+                .Select(g =>
+                {
+                    var flaggedUser = g.First().Flagged!;
+                    return new FlaggedUserDto(
+                        flaggedUser.Id,
+                        flaggedUser.Nickname ?? string.Empty,
+                        flaggedUser.Email ?? string.Empty,
+                        flaggedUser.FirstName ?? string.Empty,
+                        flaggedUser.LastName ?? string.Empty,
+                        g.Select(f => new FlagAdminDto(
+                            f.FlagId,
+                            f.Reason,
+                            f.Date,
+                            f.ReporterId,
+                            f.Reporter?.Nickname ?? string.Empty,
+                            f.Reporter?.Email ?? string.Empty
+                        )).ToList()
+                    );
+                })
+                .ToList();
+
+            return Result<IEnumerable<FlaggedUserDto>>.Success(flaggedUsers);
+        }
+        
+        public async Task<Result<AbuseReportAdminDto>> ChangeAbuseStatus(ClaimsPrincipal user, int abuseId, AbuseStatusRequestDto status)
+        {
+            if (!user.IsInRole("Admin"))
+                return Result<AbuseReportAdminDto>.Failure("Unauthorized access.", ErrorType.Unauthorized);
+
+            var currentAbuse = _context.AbuseReports
+                .Include(s => s.Reporter)
+                .Include(s => s.TargetAdvert)
+                .ThenInclude(a => a!.Seller)
+                .Include(a => a.TargetComment)
+                .ThenInclude(c => c!.Author)
+                .FirstOrDefault(a => a.Id == abuseId);
+
+            if (currentAbuse == null)
+                return Result<AbuseReportAdminDto>.Failure("Abuse report not found.", ErrorType.NotFound);
+
+            currentAbuse.Status = status.Status;
+
+            await _context.SaveChangesAsync();
+
+            return Result<AbuseReportAdminDto>.Success(_abuseReportMapper.ToAbuseReportAdminDto(currentAbuse));
+        }
+
+        public async Task<Result> DeleteAbuse(ClaimsPrincipal user, int abuseId)
+        {
+            if (!user.IsInRole("Admin"))
+                return Result.Failure("Unauthorized access.", ErrorType.Unauthorized);
+
+            AbuseReport? abuse = await _context.AbuseReports.FindAsync(abuseId);
+            if (abuse == null)
+                return Result.Failure("Abuse resport not found.", ErrorType.NotFound);
+
+            _context.AbuseReports.Remove(abuse);
+            await _context.SaveChangesAsync();
+            return Result.Success();
         }
     }
 }

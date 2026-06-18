@@ -1559,12 +1559,14 @@ public class AdvertsControllerTests : IDisposable
         var serviceCreateDto = new ServiceCreateDto(
             Title: "New Service",
             Description: "Description of the new service",
-            Price: 20m,
+            PricePerHour: 20m,
             UserId: existingUser.Id,
             SubjectId: 1,
             SchoolGradeId: 1,
             TeachingLanguage: LanguageEnum.FR,
-            StudyLevel: "Diplôme en Mathématiques"
+            StudyLevel: "Diplôme en Mathématiques",
+            MinHours: 1,
+            MaxHours: 8
         );
 
         // Act
@@ -1597,12 +1599,14 @@ public class AdvertsControllerTests : IDisposable
         var serviceCreateDto = new ServiceCreateDto(
             Title: "", // Invalid
             Description: "Description of the new service",
-            Price: 20m,
+            PricePerHour: 20m,
             UserId: existingUser.Id,
             SubjectId: 1,
             SchoolGradeId: 1,
             TeachingLanguage: LanguageEnum.FR,
-            StudyLevel: "Diplôme en Mathématiques"
+            StudyLevel: "Diplôme en Mathématiques",
+            MinHours: 1,
+            MaxHours: 8
         );
 
         // FORCE VALIDATION ERROR
@@ -1978,13 +1982,14 @@ public class AdvertsControllerTests : IDisposable
         var serviceUpdateDto = new ServiceCreateDto(
             Title: "Lesson de français",
             Description: "Cours de français pour lycéens",
-            Price: 40m,
+            PricePerHour: 40m,
             UserId: existingUser.Id,
             SubjectId: 2,
             SchoolGradeId: 1,
             TeachingLanguage: LanguageEnum.FR,
-            StudyLevel: "Diplôme en Langue Française"
-
+            StudyLevel: "Diplôme en Langue Française",
+            MinHours: 1,
+            MaxHours: 8
         );
 
         // Act
@@ -2036,13 +2041,14 @@ public class AdvertsControllerTests : IDisposable
         var serviceUpdateDto = new ServiceCreateDto(
             Title: "", // Invalid
             Description: "Cours de français pour lycéens",
-            Price: 40m,
+            PricePerHour: 40m,
             UserId: existingUser.Id,
             SubjectId: 1,
             SchoolGradeId: 1,
             TeachingLanguage: LanguageEnum.FR,
-            StudyLevel: "Diplôme en Langue Française"
-
+            StudyLevel: "Diplôme en Langue Française",
+            MinHours: 1,
+            MaxHours: 8
         );
 
         _controller.ModelState.AddModelError("Title", "The Title field is required.");
@@ -2067,13 +2073,14 @@ public class AdvertsControllerTests : IDisposable
         var serviceUpdateDto = new ServiceCreateDto(
             Title: "Lesson de français",
             Description: "Cours de français pour lycéens",
-            Price: 40m,
+            PricePerHour: 40m,
             UserId: existingUser.Id,
             SubjectId: 1,
             SchoolGradeId: 1,
             TeachingLanguage: LanguageEnum.FR,
-            StudyLevel: "Diplôme en Langue Française"
-
+            StudyLevel: "Diplôme en Langue Française",
+            MinHours: 1,
+            MaxHours: 8
         );
 
         // Act
@@ -2134,89 +2141,6 @@ public class AdvertsControllerTests : IDisposable
         var updatedBook = await _context.Books.FindAsync((long)1);
         updatedBook.Should().NotBeNull("The updated book should exist in the database");
         updatedBook.Status.Should().Be(AdvertStatus.SOLD);
-    }
-
-    [Fact]
-    public async Task UpdateAdvertStatus_SendsEmailToSeller_WhenStatusChangesToSold()
-    {
-        // Arrange
-        var sellerUser = new User { Id = "seller-123", UserName = "seller_bob", Email = "seller@example.com", Nickname = "Bob" };
-        MockUser(sellerUser.Id);
-        var advert = new Book
-        {
-            AdvertId = 10,
-            Title = "Math Book",
-            Description = "A math book",
-            Price = 15,
-            SellerId = sellerUser.Id,
-            Seller = sellerUser,
-            Status = AdvertStatus.ACTIVE,
-            CreatedAt = DateTime.UtcNow,
-            NotificationDate = DateTime.UtcNow,
-            Condition = PhysicalItemCondition.NEW,
-            ISBN = "11111",
-            Author = "Author",
-            Publisher = "Pub",
-            Edition = "1st",
-            WrittenLanguage = LanguageEnum.FR,
-            BookCategoryId = 1
-        };
-        _context.Users.Add(sellerUser);
-        _context.Adverts.Add(advert);
-        await _context.SaveChangesAsync();
-
-        // Act
-        var result = await _controller.UpdateAdvertStatus(10, AdvertStatus.SOLD);
-
-        // Assert
-        var noContentResult = result as NoContentResult;
-        noContentResult.Should().NotBeNull();
-        
-        await _emailSenderServiceMock.Received(1).SendItemSoldEmailAsync(
-            Arg.Is<User>(u => u.Id == "seller-123" && u.Email == "seller@example.com"),
-            Arg.Is<Advert>(a => a.AdvertId == 10 && a.Title == "Math Book" && a.Price == 15)
-        );
-    }
-
-    [Fact]
-    public async Task UpdateAdvertStatus_DoesNotSendEmail_WhenStatusIsAlreadySold()
-    {
-        // Arrange
-        var sellerUser = new User { Id = "seller-456", UserName = "seller_alice", Email = "alice@example.com" };
-        MockUser(sellerUser.Id);
-        var advert = new Book
-        {
-            AdvertId = 11,
-            Title = "Science Book",
-            Description = "A science book",
-            Price = 20,
-            SellerId = sellerUser.Id,
-            Seller = sellerUser,
-            Status = AdvertStatus.SOLD,
-            CreatedAt = DateTime.UtcNow,
-            NotificationDate = DateTime.UtcNow,
-            Condition = PhysicalItemCondition.NEW,
-            ISBN = "22222",
-            Author = "Author",
-            Publisher = "Pub",
-            Edition = "1st",
-            WrittenLanguage = LanguageEnum.FR,
-            BookCategoryId = 1
-        };
-        _context.Users.Add(sellerUser);
-        _context.Adverts.Add(advert);
-        await _context.SaveChangesAsync();
-
-        _emailSenderServiceMock.ClearReceivedCalls();
-
-        // Act
-        var result = await _controller.UpdateAdvertStatus(11, AdvertStatus.SOLD);
-
-        // Assert
-        var noContentResult = result as NoContentResult;
-        noContentResult.Should().NotBeNull();
-
-        await _emailSenderServiceMock.DidNotReceiveWithAnyArgs().SendItemSoldEmailAsync(default!, default!);
     }
 
     [Fact]

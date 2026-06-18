@@ -73,9 +73,10 @@ namespace EcoScolarWebApi.Services
                 return Result<CartItemDto>.Failure("L'annonce spécifiée n'existe pas.", ErrorType.NotFound);
             }
 
+            // Tutoring is sold via a dedicated reservation flow (hours + escrow), never through the cart.
             if (advert is TutoringAdvert)
             {
-                return Result<CartItemDto>.Failure("Les cours d'appui ne peuvent pas etre ajoutes au panier. Utilisez la reservation directe.", ErrorType.Conflict);
+                return Result<CartItemDto>.Failure("Les cours d'appui se réservent directement depuis l'annonce, pas via le panier.", ErrorType.Conflict);
             }
             if (advert.Status == AdvertStatus.SOLD)
             {

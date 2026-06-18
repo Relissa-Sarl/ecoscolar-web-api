@@ -19,8 +19,12 @@ public class TutoringAdvert : Advert
     [Required]
     public Enums.LanguageEnum TeachingLanguage { get; set; }
 
-    public int MaxHours { get; set; } = 10;
+    // === Tutoring sale (Price = hourly rate) ===
 
+    // Maximum number of hours a student can book in a single reservation (drives the booking modal cap).
+    public int MaxHours { get; set; } = 1;
+
+    // Optional minimum number of hours per reservation.
     public int? MinHours { get; set; }
 
     [ForeignKey("SubjectId")]

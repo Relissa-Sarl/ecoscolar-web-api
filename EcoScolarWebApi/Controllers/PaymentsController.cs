@@ -1,9 +1,11 @@
 using Asp.Versioning;
-using EcoScolarWebApi.Data;
+using EcoScolarWebApi.Commun;
 using EcoScolarWebApi.DTOs.Stripe;
-using EcoScolarWebApi.Enums;
+using EcoScolarWebApi.Models;
+using EcoScolarWebApi.Services.Contracts;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Stripe;
 using Stripe.Checkout;
 
@@ -12,149 +14,156 @@ namespace EcoScolarWebApi.Controllers;
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/[controller]")]
 [ApiController]
+[Authorize]
 public class PaymentsController : ControllerBase
 {
-	private readonly IConfiguration _config;        // Configuration to access Stripe secret key
-	private readonly EcoscolarDbContext _context;    // Database context
+    private readonly IConfiguration _config;
+    private readonly IPaymentService _paymentService;
+    private readonly UserManager<User> _userManager;
+    private readonly ILogger<PaymentsController> _logger;
 
-	/// <summary>
-	/// PaymentsController constructor
-	/// Takes the configuration and database context as parameters
-	/// 
-	/// Url: POST /api/v1/payments/checkout
-	/// </summary>
-	/// <param name="config">The configuration object containing the Stripe secret key</param>
-	/// <param name="context">The database context</param>
-	public PaymentsController(IConfiguration config, EcoscolarDbContext context)
-	{
-		_config = config;
-		_context = context;
-	}
+    public PaymentsController(
+        IConfiguration config,
+        IPaymentService paymentService,
+        UserManager<User> userManager,
+        ILogger<PaymentsController> logger)
+    {
+        _config = config;
+        _paymentService = paymentService;
+        _userManager = userManager;
+        _logger = logger;
+    }
 
-	/// <summary>
-	/// Creates a Stripe Checkout session for a given product price 
-	/// and returns the session URL to the client
-	/// 
-	/// Url: POST /api/v1/payments/checkout
-	/// </summary>
-	/// <param name="request">The checkout request containing product information</param>
-	/// <returns>The session URL</returns>
-	[HttpPost("checkout")]
-	public async Task<IActionResult> Checkout([FromBody] CheckoutRequestDto request)
-	{
-		double price = request.ProductPrice * 100;
-        string baseUrl = $"{Request.Scheme}://{Request.Host}";
+    /// <summary>
+    /// Creates a Stripe Checkout session and returns its URL. The amount and platform fee
+    /// are computed server-side from the adverts; the client never sends a price.
+    ///
+    /// Url: POST /api/v1/payments/checkout
+    /// </summary>
+    [HttpPost("checkout")]
+    public async Task<IActionResult> Checkout([FromBody] CheckoutRequestDto request)
+    {
+        var buyerId = _userManager.GetUserId(User);
+        if (string.IsNullOrEmpty(buyerId))
+            return Unauthorized();
+
+        var baseUrl = ResolveFrontendBaseUrl();
+
+        var result = await _paymentService.CreateCheckoutSessionAsync(request, buyerId, baseUrl);
+        if (result.IsSuccess)
+            return Ok(new { url = result.Data!.Url, orderNumber = result.Data.OrderNumber });
+
+        return result.ErrorType switch
+        {
+            ErrorType.NotFound => NotFound(new { result.Errors }),
+            ErrorType.Conflict => Conflict(new { code = "ITEM_UNAVAILABLE", result.Errors }),
+            ErrorType.InternalError => StatusCode(StatusCodes.Status502BadGateway, new { result.Errors }),
+            _ => BadRequest(new { result.Errors }),
+        };
+    }
+
+    /// <summary>
+    /// Verifies the Stripe event signature, then applies the checkout session result to the
+    /// matching transactions. Idempotent (Stripe replays events).
+    ///
+    /// Url: POST /api/v1/payments/webhook
+    /// </summary>
+    [HttpPost("webhook")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Webhook()
+    {
+        var json = await new StreamReader(Request.Body).ReadToEndAsync();
+        var webhookSecret = _config["Stripe:WebhookSecret"];
+
+        if (string.IsNullOrEmpty(webhookSecret))
+        {
+            _logger.LogError("Stripe:WebhookSecret is not configured; rejecting webhook.");
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+
+        Event stripeEvent;
+        try
+        {
+            // throwOnApiVersionMismatch: false — the connected Stripe account may run a newer API
+            // version than the one pinned in Stripe.net. We only read stable fields (session id,
+            // payment intent id), so a version skew is safe and must not reject the event.
+            stripeEvent = EventUtility.ConstructEvent(
+                json,
+                Request.Headers["Stripe-Signature"],
+                webhookSecret,
+                throwOnApiVersionMismatch: false);
+        }
+        catch (StripeException e)
+        {
+            _logger.LogWarning(e, "Invalid Stripe webhook signature.");
+            return BadRequest();
+        }
+
+        switch (stripeEvent.Type)
+        {
+            case "checkout.session.completed":
+            {
+                var session = (Session)stripeEvent.Data.Object;
+                await _paymentService.ConfirmCheckoutSessionAsync(session.Id, session.PaymentIntentId);
+                break;
+            }
+            case "checkout.session.expired":
+            case "checkout.session.async_payment_failed":
+            {
+                var session = (Session)stripeEvent.Data.Object;
+                await _paymentService.CancelCheckoutSessionAsync(session.Id);
+                break;
+            }
+            default:
+                _logger.LogInformation("Unhandled Stripe event type {EventType}.", stripeEvent.Type);
+                break;
+        }
+
+        // Always acknowledge handled events so Stripe stops retrying.
+        return Ok();
+    }
+
+    /// <summary>
+    /// Gets a Stripe Checkout session by its ID.
+    ///
+    /// Url: GET /api/v1/payments/session/{sessionId}
+    /// </summary>
+    [HttpGet("session/{sessionId}")]
+    public async Task<IActionResult> GetSession(string sessionId)
+    {
+        try
+        {
+            var session = await new SessionService().GetAsync(sessionId);
+            return Ok(new { amountTotal = session.AmountTotal });
+        }
+        catch (StripeException e)
+        {
+            return BadRequest(new { error = e.Message });
+        }
+        catch (Exception e)
+        {
+            return BadRequest(new { error = e.Message });
+        }
+    }
+
+    /// <summary>
+    /// Resolves the frontend base URL from the Referer header, falling back to the request host.
+    /// </summary>
+    private string ResolveFrontendBaseUrl()
+    {
         if (Request.Headers.TryGetValue("Referer", out var refererHeader) && !string.IsNullOrEmpty(refererHeader))
         {
             try
             {
                 var uri = new Uri(refererHeader.ToString());
-                baseUrl = $"{uri.Scheme}://{uri.Authority}";
+                return $"{uri.Scheme}://{uri.Authority}";
             }
             catch
             {
-                // Fallback in case of malformed Referer
+                // Fallback below in case of a malformed Referer.
             }
         }
 
-		// Handle both single item (for fallback) and list of items
-		var productIds = request.ProductIds != null && request.ProductIds.Count > 0
-			? request.ProductIds
-			: new List<long> { (long)request.ProductId };
-
-		// Check if any product is already sold or currently being paid for (status is SOLD or PAUSED)
-		foreach (var pid in productIds)
-		{
-			var advert = await _context.Adverts.FindAsync(pid);
-			if (advert == null)
-			{
-				return NotFound(new { error = $"L'annonce avec l'ID {pid} n'existe pas." });
-			}
-			if (advert.Status == AdvertStatus.PAUSED || advert.Status == AdvertStatus.SOLD)
-			{
-                return BadRequest(new { code = "ITEM_UNAVAILABLE", error = "Un des articles dans votre panier est en cours de paiement ou déjà vendu." });
-            }
-		}
-
-		// Update all products status to PAUSED during checkout
-		foreach (var pid in productIds)
-		{
-			var advert = await _context.Adverts.FindAsync(pid);
-			if (advert != null)
-			{
-				advert.Status = AdvertStatus.PAUSED;
-				_context.Entry(advert).State = EntityState.Modified;
-			}
-		}
-		await _context.SaveChangesAsync();
-
-		string productIdsQuery = string.Join(",", productIds);
-
-        var options = new SessionCreateOptions
-		{
-			PaymentMethodTypes = new List<string> { "card" },
-			LineItems = new List<SessionLineItemOptions>
-			{
-				new SessionLineItemOptions
-				{
-					PriceData = new SessionLineItemPriceDataOptions
-					{
-                        // 1 franc = 100 cents
-                        UnitAmount = (long)price,
-						Currency = "chf",
-						ProductData = new SessionLineItemPriceDataProductDataOptions
-						{
-							Name = "Amount due",
-							Description = "Thank you for choosing EcoScolar for your school supplies. Good luck with your studies!"
-                        },
-					},
-					Quantity = 1,
-				},
-			},
-			Mode = "payment",
-			PaymentIntentData = new SessionPaymentIntentDataOptions
-			{
-				TransferGroup = "COMMANDE_ID_789",
-			},
-
-            SuccessUrl = $"{baseUrl}/success?stripeSessionId={{CHECKOUT_SESSION_ID}}&productIds={productIdsQuery}&productId={productIds[0]}",
-            CancelUrl = $"{baseUrl}/denied?productIds={productIdsQuery}",
-		};
-
-		var service = new SessionService();
-		Session session = await service.CreateAsync(options);
-
-		return Ok(new { url = session.Url });
-	}
-
-	/// <summary>
-	/// Creates a transfer to a connected account using the Stripe API
-	/// 
-	/// Url: POST /api/v1/payments/create-transfer
-	/// </summary>
-	/// <param name="request">The transfer request containing transfer information</param>
-	/// <returns>The transfer ID</returns>
-	[HttpPost("create-transfer")]
-	public async Task<IActionResult> CreateTransfer([FromBody] TransferRequestDto request)
-	{
-		try
-		{
-			var options = new TransferCreateOptions
-			{
-				Amount = request.Amount,
-				Currency = "chf",
-				Destination = request.ConnectedAccountId,
-				TransferGroup = request.TransferGroup,
-			};
-
-			var transferService = new TransferService();
-			Transfer transfer = await transferService.CreateAsync(options);
-
-			return Ok(new { transferId = transfer.Id });
-		}
-		catch (StripeException e)
-		{
-			return BadRequest(new { error = e.StripeError.Message });
-		}
-	}
+        return $"{Request.Scheme}://{Request.Host}";
+    }
 }

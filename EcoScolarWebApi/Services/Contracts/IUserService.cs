@@ -18,4 +18,5 @@ public interface IUserService
 	Task<Result<UserResponse>> UpdateProfileAsync(ClaimsPrincipal user, UserUpdateDto dto);
 	Task<Result<UserPublicReadDto>> GetPublicProfileAsync(string userId);
 	Task<Result<bool>> AnonymizeProfileAsync(ClaimsPrincipal userPrincipal);
+	Task<Result<bool>> ReportUserAsync(ClaimsPrincipal userPrincipal, string flaggedUserId, string reason);
 }

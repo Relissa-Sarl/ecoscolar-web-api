@@ -58,6 +58,7 @@ public class MeController : ControllerBase
                 GetPrimaryImage(t.Advert),
                 t.Advert.Seller?.Nickname ?? t.Advert.Seller?.UserName ?? "Anonyme",
                 review != null ? new ReviewDto(review.Rating, review.Comment) : null,
+                t.OrderNumber,
                 GetAdvertType(t.Advert)
             );
         }).ToList();
