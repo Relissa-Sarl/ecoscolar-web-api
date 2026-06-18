@@ -3,8 +3,10 @@ using EcoScolarWebApi.Data;
 using EcoScolarWebApi.Enums;
 using EcoScolarWebApi.Models;
 using EcoScolarWebApi.Services;
+using EcoScolarWebApi.Services.Contracts;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using NSubstitute;
 using Xunit;
 
 namespace EcoScolarWebApi.Tests;
@@ -20,7 +22,8 @@ public class TutoringTransactionServiceTests : IDisposable
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
         _context = new EcoscolarDbContext(options);
-        _service = new TutoringTransactionService(_context);
+        // Refund is exercised in PaymentRefundServiceTests; here a substitute keeps the test focused.
+        _service = new TutoringTransactionService(_context, Substitute.For<IRefundService>());
     }
 
     public void Dispose()

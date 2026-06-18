@@ -5,13 +5,13 @@ using EcoScolarWebApi.Enums;
 using EcoScolarWebApi.Models;
 using EcoScolarWebApi.Services.Contracts;
 using Microsoft.EntityFrameworkCore;
-using Stripe;
 
 namespace EcoScolarWebApi.Services;
 
-public class TutoringTransactionService(EcoscolarDbContext context) : ITutoringTransactionService
+public class TutoringTransactionService(EcoscolarDbContext context, IRefundService refundService) : ITutoringTransactionService
 {
     private readonly EcoscolarDbContext _context = context;
+    private readonly IRefundService _refundService = refundService;
 
     public async Task<Result> AcceptAsync(long transactionId, string sellerId)
     {
@@ -43,7 +43,7 @@ public class TutoringTransactionService(EcoscolarDbContext context) : ITutoringT
         if (transaction.Status != TransactionStatus.PAID_WAITING_ACCEPTANCE)
             return Result.Failure("La transaction n'est pas en attente d'acceptation.", ErrorType.BadRequest);
 
-        await TryRefundAsync(transaction);
+        await _refundService.RefundAsync(transaction);
 
         transaction.Status = TransactionStatus.CANCELLED;
         transaction.Advert.Status = AdvertStatus.ACTIVE;
@@ -132,38 +132,5 @@ public class TutoringTransactionService(EcoscolarDbContext context) : ITutoringT
             return null;
 
         return transaction;
-    }
-
-    private async Task TryRefundAsync(Transaction transaction)
-    {
-        try
-        {
-            if (!string.IsNullOrEmpty(transaction.StripePaymentIntentId))
-            {
-                var refundService = new RefundService();
-                await refundService.CreateAsync(new RefundCreateOptions
-                {
-                    PaymentIntent = transaction.StripePaymentIntentId
-                });
-                return;
-            }
-
-            if (!string.IsNullOrEmpty(transaction.StripeSessionId))
-            {
-                var session = await new Stripe.Checkout.SessionService().GetAsync(transaction.StripeSessionId);
-                if (!string.IsNullOrEmpty(session.PaymentIntentId))
-                {
-                    var refundService = new RefundService();
-                    await refundService.CreateAsync(new RefundCreateOptions
-                    {
-                        PaymentIntent = session.PaymentIntentId
-                    });
-                }
-            }
-        }
-        catch (StripeException ex)
-        {
-            Console.WriteLine($"Stripe refund failed: {ex.Message}");
-        }
     }
 }
