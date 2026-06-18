@@ -280,7 +280,7 @@ public class UsersController(IUserService userService, UserManager<User> userMan
 		};
 	}
 
-    [HttpPatch("{id}/report")]
+    [HttpPost("{id}/report")]
     public async Task<IActionResult> ReportUserProfile(string id, [FromBody] FlagRequestDto dto)
 	{
 		if (!ModelState.IsValid)
