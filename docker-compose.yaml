@@ -7,7 +7,7 @@ services:
     environment:
       ACCEPT_EULA: "Y"
       MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD}
-      MSSQL_TCP_PORT: "1444"
+      MSSQL_TCP_PORT: "1433"
     volumes:
       - mssql-ecoscolar-data:/var/opt/mssql
     networks:
@@ -16,7 +16,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "/opt/mssql-tools18/bin/sqlcmd -C -S localhost,1444 -U sa -P \"${MSSQL_SA_PASSWORD}\" -Q \"SELECT 1\" || exit 1"
+          "/opt/mssql-tools18/bin/sqlcmd -C -S localhost,1433 -U sa -P \"${MSSQL_SA_PASSWORD}\" -Q \"SELECT 1\" || exit 1"
         ]
       interval: 5s
       timeout: 5s
@@ -36,7 +36,7 @@ services:
       ASPNETCORE_ENVIRONMENT: "Production"
       ApplyDatabaseMigrations: "true"
       Features__UseFakeAdvertSearch: "false"
-      ConnectionStrings__Default: "Server=ecoscolar-api-database,1444;Initial Catalog=ecoscolar;User ID=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;Encrypt=True"
+      ConnectionStrings__Default: "Server=ecoscolar-api-database,1433;Initial Catalog=ecoscolar;User ID=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;Encrypt=True"
       Stripe__SecretKey: ${STRIPE_SECRET_KEY}
       Smtp__Host: ecoscolar-mailpit
       Smtp__Port: 1025

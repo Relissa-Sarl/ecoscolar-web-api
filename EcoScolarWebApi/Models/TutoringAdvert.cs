@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace EcoScolarWebApi.Models;
 
 [Table("TutoringAdverts")]
-public class TutoringAdvert : Advert // TODO : Rename in MCD Services -> to ServiceAdvert
+public class TutoringAdvert : Advert
 {
     [Required]
     [StringLength(50)]
@@ -17,8 +17,7 @@ public class TutoringAdvert : Advert // TODO : Rename in MCD Services -> to Serv
     public long SchoolGradeId { get; set; }
 
     [Required]
-    public Enums.LanguageEnum TeachingLanguage { get; set; } // TODO : Check because we have a Language table, maybe we can use it instead of an enum.
-                                                             // A TutoringAdvert can be taught in multiple languages, so maybe we need a many-to-many relationship between TutoringAdvert and Language.
+    public Enums.LanguageEnum TeachingLanguage { get; set; }
 
     // === Tutoring sale (Price = hourly rate) ===
 

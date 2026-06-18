@@ -455,6 +455,34 @@ public class TransactionsControllerTests : IDisposable
 	}
 
 	[Fact]
+	public async Task CreateTransactions_ShouldReturnBadRequest_WhenAdvertIsTutoring()
+	{
+		var currentUser = new User { Id = "buyer-1" };
+		_userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(currentUser);
+
+		var service = new TutoringAdvert
+		{
+			AdvertId = 55,
+			Title = "Cours",
+			Description = "Desc",
+			Price = 45m,
+			SellerId = "seller-1",
+			Status = AdvertStatus.ACTIVE,
+			StudyLevel = "Lycee",
+			SubjectId = 1,
+			SchoolGradeId = 1,
+			TeachingLanguage = LanguageEnum.FR
+		};
+		_context.Adverts.Add(service);
+		await _context.SaveChangesAsync();
+
+		var request = new CreateTransactionRequestDto { AdvertIds = new List<long> { 55L } };
+		var result = await _controller.CreateTransactions(request);
+
+		result.Should().BeOfType<BadRequestObjectResult>();
+	}
+
+	[Fact]
 	public async Task CreateTransactions_ShouldSendEmailToSeller_WhenValidAndSellerHasEmail()
 	{
 		// Arrange

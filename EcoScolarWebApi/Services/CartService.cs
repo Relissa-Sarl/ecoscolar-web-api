@@ -78,7 +78,6 @@ namespace EcoScolarWebApi.Services
             {
                 return Result<CartItemDto>.Failure("Les cours d'appui se réservent directement depuis l'annonce, pas via le panier.", ErrorType.Conflict);
             }
-
             if (advert.Status == AdvertStatus.SOLD)
             {
                 return Result<CartItemDto>.Failure("Cet article a déjà été vendu.", ErrorType.Conflict);

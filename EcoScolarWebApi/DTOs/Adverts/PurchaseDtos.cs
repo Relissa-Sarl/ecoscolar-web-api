@@ -24,5 +24,6 @@ public record PurchaseReadDto(
     string? ImageUrl,
     string SellerName,
     ReviewDto? Review = null,
-    string? OrderNumber = null
+    string? OrderNumber = null,
+    string? Type = null
 );
