@@ -1560,6 +1560,7 @@ public class AdvertsControllerTests : IDisposable
             Title: "New Service",
             Description: "Description of the new service",
             PricePerHour: 20m,
+            PricePerHour: 20m,
             UserId: existingUser.Id,
             SubjectId: 1,
             SchoolGradeId: 1,
@@ -1604,9 +1605,7 @@ public class AdvertsControllerTests : IDisposable
             SubjectId: 1,
             SchoolGradeId: 1,
             TeachingLanguage: LanguageEnum.FR,
-            StudyLevel: "Diplôme en Mathématiques",
-            MinHours: 1,
-            MaxHours: 8
+            StudyLevel: "Diplôme en Mathématiques"
         );
 
         // FORCE VALIDATION ERROR
@@ -2073,7 +2072,7 @@ public class AdvertsControllerTests : IDisposable
         var serviceUpdateDto = new ServiceCreateDto(
             Title: "Lesson de français",
             Description: "Cours de français pour lycéens",
-            PricePerHour: 40m,
+            Price: 40m,
             UserId: existingUser.Id,
             SubjectId: 1,
             SchoolGradeId: 1,

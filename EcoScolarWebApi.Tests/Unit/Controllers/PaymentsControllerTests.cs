@@ -1,4 +1,5 @@
 using EcoScolarWebApi.Commun;
+using EcoScolarWebApi.Commun;
 using EcoScolarWebApi.Controllers;
 using EcoScolarWebApi.DTOs.Stripe;
 using EcoScolarWebApi.Models;
@@ -10,6 +11,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
+using System.Collections.Generic;
+using System.Security.Claims;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace EcoScolarWebApi.Tests.Unit.Controllers;

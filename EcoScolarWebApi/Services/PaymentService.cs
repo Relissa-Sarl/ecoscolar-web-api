@@ -118,7 +118,7 @@ public class PaymentService : IPaymentService
                 ["orderNumber"] = orderNumber,
                 ["buyerId"] = buyerId,
             },
-            SuccessUrl = $"{baseUrl}/success?productIds={advertIdsQuery}&orderId={orderNumber}",
+            SuccessUrl = $"{baseUrl}/success?stripeSessionId={{CHECKOUT_SESSION_ID}}&productIds={advertIdsQuery}&orderId={orderNumber}",
             CancelUrl = $"{baseUrl}/denied?productIds={advertIdsQuery}",
         };
 
