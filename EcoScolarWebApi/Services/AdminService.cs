@@ -203,5 +203,42 @@ namespace EcoScolarWebApi.Services
                 .ToListAsync();
             return Result<List<AbuseReportAdminDto>>.Success(abuses.Select(a => _abuseReportMapper.ToAbuseReportAdminDto(a)).ToList());
         }
+
+        public async Task<Result<IEnumerable<FlaggedUserDto>>> GetFlaggedUsers(ClaimsPrincipal user)
+        {
+            if (!user.IsInRole("Admin"))
+                return Result<IEnumerable<FlaggedUserDto>>.Failure("Unauthorized access.", ErrorType.Unauthorized);
+
+            var flags = await _context.Flags
+                .Include(f => f.Flagged)
+                .Include(f => f.Reporter)
+                .OrderByDescending(f => f.Date)
+                .ToListAsync();
+
+            var flaggedUsers = flags
+                .GroupBy(f => f.FlaggedId)
+                .Select(g =>
+                {
+                    var flaggedUser = g.First().Flagged!;
+                    return new FlaggedUserDto(
+                        flaggedUser.Id,
+                        flaggedUser.Nickname ?? string.Empty,
+                        flaggedUser.Email ?? string.Empty,
+                        flaggedUser.FirstName ?? string.Empty,
+                        flaggedUser.LastName ?? string.Empty,
+                        g.Select(f => new FlagAdminDto(
+                            f.FlagId,
+                            f.Reason,
+                            f.Date,
+                            f.ReporterId,
+                            f.Reporter?.Nickname ?? string.Empty,
+                            f.Reporter?.Email ?? string.Empty
+                        )).ToList()
+                    );
+                })
+                .ToList();
+
+            return Result<IEnumerable<FlaggedUserDto>>.Success(flaggedUsers);
+        }
     }
 }

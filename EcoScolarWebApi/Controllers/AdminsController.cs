@@ -171,6 +171,21 @@ namespace EcoScolarWebApi.Controllers
             };
         }
 
+        [HttpGet("flagged-users")]
+        public async Task<IActionResult> GetAllFlaggedUsers()
+        {
+            var result = await _adminService.GetFlaggedUsers(User);
+
+            if (result.IsSuccess)
+                return Ok(result.Data);
+
+            return result.ErrorType switch
+            {
+                ErrorType.Unauthorized => Unauthorized(new { result.Errors }),
+                _ => BadRequest(new { result.Errors })
+            };
+        }
+
         #endregion
     }
 }
