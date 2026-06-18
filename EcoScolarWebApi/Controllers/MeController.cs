@@ -46,7 +46,8 @@ public class MeController : ControllerBase
             .Where(r => transactionIds.Contains(r.TransactionId) && r.ReviewedRole == ReviewedRole.SELLER)
             .ToDictionaryAsync(r => r.TransactionId);
 
-        var purchaseDtos = purchases.Select(t => {
+        var purchaseDtos = purchases.Select(t =>
+        {
             reviews.TryGetValue(t.TransactionId, out var review);
             return new PurchaseReadDto(
                 t.TransactionId.ToString(),
@@ -204,7 +205,7 @@ public class MeController : ControllerBase
             return BadRequest(new { message = "La transaction ne peut être annulée que si elle est en attente d'expédition." });
 
         transaction.Status = TransactionStatus.CANCELLED;
-        
+
         if (transaction.Advert != null)
         {
             transaction.Advert.Status = AdvertStatus.ACTIVE;

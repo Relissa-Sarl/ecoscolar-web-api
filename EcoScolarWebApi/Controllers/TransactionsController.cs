@@ -138,26 +138,26 @@ public class TransactionsController(EcoscolarDbContext context, UserManager<User
         if (transaction.BuyerId != user.Id)
             return Forbid();
 
-		var isService = await _context.Transactions
-			.Where(t => t.TransactionId == transactionId)
-			.Select(t => t.Advert is TutoringAdvert)
-			.FirstAsync();
+        var isService = await _context.Transactions
+            .Where(t => t.TransactionId == transactionId)
+            .Select(t => t.Advert is TutoringAdvert)
+            .FirstAsync();
 
-		var allowedStatus = isService
-			? transaction.Status == TransactionStatus.PAID_WAITING_COMPLETION
-			: transaction.Status == TransactionStatus.SHIPPED;
+        var allowedStatus = isService
+            ? transaction.Status == TransactionStatus.PAID_WAITING_COMPLETION
+            : transaction.Status == TransactionStatus.SHIPPED;
 
-		if (!allowedStatus)
-			return BadRequest(new { message = "Vous ne pouvez pas ouvrir de litige pour cette transaction dans son état actuel." });
+        if (!allowedStatus)
+            return BadRequest(new { message = "Vous ne pouvez pas ouvrir de litige pour cette transaction dans son état actuel." });
 
-		var dispute = new Dispute
-		{
-			TransactionId = transactionId,
-			Reason = request.Reason,
-			Description = request.Description,
-			Status = EcoScolarWebApi.Enums.TicketStatus.PENDING,
-			Date = DateTime.UtcNow
-		};
+        var dispute = new Dispute
+        {
+            TransactionId = transactionId,
+            Reason = request.Reason,
+            Description = request.Description,
+            Status = EcoScolarWebApi.Enums.TicketStatus.PENDING,
+            Date = DateTime.UtcNow
+        };
 
         transaction.Status = TransactionStatus.DISPUTED;
 
@@ -179,12 +179,12 @@ public class TransactionsController(EcoscolarDbContext context, UserManager<User
             return BadRequest(new { message = "AdvertIds are required." });
         }
 
-		var existingOrderNumber = await _context.Transactions
-			.Where(t => request.AdvertIds.Contains(t.AdvertId) && t.OrderNumber != null)
-			.Select(t => t.OrderNumber)
-			.FirstOrDefaultAsync();
+        var existingOrderNumber = await _context.Transactions
+            .Where(t => request.AdvertIds.Contains(t.AdvertId) && t.OrderNumber != null)
+            .Select(t => t.OrderNumber)
+            .FirstOrDefaultAsync();
 
-		var orderNumber = existingOrderNumber ?? await GenerateUniqueOrderNumberAsync();
+        var orderNumber = existingOrderNumber ?? await GenerateUniqueOrderNumberAsync();
 
         var createdTransactions = new List<Transaction>();
         var soldAdverts = new List<Advert>();
@@ -195,15 +195,15 @@ public class TransactionsController(EcoscolarDbContext context, UserManager<User
             var existingTransaction = await _context.Transactions
                 .FirstOrDefaultAsync(t => t.AdvertId == advertId);
 
-			if (existingTransaction != null)
-			{
-				if (string.IsNullOrWhiteSpace(existingTransaction.OrderNumber))
-				{
-					existingTransaction.OrderNumber = orderNumber;
-				}
-				createdTransactions.Add(existingTransaction);
-				continue;
-			}
+            if (existingTransaction != null)
+            {
+                if (string.IsNullOrWhiteSpace(existingTransaction.OrderNumber))
+                {
+                    existingTransaction.OrderNumber = orderNumber;
+                }
+                createdTransactions.Add(existingTransaction);
+                continue;
+            }
 
             var advert = await _context.Adverts.FindAsync(advertId);
             if (advert == null)
@@ -219,18 +219,18 @@ public class TransactionsController(EcoscolarDbContext context, UserManager<User
             // Calculate platform fee (5% of price, rounded to 2 decimal places)
             var platformFee = Math.Round(advert.Price * 0.05m, 2);
 
-			var newTransaction = new Transaction
-			{
-				AdvertId = advertId,
-				BuyerId = user.Id,
-				Date = DateTime.UtcNow,
-				Status = TransactionStatus.PAID_WAITING_SHIPPING,
-				PlatformFee = platformFee,
-				OrderNumber = orderNumber,
-				StripeSessionId = request.StripeSessionId,
-				BuyerConsent = false,
-				SellerConsent = false,
-			};
+            var newTransaction = new Transaction
+            {
+                AdvertId = advertId,
+                BuyerId = user.Id,
+                Date = DateTime.UtcNow,
+                Status = TransactionStatus.PAID_WAITING_SHIPPING,
+                PlatformFee = platformFee,
+                OrderNumber = orderNumber,
+                StripeSessionId = request.StripeSessionId,
+                BuyerConsent = false,
+                SellerConsent = false,
+            };
 
             // Update the advert status to SOLD
             advert.Status = AdvertStatus.SOLD;
@@ -241,52 +241,53 @@ public class TransactionsController(EcoscolarDbContext context, UserManager<User
             soldAdverts.Add(advert);
         }
 
-		await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync();
 
-		var baseUrl = _configuration["Frontend:BaseUrl"] ?? "http://localhost:3000";
-		foreach (var advert in soldAdverts)
-		{
-			if (advert.Seller == null)
-			{
-				await _context.Entry(advert).Reference(a => a.Seller).LoadAsync();
-			}
+        var baseUrl = _configuration["Frontend:BaseUrl"] ?? "http://localhost:3000";
+        foreach (var advert in soldAdverts)
+        {
+            if (advert.Seller == null)
+            {
+                await _context.Entry(advert).Reference(a => a.Seller).LoadAsync();
+            }
 
-			if (advert.Seller != null && !string.IsNullOrEmpty(advert.Seller.Email))
-			{
-				var allSoldLink = $"{baseUrl.TrimEnd('/')}/me/sales?from=profile";
-				try
-				{
-					await _emailSenderService.SendItemSoldEmailAsync(advert.Seller, advert, allSoldLink);
-				}
-				catch (Exception e)
-				{
-					Console.WriteLine($"Error: Failed to send sale notification email :{e.Message}");
-				}
-			}
-		}
+            if (advert.Seller != null && !string.IsNullOrEmpty(advert.Seller.Email))
+            {
+                var allSoldLink = $"{baseUrl.TrimEnd('/')}/me/sales?from=profile";
+                try
+                {
+                    await _emailSenderService.SendItemSoldEmailAsync(advert.Seller, advert, allSoldLink);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error: Failed to send sale notification email :{e.Message}");
+                }
+            }
+        }
 
-		return Ok(createdTransactions.Select(t => new {
-			t.TransactionId,
-			t.AdvertId,
-			t.BuyerId,
-			t.Status,
-			t.Date,
-			t.PlatformFee,
-			t.OrderNumber,
-			t.StripeSessionId
-		}));
-	}
+        return Ok(createdTransactions.Select(t => new
+        {
+            t.TransactionId,
+            t.AdvertId,
+            t.BuyerId,
+            t.Status,
+            t.Date,
+            t.PlatformFee,
+            t.OrderNumber,
+            t.StripeSessionId
+        }));
+    }
 
-	private async Task<string> GenerateUniqueOrderNumberAsync()
-	{
-		string orderNumber;
-		do
-		{
-			orderNumber = $"ECO-{DateTime.UtcNow:yyyyMMdd}-{RandomNumberGenerator.GetInt32(0, 1_000_000):D6}";
-		}
-		while (await _context.Transactions.AnyAsync(t => t.OrderNumber == orderNumber));
-		return orderNumber;
-	}
+    private async Task<string> GenerateUniqueOrderNumberAsync()
+    {
+        string orderNumber;
+        do
+        {
+            orderNumber = $"ECO-{DateTime.UtcNow:yyyyMMdd}-{RandomNumberGenerator.GetInt32(0, 1_000_000):D6}";
+        }
+        while (await _context.Transactions.AnyAsync(t => t.OrderNumber == orderNumber));
+        return orderNumber;
+    }
 }
 
 public record TransactionUserIdsDto(string BuyerId, string SellerId);

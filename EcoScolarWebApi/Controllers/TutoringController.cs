@@ -15,13 +15,13 @@ namespace EcoScolarWebApi.Controllers;
 [Authorize]
 public class TutoringController(ITutoringReservationService reservationService, UserManager<User> userManager) : ControllerBase
 {
-	/// <summary>
-	/// Reserves a tutoring package (a number of hours) and returns a Stripe Checkout session URL.
-	/// The price is computed server-side from the advert's hourly rate; the client only sends the hours.
-	///
-	/// Url: POST /api/v1/tutoring/{advertId}/reserve
-	/// </summary>
-	[HttpPost("{advertId}/reserve")]
+    /// <summary>
+    /// Reserves a tutoring package (a number of hours) and returns a Stripe Checkout session URL.
+    /// The price is computed server-side from the advert's hourly rate; the client only sends the hours.
+    ///
+    /// Url: POST /api/v1/tutoring/{advertId}/reserve
+    /// </summary>
+    [HttpPost("{advertId}/reserve")]
     public async Task<IActionResult> Reserve(long advertId, [FromBody] TutoringReserveRequestDto request)
     {
         if (!ModelState.IsValid)

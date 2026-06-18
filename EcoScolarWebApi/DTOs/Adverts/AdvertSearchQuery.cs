@@ -10,18 +10,18 @@ namespace EcoScolarWebApi.DTOs.Adverts;
 /// </remarks>
 public class AdvertSearchQuery
 {
-	public string? Q { get; set; }
-	public string? Isbn { get; set; }
-	public string? Type { get; set; }
-	public string? BookCategoryIds { get; set; }
-	public string? SchoolGradeIds { get; set; }
-	public string? SubjectIds { get; set; }
-	public string? Category { get; set; }
-	public decimal? MinPrice { get; set; } = null;
-	public decimal? MaxPrice { get; set; }
-	public string? Subjects { get; set; }
-	public string? Grade { get; set; }
-	public string? Sort { get; set; }
-	public int? Page { get; set; }
-	public int? PageSize { get; set; }
+    public string? Q { get; set; }
+    public string? Isbn { get; set; }
+    public string? Type { get; set; }
+    public string? BookCategoryIds { get; set; }
+    public string? SchoolGradeIds { get; set; }
+    public string? SubjectIds { get; set; }
+    public string? Category { get; set; }
+    public decimal? MinPrice { get; set; } = null;
+    public decimal? MaxPrice { get; set; }
+    public string? Subjects { get; set; }
+    public string? Grade { get; set; }
+    public string? Sort { get; set; }
+    public int? Page { get; set; }
+    public int? PageSize { get; set; }
 }

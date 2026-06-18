@@ -21,7 +21,7 @@ public record SearchAlertReadDto(
     DateTime CreatedAt
 )
 {
-    public static SearchAlertReadDto FromEntity(SearchAlert entity, int matchedCount=0) => new(
+    public static SearchAlertReadDto FromEntity(SearchAlert entity, int matchedCount = 0) => new(
         Id: entity.ResearchId,
         Q: string.IsNullOrWhiteSpace(entity.AdvertSearch) ? null : entity.AdvertSearch,
         AdvertType: entity.AdvertType,

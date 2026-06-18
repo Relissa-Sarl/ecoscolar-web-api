@@ -1,3 +1,4 @@
+using Xunit;
 using EcoScolarWebApi.Controllers;
 using EcoScolarWebApi.Data;
 using EcoScolarWebApi.DTOs;
@@ -380,7 +381,7 @@ public class MeControllerTests : IDisposable
             Date = DateTime.UtcNow,
             Status = TransactionStatus.COMPLETED
         };
-        
+
         var review = new Review
         {
             ReviewId = 2,

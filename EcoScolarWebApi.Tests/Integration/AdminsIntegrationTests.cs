@@ -1,3 +1,4 @@
+using Xunit;
 using EcoScolarWebApi.Data;
 using EcoScolarWebApi.Enums;
 using EcoScolarWebApi.Models;
@@ -40,10 +41,10 @@ public class AdminsIntegrationTests : IClassFixture<AuthInMemoryWebApplicationFa
 
             var user = await userManager.FindByEmailAsync(email);
             await userManager.AddToRoleAsync(user!, "Admin");
-            
+
             // Re-login to refresh claims
             await client.PostAsJsonAsync("/api/v1/auth/login?useCookies=true", new { email, password });
-            
+
             return (client, user!);
         }
     }
@@ -72,7 +73,7 @@ public class AdminsIntegrationTests : IClassFixture<AuthInMemoryWebApplicationFa
 
         // AdminService returns 401 Unauthorized for non-admins, but usually it should be 403 Forbidden
         // Let's see what it actually returns.
-        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized); 
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
     [Fact]
@@ -241,10 +242,10 @@ public class AdminsIntegrationTests : IClassFixture<AuthInMemoryWebApplicationFa
         {
             var db = scope.ServiceProvider.GetRequiredService<EcoscolarDbContext>();
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
-            
+
             var seller = new User { UserName = "seller@example.com", Email = "seller@example.com", FirstName = "Seller", LastName = "User" };
             await userManager.CreateAsync(seller, "Password123!");
-            
+
             var advert = new EcoScolarWebApi.Models.PhysicalItem { Title = "Test Advert", Description = "Test Description", SellerId = seller.Id, Seller = seller, Status = AdvertStatus.ACTIVE, CreatedAt = DateTime.UtcNow };
             db.Products.Add(advert);
             await db.SaveChangesAsync();
@@ -277,7 +278,7 @@ public class AdminsIntegrationTests : IClassFixture<AuthInMemoryWebApplicationFa
 
         // Capture response content for debugging
         var content = await response.Content.ReadAsStringAsync();
-        
+
         response.StatusCode.Should().Be(HttpStatusCode.OK, $"Response content: {content}");
     }
 
@@ -304,22 +305,22 @@ public class AdminsIntegrationTests : IClassFixture<AuthInMemoryWebApplicationFa
         var seller = new User { UserName = $"seller.{Guid.NewGuid():N}@example.com", Email = $"seller.{Guid.NewGuid():N}@example.com", FirstName = "Sell", LastName = "Er" };
         await userManager.CreateAsync(seller, "Password123!");
 
-        var advert = new EcoScolarWebApi.Models.PhysicalItem 
-        { 
-            Title = "Test Advert", 
-            Description = "Test Description", 
-            SellerId = seller.Id, 
-            Seller = seller, 
-            Status = AdvertStatus.ACTIVE, 
-            CreatedAt = DateTime.UtcNow 
+        var advert = new EcoScolarWebApi.Models.PhysicalItem
+        {
+            Title = "Test Advert",
+            Description = "Test Description",
+            SellerId = seller.Id,
+            Seller = seller,
+            Status = AdvertStatus.ACTIVE,
+            CreatedAt = DateTime.UtcNow
         };
         db.Products.Add(advert);
         await db.SaveChangesAsync();
 
-        var abuse = new EcoScolarWebApi.Models.AbuseReport 
-        { 
-            Reason = ReportReason.INAPPROPRIATE_ADVERT, 
-            CreatedAt = DateTime.UtcNow, 
+        var abuse = new EcoScolarWebApi.Models.AbuseReport
+        {
+            Reason = ReportReason.INAPPROPRIATE_ADVERT,
+            CreatedAt = DateTime.UtcNow,
             Status = Enums.TicketStatus.PENDING,
             ReporterUserId = reporter.Id,
             Reporter = reporter,

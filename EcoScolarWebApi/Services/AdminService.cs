@@ -69,7 +69,7 @@ namespace EcoScolarWebApi.Services
                 var badReviews = badReviewCounts.GetValueOrDefault(item.Id, 0);
                 userDtos.Add(_userMapper.ToResponse(item) with
                 {
-					Roles = [.. await _userManager.GetRolesAsync(item)],
+                    Roles = [.. await _userManager.GetRolesAsync(item)],
                     BadReviewsCount = badReviews,
                     AlerteTooBadReviews = badReviews > _tooManyBadReviewsThreshold
                 });
@@ -115,7 +115,7 @@ namespace EcoScolarWebApi.Services
             if (string.IsNullOrWhiteSpace(body))
                 return Result<SupportTicketMessageAdminDto>.Failure("Please enter a message.", ErrorType.Conflict);
 
-            if (! await _context.SupportTickets.AnyAsync(t => t.Id == ticketId))
+            if (!await _context.SupportTickets.AnyAsync(t => t.Id == ticketId))
                 return Result<SupportTicketMessageAdminDto>.Failure("Request not found.", ErrorType.NotFound);
 
             var message = new SupportTicketMessage
@@ -177,7 +177,7 @@ namespace EcoScolarWebApi.Services
             if (currentAdvert == null)
                 return Result<AdvertReadDto>.Failure("Advert not found.", ErrorType.NotFound);
 
-            if(currentAdvert.Status == AdvertStatus.BLOCKED)
+            if (currentAdvert.Status == AdvertStatus.BLOCKED)
                 return Result<AdvertReadDto>.Failure("Advert is already blocked.", ErrorType.Conflict);
 
             currentAdvert.Status = AdvertStatus.BLOCKED;
@@ -240,7 +240,7 @@ namespace EcoScolarWebApi.Services
 
             return Result<IEnumerable<FlaggedUserDto>>.Success(flaggedUsers);
         }
-        
+
         public async Task<Result<AbuseReportAdminDto>> ChangeAbuseStatus(ClaimsPrincipal user, int abuseId, AbuseStatusRequestDto status)
         {
             if (!user.IsInRole("Admin"))

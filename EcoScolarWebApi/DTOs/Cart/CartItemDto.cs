@@ -34,4 +34,4 @@ namespace EcoScolarWebApi.DTOs.Cart
         [Required]
         public string Status { get; set; } = string.Empty;
     }
-}   
+}

@@ -37,7 +37,7 @@ namespace EcoScolarWebApi.Services
             {
                 var pic = _context.Pictures.Where(p => p.PhysicalItemId == c.AdvertId).OrderBy(p => p.SortOrder).FirstOrDefault();
                 var primaryImage = pic?.PublicUrl ?? pic?.Label;
-                
+
                 string type = c.Advert switch
                 {
                     Book => "BOOK",

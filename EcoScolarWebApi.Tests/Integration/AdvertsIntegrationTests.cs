@@ -1,3 +1,4 @@
+using Xunit;
 using EcoScolarWebApi.DTOs.Adverts;
 using EcoScolarWebApi.Enums;
 using FluentAssertions;
@@ -44,7 +45,7 @@ public class AdvertsIntegrationTests : IClassFixture<AuthInMemoryWebApplicationF
         );
 
         var response = await client.PostAsJsonAsync("/api/v1/adverts/books", dto);
-        
+
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
@@ -75,7 +76,7 @@ public class AdvertsIntegrationTests : IClassFixture<AuthInMemoryWebApplicationF
         );
 
         var response = await client.PostAsJsonAsync("/api/v1/adverts/books", dto);
-        
+
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 }
