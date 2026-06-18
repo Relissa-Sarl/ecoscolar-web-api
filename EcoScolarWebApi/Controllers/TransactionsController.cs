@@ -159,7 +159,7 @@ public class TransactionsController(EcoscolarDbContext context, UserManager<User
 			TransactionId = transactionId,
 			Reason = request.Reason,
 			Description = request.Description,
-			Status = EcoScolarWebApi.Enums.TicketStatus.Pending,
+			Status = EcoScolarWebApi.Enums.TicketStatus.PENDING,
 			Date = DateTime.UtcNow
 		};
 

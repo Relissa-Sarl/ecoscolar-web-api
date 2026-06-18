@@ -1,5 +1,6 @@
 ﻿using EcoScolarWebApi.Commun;
 using EcoScolarWebApi.Data;
+using EcoScolarWebApi.DTOs;
 using EcoScolarWebApi.DTOs.Adverts;
 using EcoScolarWebApi.DTOs.Support;
 using EcoScolarWebApi.DTOs.Users;
@@ -25,15 +26,17 @@ namespace EcoScolarWebApi.Services
         private readonly SignInManager<User> _signInManager;        // Sign-in manager
         private readonly EcoscolarDbContext _context;               // Database context
         private readonly UserMapper _userMapper;                    // User mapper for converting between entities and DTOs
+        private readonly AbuseReportMapper _abuseReportMapper;
         private readonly int _badReviewRatingThreshold;             // Rating below which a review counts as "bad"
         private readonly int _tooManyBadReviewsThreshold;           // Bad-review count above which a user is flagged
 
-        public AdminService(UserManager<User> userManager, EcoscolarDbContext dbContext, SignInManager<User> signInManager, UserMapper userMapper, IConfiguration configuration)
+        public AdminService(UserManager<User> userManager, EcoscolarDbContext dbContext, SignInManager<User> signInManager, UserMapper userMapper, AbuseReportMapper abuseReportMapper, IConfiguration configuration)
         {
             _userManager = userManager;
             _context = dbContext;
             _signInManager = signInManager;
             _userMapper = userMapper;
+            _abuseReportMapper = abuseReportMapper;
             _badReviewRatingThreshold = configuration.GetValue("BusinessSettings:BadReviewRatingThreshold", DefaultBadReviewRatingThreshold);
             _tooManyBadReviewsThreshold = configuration.GetValue("BusinessSettings:TooManyBadReviewsThreshold", DefaultTooManyBadReviewsThreshold);
         }
@@ -183,6 +186,22 @@ namespace EcoScolarWebApi.Services
 
             AdvertReadDto advertReadDto = AdvertReadDto.FromEntity(currentAdvert);
             return Result<AdvertReadDto>.Success(advertReadDto);
+        }
+
+        public async Task<Result<List<AbuseReportAdminDto>>> GetAllAbuses(ClaimsPrincipal user)
+        {
+            if (!user.IsInRole("Admin"))
+                return Result<List<AbuseReportAdminDto>>.Failure("Unauthorized access.", ErrorType.Unauthorized);
+
+            var abuses = await _context.AbuseReports
+                .Include(s => s.Reporter)
+                .Include(s => s.TargetAdvert)
+                .ThenInclude(a => a!.Seller)
+                .Include(a => a.TargetComment)
+                .ThenInclude(c => c!.Author)
+                .OrderByDescending(t => t.CreatedAt)
+                .ToListAsync();
+            return Result<List<AbuseReportAdminDto>>.Success(abuses.Select(a => _abuseReportMapper.ToAbuseReportAdminDto(a)).ToList());
         }
     }
 }

@@ -124,6 +124,29 @@ public class PaymentsController : ControllerBase
     }
 
     /// <summary>
+    /// Gets a Stripe Checkout session by its ID.
+    ///
+    /// Url: GET /api/v1/payments/session/{sessionId}
+    /// </summary>
+    [HttpGet("session/{sessionId}")]
+    public async Task<IActionResult> GetSession(string sessionId)
+    {
+        try
+        {
+            var session = await new SessionService().GetAsync(sessionId);
+            return Ok(new { amountTotal = session.AmountTotal });
+        }
+        catch (StripeException e)
+        {
+            return BadRequest(new { error = e.Message });
+        }
+        catch (Exception e)
+        {
+            return BadRequest(new { error = e.Message });
+        }
+    }
+
+    /// <summary>
     /// Resolves the frontend base URL from the Referer header, falling back to the request host.
     /// </summary>
     private string ResolveFrontendBaseUrl()
