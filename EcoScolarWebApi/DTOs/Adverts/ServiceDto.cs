@@ -39,14 +39,14 @@ public record ServiceReadDto(long Id, string Title, string Description, decimal 
 /// </summary>
 /// <param name="Title">The title of the service PhysicalItem</param>
 /// <param name="Description">The description of the service PhysicalItem</param>
-/// <param name="Price">The price of the service PhysicalItem</param>
+/// <param name="PricePerHour">The price of the service PhysicalItem</param>
 /// <param name="UserId">The ID of the user who is creating the service PhysicalItem</param>
 /// <param name="SubjectId">The ID of the Subjects related to the service PhysicalItem</param>
 /// <param name="SchoolGradeId">The ID of the school grade related to the service PhysicalItem</param>
 /// <param name="TeachingLanguage">The language in which the service will be taught</param>
 /// <param name="StudyLevel">The specific study level related to the service PhysicalItem</param>
-public record ServiceCreateDto(string Title, string Description, decimal Price, string UserId, long SubjectId, long SchoolGradeId, Enums.LanguageEnum TeachingLanguage, string StudyLevel)
-	: AdvertCreateDto(Title, Description, Price, UserId)
+public record ServiceCreateDto(string Title, string Description, decimal PricePerHour, string UserId, long SubjectId, long SchoolGradeId, Enums.LanguageEnum TeachingLanguage, string StudyLevel, int? MinHours, int MaxHours)
+	: AdvertCreateDto(Title, Description, PricePerHour, UserId)
 {
 	/// <summary>
 	/// Converts the ServiceCreateDto to an AdvertServices entity.
@@ -72,6 +72,8 @@ public record ServiceCreateDto(string Title, string Description, decimal Price, 
 			service.SchoolGradeId = SchoolGradeId;
 			service.TeachingLanguage = TeachingLanguage;
 			service.StudyLevel = StudyLevel;
+			service.MinHours = MinHours;
+			service.MaxHours = MaxHours;
 		}
 	}
 }
