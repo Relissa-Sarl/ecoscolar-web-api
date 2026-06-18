@@ -208,6 +208,15 @@ dotnet user-secrets set "Stripe:WebhookSecret" "whsec_..."
 
 > ⚠️ **À adapter côté front (`ecoscolar-web-ui`)** : `success.vue` ne doit plus créer les transactions ni passer l'annonce à `SOLD` — l'état vient désormais du webhook. Et le type `CheckoutRequest` ne doit plus envoyer `productPrice` (le serveur l'ignore, le prix est calculé serveur).
 
+### 4. Tester le virement réel au vendeur (Connect)
+
+Le versement (montant **net de commission**) part quand l'acheteur confirme la réception (ou via le job auto après délai).
+
+1. **Onboarder le vendeur** : connecté en tant que vendeur, `POST /api/v1/users/me/stripe/onboarding` → ouvrir l'`url`, compléter le formulaire Express (données de test). Vérifier `GET /api/v1/users/me/stripe/status` → `isStripeOnboarded: true`.
+2. **Acheter** comme à l'étape 3, mais payer avec la carte **`4000 0000 0000 0077`** (fonds ajoutés **directement au solde disponible** ; sinon le transfert échoue « insufficient available funds »).
+3. **Confirmer la réception** en tant qu'acheteur : `PUT /api/v1/transactions/{transactionId}/confirm-receipt`.
+4. **Vérifier** : en base la transaction a un `StripeTransferId` et passe `COMPLETED` ; Dashboard Stripe (test) → **Connect → Transfers** affiche le montant net. Rappeler `confirm-receipt` ne re-transfère pas (idempotent).
+
 ## Docker container
 
 This project can be build into a docker container.
