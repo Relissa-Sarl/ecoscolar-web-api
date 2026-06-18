@@ -1,3 +1,4 @@
+using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 
 namespace EcoScolarWebApi.Enums;
@@ -5,7 +6,13 @@ namespace EcoScolarWebApi.Enums;
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum TicketStatus
 {
-    Pending,
-    Reviewed,
-    Resolved
+    [EnumMember(Value = "PENDING")]
+    [JsonPropertyName("PENDING")]
+    PENDING,
+    [EnumMember(Value = "REVIEWED")]
+    [JsonPropertyName("REVIEWED")]
+    REVIEWED,
+    [EnumMember(Value = "RESOLVED")]
+    [JsonPropertyName("RESOLVED")]
+    RESOLVED
 }

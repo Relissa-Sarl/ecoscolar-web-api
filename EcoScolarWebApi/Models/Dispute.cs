@@ -21,7 +21,7 @@ public class Dispute
     public DateTime Date { get; set; } = DateTime.UtcNow;
 
     [Required]
-    public EcoScolarWebApi.Enums.TicketStatus Status { get; set; } = EcoScolarWebApi.Enums.TicketStatus.Pending;
+    public EcoScolarWebApi.Enums.TicketStatus Status { get; set; } = EcoScolarWebApi.Enums.TicketStatus.PENDING;
 
     public string? Resolution { get; set; }
 

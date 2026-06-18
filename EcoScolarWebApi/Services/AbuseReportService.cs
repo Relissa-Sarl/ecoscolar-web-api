@@ -17,7 +17,7 @@ public class AbuseReportService(EcoscolarDbContext context) : IAbuseReportServic
             Reason = requestDto.Reason,
             Message = requestDto.Message,
             ReporterUserId = reporterUserId,
-            Status = TicketStatus.Pending,
+            Status = TicketStatus.PENDING,
             CreatedAt = DateTime.UtcNow
         };
 
