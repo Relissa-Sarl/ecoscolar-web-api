@@ -40,6 +40,22 @@ public class Transaction
 
     public string? StripeSessionId { get; set; }
 
+    [Column(TypeName = "decimal(18,2)")]
+    public decimal UnitPrice { get; set; }
+
+    [Column(TypeName = "decimal(18,2)")]
+    public decimal Amount { get; set; }
+
+    public string? StripePaymentIntentId { get; set; }
+
+    public string? StripeTransferId { get; set; }
+
+    public int Quantity { get; set; } = 1;
+
+    public DateTime? TutorConfirmedAt { get; set; }
+
+    public DateTime? PackageExpiresAt { get; set; }
+
     // === Foreign Keys ===
 
     [Required]

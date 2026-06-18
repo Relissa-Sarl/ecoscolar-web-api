@@ -147,8 +147,17 @@ public class TransactionsController(EcoscolarDbContext context, UserManager<User
 		if (transaction.BuyerId != user.Id)
 			return Forbid();
 
-		if (transaction.Status != TransactionStatus.SHIPPED)
-			return BadRequest(new { message = "You can only dispute a shipped order." });
+		var isService = await _context.Transactions
+			.Where(t => t.TransactionId == transactionId)
+			.Select(t => t.Advert is TutoringAdvert)
+			.FirstAsync();
+
+		var allowedStatus = isService
+			? transaction.Status == TransactionStatus.PAID_WAITING_COMPLETION
+			: transaction.Status == TransactionStatus.SHIPPED;
+
+		if (!allowedStatus)
+			return BadRequest(new { message = "Vous ne pouvez pas ouvrir de litige pour cette transaction dans son état actuel." });
 
 		var dispute = new Dispute
 		{
@@ -209,6 +218,11 @@ public class TransactionsController(EcoscolarDbContext context, UserManager<User
 				return NotFound(new { message = $"Advert with ID {advertId} not found." });
 			}
 
+
+			if (advert is TutoringAdvert)
+			{
+				return BadRequest(new { message = "Les prestations de tutorat doivent etre reservees via l endpoint /tutoring/{advertId}/reserve." });
+			}
 			var platformFee = Math.Round(advert.Price * 0.05m, 2);
 
 			var newTransaction = new Transaction
@@ -221,7 +235,7 @@ public class TransactionsController(EcoscolarDbContext context, UserManager<User
 				OrderNumber = orderNumber,
 				StripeSessionId = request.StripeSessionId,
 				BuyerConsent = false,
-				SellerConsent = false
+				SellerConsent = false,
 			};
 
 			advert.Status = AdvertStatus.SOLD;

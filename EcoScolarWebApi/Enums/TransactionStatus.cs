@@ -27,5 +27,13 @@ public enum TransactionStatus
 
     [EnumMember(Value = "DISPUTED")]
     [JsonPropertyName("DISPUTED")]
-    DISPUTED
+    DISPUTED,
+
+    [EnumMember(Value = "PAID_WAITING_ACCEPTANCE")]
+    [JsonPropertyName("PAID_WAITING_ACCEPTANCE")]
+    PAID_WAITING_ACCEPTANCE,
+
+    [EnumMember(Value = "PAID_WAITING_COMPLETION")]
+    [JsonPropertyName("PAID_WAITING_COMPLETION")]
+    PAID_WAITING_COMPLETION
 }

@@ -73,6 +73,10 @@ namespace EcoScolarWebApi.Services
                 return Result<CartItemDto>.Failure("L'annonce spécifiée n'existe pas.", ErrorType.NotFound);
             }
 
+            if (advert is TutoringAdvert)
+            {
+                return Result<CartItemDto>.Failure("Les cours d'appui ne peuvent pas etre ajoutes au panier. Utilisez la reservation directe.", ErrorType.Conflict);
+            }
             if (advert.Status == AdvertStatus.SOLD)
             {
                 return Result<CartItemDto>.Failure("Cet article a déjà été vendu.", ErrorType.Conflict);
