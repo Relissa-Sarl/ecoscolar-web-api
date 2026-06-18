@@ -28,6 +28,7 @@ public class TransactionsControllerTests : IDisposable
 	private readonly ReviewMapper _reviewMapper;
 	private readonly IEmailSenderService _emailSenderServiceMock;
 	private readonly IConfiguration _configuration;
+	private readonly IPayoutService _payoutServiceMock;
 	private readonly TransactionsController _controller;
 
 	public TransactionsControllerTests()
@@ -43,8 +44,9 @@ public class TransactionsControllerTests : IDisposable
 		_emailSenderServiceMock = Substitute.For<IEmailSenderService>();
 		_configuration = Substitute.For<IConfiguration>();
 		_configuration["Frontend:BaseUrl"].Returns("http://localhost:3000");
+		_payoutServiceMock = Substitute.For<IPayoutService>();
 
-		_controller = new TransactionsController(_context, _userManagerMock, _reviewMapper, _configuration, _emailSenderServiceMock);
+		_controller = new TransactionsController(_context, _userManagerMock, _reviewMapper, _configuration, _emailSenderServiceMock, _payoutServiceMock);
 	}
 
 	public void Dispose()

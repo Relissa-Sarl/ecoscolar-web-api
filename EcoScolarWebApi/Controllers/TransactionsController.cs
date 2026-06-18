@@ -17,13 +17,14 @@ namespace EcoScolarWebApi.Controllers;
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/[controller]")]
 [ApiController]
-public class TransactionsController(EcoscolarDbContext context, UserManager<User> userManager, ReviewMapper reviewMapper, IConfiguration configuration, IEmailSenderService emailSenderService) : ControllerBase
+public class TransactionsController(EcoscolarDbContext context, UserManager<User> userManager, ReviewMapper reviewMapper, IConfiguration configuration, IEmailSenderService emailSenderService, IPayoutService payoutService) : ControllerBase
 {
     private readonly EcoscolarDbContext _context = context;
     private readonly UserManager<User> _userManager = userManager;
     private readonly ReviewMapper _reviewMapper = reviewMapper;
     private readonly IConfiguration _configuration = configuration;
     private readonly IEmailSenderService _emailSenderService = emailSenderService;
+    private readonly IPayoutService _payoutService = payoutService;
 
     [HttpPost("{transactionId}/reviews")]
     public async Task<ActionResult<IEnumerable<ReviewResponseDTO>>> CreateReview(long transactionId, [FromBody] ReviewRequestDTO review)
@@ -106,28 +107,9 @@ public class TransactionsController(EcoscolarDbContext context, UserManager<User
         {
             transaction.Advert.Status = AdvertStatus.SOLD;
 
-            // Trigger Stripe transfer if the seller has a connected account
-            if (!string.IsNullOrEmpty(transaction.Advert.Seller?.StripeAccountId))
-            {
-                try
-                {
-                    var transferOptions = new Stripe.TransferCreateOptions
-                    {
-                        Amount = (long)(transaction.Advert.Price * 100), // en centimes
-                        Currency = "chf",
-                        Destination = transaction.Advert.Seller.StripeAccountId,
-                        TransferGroup = "COMMANDE_ID_789", // Same as defined in checkout
-                    };
-
-                    var transferService = new Stripe.TransferService();
-                    await transferService.CreateAsync(transferOptions);
-                }
-                catch (Stripe.StripeException ex)
-                {
-                    // Log the exception or handle it, but allow the transaction to be completed
-                    Console.WriteLine($"Stripe transfer failed: {ex.Message}");
-                }
-            }
+            // Release escrowed funds to the seller (net of platform fee). Idempotent; logs on failure
+            // but still completes the transaction.
+            await _payoutService.ReleaseFundsAsync(transaction);
         }
 
         await _context.SaveChangesAsync();
