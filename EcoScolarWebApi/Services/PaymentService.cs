@@ -72,11 +72,12 @@ public class PaymentService : IPaymentService
         }
 
         // Order total charged to the buyer (escrowed on the platform account).
-        // The platform is not subject to VAT, so none is applied.
+        // VAT at 8.1% is applied to the total order amount.
         var subtotal = lines.Sum(l => l.UnitPrice);
         var totalFee = lines.Sum(l => l.Fee);
         var shipping = _shippingFeeCalculator.CalculateFee(request.ShippingMethod);
-        var grandTotal = subtotal + shipping + totalFee;
+        var vat = Math.Round((subtotal + shipping + totalFee) * 0.081m, 2, MidpointRounding.AwayFromZero);
+        var grandTotal = subtotal + shipping + totalFee + vat;
         var amountInCents = (long)Math.Round(grandTotal * 100, MidpointRounding.AwayFromZero);
 
         var orderNumber = await GenerateUniqueOrderNumberAsync();

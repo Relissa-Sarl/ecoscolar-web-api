@@ -11,23 +11,13 @@ using Xunit;
 
 namespace EcoScolarWebApi.Tests.Integration;
 
-public class AdminsIntegrationTests : IClassFixture<AuthInMemoryWebApplicationFactory>, IAsyncLifetime
+public class AdminsIntegrationTests : IClassFixture<AuthInMemoryWebApplicationFactory>
 {
     private readonly AuthInMemoryWebApplicationFactory _factory;
 
     public AdminsIntegrationTests(AuthInMemoryWebApplicationFactory factory)
     {
         _factory = factory;
-    }
-
-    public Task InitializeAsync() => Task.CompletedTask;
-
-    public Task DisposeAsync()
-    {
-        using var scope = _factory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<EcoscolarDbContext>();
-        db.Database.EnsureDeleted();
-        return Task.CompletedTask;
     }
 
     private async Task<(HttpClient client, User user)> CreateAdminClientAsync()
@@ -280,24 +270,7 @@ public class AdminsIntegrationTests : IClassFixture<AuthInMemoryWebApplicationFa
     public async Task ChangeAbuseStatus_AsAdmin_ReturnsOk()
     {
         var (client, _) = await CreateAdminClientAsync();
-        int abuseId;
-
-        using (var scope = _factory.Services.CreateScope())
-        {
-            var db = scope.ServiceProvider.GetRequiredService<EcoscolarDbContext>();
-            var abuse = new EcoScolarWebApi.Models.AbuseReport { Reason = ReportReason.INAPPROPRIATE_ADVERT, CreatedAt = DateTime.UtcNow, Status = Enums.TicketStatus.PENDING };
-            db.AbuseReports.Add(abuse);
-            await db.SaveChangesAsync();
-            abuseId = abuse.Id;
-        }
-
-        // Test if the report exists in a NEW scope
-        using (var scope = _factory.Services.CreateScope())
-        {
-            var db = scope.ServiceProvider.GetRequiredService<EcoscolarDbContext>();
-            var exists = await db.AbuseReports.AnyAsync<EcoScolarWebApi.Models.AbuseReport>(a => a.Id == abuseId);
-            // This MUST be true
-        }
+        var abuseId = await CreateAbuseReportInDatabaseAsync();
 
         var statusDto = new { Status = Enums.TicketStatus.REVIEWED };
         var response = await client.PatchAsJsonAsync($"/api/v1/admins/abuses/{abuseId}/status", statusDto);
@@ -312,19 +285,51 @@ public class AdminsIntegrationTests : IClassFixture<AuthInMemoryWebApplicationFa
     public async Task DeleteFlag_AsAdmin_ReturnsOk()
     {
         var (client, _) = await CreateAdminClientAsync();
-        int abuseId;
-
-        using (var scope = _factory.Services.CreateScope())
-        {
-            var db = scope.ServiceProvider.GetRequiredService<EcoscolarDbContext>();
-            var abuse = new EcoScolarWebApi.Models.AbuseReport { Reason = ReportReason.INAPPROPRIATE_ADVERT, CreatedAt = DateTime.UtcNow, Status = Enums.TicketStatus.PENDING };
-            db.AbuseReports.Add(abuse);
-            await db.SaveChangesAsync();
-            abuseId = abuse.Id;
-        }
+        var abuseId = await CreateAbuseReportInDatabaseAsync();
 
         var response = await client.DeleteAsync($"/api/v1/admins/abuses/{abuseId}");
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    private async Task<int> CreateAbuseReportInDatabaseAsync()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<EcoscolarDbContext>();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+
+        var reporter = new User { UserName = $"reporter.{Guid.NewGuid():N}@example.com", Email = $"reporter.{Guid.NewGuid():N}@example.com", FirstName = "Rep", LastName = "Porter" };
+        await userManager.CreateAsync(reporter, "Password123!");
+
+        var seller = new User { UserName = $"seller.{Guid.NewGuid():N}@example.com", Email = $"seller.{Guid.NewGuid():N}@example.com", FirstName = "Sell", LastName = "Er" };
+        await userManager.CreateAsync(seller, "Password123!");
+
+        var advert = new EcoScolarWebApi.Models.PhysicalItem 
+        { 
+            Title = "Test Advert", 
+            Description = "Test Description", 
+            SellerId = seller.Id, 
+            Seller = seller, 
+            Status = AdvertStatus.ACTIVE, 
+            CreatedAt = DateTime.UtcNow 
+        };
+        db.Products.Add(advert);
+        await db.SaveChangesAsync();
+
+        var abuse = new EcoScolarWebApi.Models.AbuseReport 
+        { 
+            Reason = ReportReason.INAPPROPRIATE_ADVERT, 
+            CreatedAt = DateTime.UtcNow, 
+            Status = Enums.TicketStatus.PENDING,
+            ReporterUserId = reporter.Id,
+            Reporter = reporter,
+            TargetAdvertId = advert.AdvertId,
+            TargetAdvert = advert,
+            Message = "Spam report message"
+        };
+        db.AbuseReports.Add(abuse);
+        await db.SaveChangesAsync();
+
+        return abuse.Id;
     }
 }
