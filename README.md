@@ -169,6 +169,45 @@ Use the following credentials to test the application:
 
 ### Step 4: Start the program
 
+## Tester le flux de paiement (Stripe)
+
+Le checkout est **piloté serveur** : le client n'envoie que des IDs d'annonces, le serveur calcule le prix et la commission, crée une transaction `PENDING`, puis un **webhook Stripe signé** confirme le paiement. Pour tester en local, il faut le [Stripe CLI](https://stripe.com/docs/stripe-cli) (mode test).
+
+### 1. Configurer les secrets
+
+```bash
+# Clé secrète de test (Dashboard Stripe → Developers → API keys)
+dotnet user-secrets set "Stripe:SecretKey" "sk_test_..."
+```
+
+### 2. Lancer le relais webhook (terminal dédié, à laisser tourner)
+
+```bash
+stripe login
+stripe listen --forward-to https://localhost:7267/api/v1/payments/webhook --skip-verify
+```
+`--skip-verify` est nécessaire (certificat HTTPS auto-signé). Copier le `whsec_...` affiché et le configurer :
+```bash
+dotnet user-secrets set "Stripe:WebhookSecret" "whsec_..."
+```
+> Le `whsec_` à utiliser est celui imprimé par `stripe listen`, **pas** celui du Dashboard. Les user-secrets ne sont lus qu'au démarrage → **redémarrer l'API** après les avoir posés.
+
+### 3. Dérouler un achat
+
+1. Démarrer l'API, ouvrir `https://localhost:7267/swagger`.
+2. `POST /api/v1/auth/login` → récupérer l'`accessToken` → bouton **Authorize** (`Bearer <token>`).
+3. `POST /api/v1/payments/checkout` avec une annonce **ACTIVE** qui n'est pas la vôtre :
+   ```json
+   { "productIds": [10], "shippingMethod": "handToHand" }
+   ```
+   → réponse `{ "url", "orderNumber" }`. En base : une transaction `PENDING`, l'annonce en `PAUSED`.
+4. Ouvrir l'`url`, payer avec la carte test `4242 4242 4242 4242` (date future, CVC au hasard).
+5. Le terminal `stripe listen` affiche `checkout.session.completed [200]`. En base : transaction `PAID_WAITING_SHIPPING`, `StripePaymentIntentId` rempli, annonce `SOLD`.
+
+> Créer la session ne déclenche **aucun** webhook : l'événement n'est émis qu'au **paiement**.
+
+> ⚠️ **À adapter côté front (`ecoscolar-web-ui`)** : `success.vue` ne doit plus créer les transactions ni passer l'annonce à `SOLD` — l'état vient désormais du webhook. Et le type `CheckoutRequest` ne doit plus envoyer `productPrice` (le serveur l'ignore, le prix est calculé serveur).
+
 ## Docker container
 
 This project can be build into a docker container.
