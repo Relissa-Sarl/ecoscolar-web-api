@@ -232,6 +232,46 @@ public class PaymentServiceTests : IDisposable
         await act.Should().NotThrowAsync();
     }
 
+    [Fact]
+    public async Task ConfirmCheckoutSession_TutoringAdvert_BecomesWaitingAcceptance_AndAdvertStaysActive()
+    {
+        var tutoring = new TutoringAdvert
+        {
+            Title = "Maths",
+            Description = "desc",
+            Price = 30m,
+            Status = AdvertStatus.ACTIVE,
+            SellerId = SellerId,
+            NotificationDate = DateTime.UtcNow,
+            SubjectId = 1,
+            SchoolGradeId = 1,
+        };
+        _context.Adverts.Add(tutoring);
+        await _context.SaveChangesAsync();
+
+        _context.Transactions.Add(new Transaction
+        {
+            AdvertId = tutoring.AdvertId,
+            BuyerId = BuyerId,
+            Date = DateTime.UtcNow,
+            Status = TransactionStatus.PENDING,
+            StripeSessionId = "cs_tut_1",
+            Quantity = 5,
+            UnitPrice = 30m,
+            PlatformFee = 15m,
+            Amount = 165m,
+        });
+        await _context.SaveChangesAsync();
+
+        await _service.ConfirmCheckoutSessionAsync("cs_tut_1", "pi_tut");
+
+        var transaction = await _context.Transactions.SingleAsync();
+        // Tutoring waits for the tutor's acceptance and the advert is never marked SOLD.
+        transaction.Status.Should().Be(TransactionStatus.PAID_WAITING_ACCEPTANCE);
+        transaction.StripePaymentIntentId.Should().Be("pi_tut");
+        (await _context.Adverts.FindAsync(tutoring.AdvertId))!.Status.Should().Be(AdvertStatus.ACTIVE);
+    }
+
     // === webhook cancel / revert ===
 
     [Fact]

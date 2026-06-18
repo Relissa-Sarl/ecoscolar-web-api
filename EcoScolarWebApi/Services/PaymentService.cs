@@ -178,10 +178,19 @@ public class PaymentService : IPaymentService
         {
             transaction.StripePaymentIntentId = paymentIntentId;
 
-            // Physical goods: paid, waiting for the seller to ship.
-            transaction.Status = TransactionStatus.PAID_WAITING_SHIPPING;
-            if (transaction.Advert is not null)
-                transaction.Advert.Status = AdvertStatus.SOLD;
+            if (transaction.Advert is TutoringAdvert)
+            {
+                // Tutoring package: awaits the tutor's accept/refuse decision (UC-09 E6-02).
+                // The advert stays ACTIVE so other students can keep booking the same tutor.
+                transaction.Status = TransactionStatus.PAID_WAITING_ACCEPTANCE;
+            }
+            else
+            {
+                // Physical goods: paid, waiting for the seller to ship.
+                transaction.Status = TransactionStatus.PAID_WAITING_SHIPPING;
+                if (transaction.Advert is not null)
+                    transaction.Advert.Status = AdvertStatus.SOLD;
+            }
         }
 
         await _context.SaveChangesAsync(cancellationToken);
