@@ -66,14 +66,40 @@ public class EmailSenderService : IEmailSenderService
         await SendEmailAsync(email, subject, body);
     }
 
-    public async Task SendItemSoldEmailAsync(User seller, Advert advert)
+    public async Task SendItemSoldEmailAsync(User seller, Advert advert, string allSoldLink)
     {
         var subject = "Votre article a été vendu ! - EcoScolar";
         var body = $"""
         <div style="font-family: sans-serif; line-height: 1.5; color: #333;">
             <p>Bonjour {seller.Nickname},</p>
             <p>Bonne nouvelle ! Votre annonce "<strong>{advert.Title}</strong>" a été achetée.</strong>.</p>
+            <p>Vous pouvez retrouver tous vos articles vendus <a href="{allSoldLink}">ici.</a></p>
             <p>Nous vous remercions pour votre confiance sur notre plateforme.</p>
+            <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
+        </div>
+        """;
+
+        await SendEmailAsync(seller.Email!, subject, body);
+    }
+
+    public async Task SendAdvertExpirationWarningAsync(User seller, Advert advert, string renewLink)
+    {
+        var subject = "Votre annonce expire bientôt - EcoScolar";
+        var body = $"""
+        <div style="font-family: sans-serif; line-height: 1.5; color: #333;">
+            <p>Bonjour {seller.Nickname ?? seller.UserName ?? ""},</p>
+            <p>Votre annonce "<strong>{advert.Title}</strong>" expire dans 7 jours.</p>
+            <p>Sans action de votre part, elle sera retirée de la plateforme.</p>
+            <p style="margin: 24px 0;">
+                <a href="{renewLink}" 
+                   style="background-color: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
+                   Renouveler mon annonce
+                </a>
+            </p>
+            <p style="font-size: 12px; color: #666;">
+                Si le bouton ne fonctionne pas, vous pouvez copier-coller ce lien dans votre navigateur :<br/>
+                <a href="{renewLink}">{renewLink}</a>
+            </p>
             <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
         </div>
         """;

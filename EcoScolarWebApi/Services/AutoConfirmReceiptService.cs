@@ -1,7 +1,7 @@
 using EcoScolarWebApi.Data;
 using EcoScolarWebApi.Enums;
+using EcoScolarWebApi.Services.Contracts;
 using Microsoft.EntityFrameworkCore;
-using Stripe;
 
 namespace EcoScolarWebApi.Services;
 
@@ -42,6 +42,7 @@ public class AutoConfirmReceiptService : BackgroundService
     {
         using var scope = _serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<EcoscolarDbContext>();
+        var payoutService = scope.ServiceProvider.GetRequiredService<IPayoutService>();
 
         // Récupérer le délai de configuration (par défaut 7)
         int delayDays = _configuration.GetValue<int>("BusinessSettings:SellerAutoPayoutDays", 7);
@@ -50,8 +51,8 @@ public class AutoConfirmReceiptService : BackgroundService
         var transactionsToConfirm = await context.Transactions
             .Include(t => t.Advert)
                 .ThenInclude(a => a.Seller)
-            .Where(t => t.Status == TransactionStatus.SHIPPED 
-                     && t.ShippedDate.HasValue 
+            .Where(t => t.Status == TransactionStatus.SHIPPED
+                     && t.ShippedDate.HasValue
                      && t.ShippedDate.Value <= thresholdDate)
             .ToListAsync(stoppingToken);
 
@@ -60,37 +61,16 @@ public class AutoConfirmReceiptService : BackgroundService
 
         _logger.LogInformation($"Found {transactionsToConfirm.Count} transactions to auto-confirm.");
 
-        var transferService = new TransferService();
-
         foreach (var transaction in transactionsToConfirm)
         {
             transaction.Status = TransactionStatus.COMPLETED;
-            
+
             if (transaction.Advert != null)
             {
                 transaction.Advert.Status = AdvertStatus.SOLD;
 
-                // Trigger Stripe transfer if the seller has a connected account
-                if (!string.IsNullOrEmpty(transaction.Advert.Seller?.StripeAccountId))
-                {
-                    try
-                    {
-                        var transferOptions = new TransferCreateOptions
-                        {
-                            Amount = (long)(transaction.Advert.Price * 100), // en centimes
-                            Currency = "chf",
-                            Destination = transaction.Advert.Seller.StripeAccountId,
-                            TransferGroup = "COMMANDE_ID_789", // Same as defined in checkout
-                        };
-
-                        await transferService.CreateAsync(transferOptions, cancellationToken: stoppingToken);
-                        _logger.LogInformation($"Successfully transferred {transaction.Advert.Price} CHF to seller {transaction.Advert.SellerId} for transaction {transaction.TransactionId}");
-                    }
-                    catch (StripeException ex)
-                    {
-                        _logger.LogError(ex, $"Stripe transfer failed for transaction {transaction.TransactionId}");
-                    }
-                }
+                // Release escrowed funds to the seller (net of platform fee). Idempotent; logs on failure.
+                await payoutService.ReleaseFundsAsync(transaction, stoppingToken);
             }
         }
 

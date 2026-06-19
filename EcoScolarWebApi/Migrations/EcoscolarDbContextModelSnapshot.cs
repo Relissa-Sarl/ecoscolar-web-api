@@ -22,6 +22,50 @@ namespace EcoScolarWebApi.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("EcoScolarWebApi.Models.AbuseReport", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Reason")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ReporterUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<long>("TargetAdvertId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int?>("TargetCommentId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReporterUserId");
+
+                    b.HasIndex("TargetAdvertId");
+
+                    b.HasIndex("TargetCommentId");
+
+                    b.ToTable("AbuseReports");
+                });
+
             modelBuilder.Entity("EcoScolarWebApi.Models.Advert", b =>
                 {
                     b.Property<long>("AdvertId")
@@ -235,16 +279,14 @@ namespace EcoScolarWebApi.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Reason")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("Reason")
+                        .HasColumnType("int");
 
                     b.Property<string>("Resolution")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
 
                     b.Property<long>("TransactionId")
                         .HasColumnType("bigint");
@@ -375,13 +417,28 @@ namespace EcoScolarWebApi.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("PictureId"));
 
+                    b.Property<string>("ContentType")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<string>("Label")
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<string>("ObjectKey")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<long>("PhysicalItemId")
                         .HasColumnType("bigint");
+
+                    b.Property<string>("PublicUrl")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
 
                     b.HasKey("PictureId");
 
@@ -1017,6 +1074,9 @@ namespace EcoScolarWebApi.Migrations
                     b.Property<long>("AdvertId")
                         .HasColumnType("bigint");
 
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<bool>("BuyerConsent")
                         .HasColumnType("bit");
 
@@ -1032,8 +1092,18 @@ namespace EcoScolarWebApi.Migrations
                     b.Property<DateTime?>("ExpirationReservationTime")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("OrderNumber")
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<DateTime?>("PackageExpiresAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<decimal>("PlatformFee")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("ReminderDate")
                         .HasColumnType("datetime2");
@@ -1048,14 +1118,28 @@ namespace EcoScolarWebApi.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("StripePaymentIntentId")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("StripeSessionId")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("StripeTransferId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("TutorConfirmedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasColumnType("decimal(18,2)");
 
                     b.HasKey("TransactionId");
 
                     b.HasIndex("AdvertId");
 
                     b.HasIndex("BuyerId");
+
+                    b.HasIndex("OrderNumber");
 
                     b.ToTable("Transactions");
                 });
@@ -1355,6 +1439,12 @@ namespace EcoScolarWebApi.Migrations
                 {
                     b.HasBaseType("EcoScolarWebApi.Models.Advert");
 
+                    b.Property<int>("MaxHours")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("MinHours")
+                        .HasColumnType("int");
+
                     b.Property<long>("SchoolGradeId")
                         .HasColumnType("bigint");
 
@@ -1409,6 +1499,32 @@ namespace EcoScolarWebApi.Migrations
                     b.HasIndex("BookCategoryId");
 
                     b.ToTable("Books");
+                });
+
+            modelBuilder.Entity("EcoScolarWebApi.Models.AbuseReport", b =>
+                {
+                    b.HasOne("EcoScolarWebApi.Models.User", "Reporter")
+                        .WithMany()
+                        .HasForeignKey("ReporterUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("EcoScolarWebApi.Models.Advert", "TargetAdvert")
+                        .WithMany()
+                        .HasForeignKey("TargetAdvertId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EcoScolarWebApi.Models.PublicComment", "TargetComment")
+                        .WithMany()
+                        .HasForeignKey("TargetCommentId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("Reporter");
+
+                    b.Navigation("TargetAdvert");
+
+                    b.Navigation("TargetComment");
                 });
 
             modelBuilder.Entity("EcoScolarWebApi.Models.Advert", b =>

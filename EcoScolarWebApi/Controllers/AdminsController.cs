@@ -1,8 +1,10 @@
-﻿using EcoScolarWebApi.Commun;
+﻿using Docker.DotNet.Models;
+using EcoScolarWebApi.Commun;
 using EcoScolarWebApi.Data;
+using EcoScolarWebApi.DTOs;
 using EcoScolarWebApi.DTOs.Support;
+using EcoScolarWebApi.Enums;
 using EcoScolarWebApi.Models;
-using EcoScolarWebApi.Services;
 using EcoScolarWebApi.Services.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -20,7 +22,6 @@ namespace EcoScolarWebApi.Controllers
     /// <param name="adminService">The user service for handling user-related operations</param>
     /// <param name="userManager">The user manager for handling identity management tasks</param>
     /// <param name="context">The database context for handling database interactions</param>
-    [Route("api/[controller]")]
     [ApiController]
     [Route("api/v{version:apiVersion}/[controller]")]
     [Authorize]
@@ -135,6 +136,90 @@ namespace EcoScolarWebApi.Controllers
             // If successful, return 200 OK along with the user's data
             if (result.IsSuccess)
                 return Ok(result.Data);
+
+            // Dispatch the response depending on the error code
+            return result.ErrorType switch
+            {
+                // 401 Unauthorized if the user isn't connected
+                ErrorType.Unauthorized => Unauthorized(new { result.Errors }),
+
+                // 404 Not Found if the user was deleted
+                ErrorType.NotFound => NotFound(new { result.Errors }),
+
+                // 400 Bad Request fallback
+                _ => BadRequest(new { result.Errors })
+            };
+        }
+
+        [HttpGet("abuses")]
+        public async Task<IActionResult> GetAllAbuses()
+        {
+            var result = await _adminService.GetAllAbuses(User);
+
+            // If successful, return 200 OK along with the user's data
+            if (result.IsSuccess)
+                return Ok(result.Data);
+
+            // Dispatch the response depending on the error code
+            return result.ErrorType switch
+            {
+                // 401 Unauthorized if the user isn't connected
+                ErrorType.Unauthorized => Unauthorized(new { result.Errors }),
+
+                // 404 Not Found if the user was deleted
+                ErrorType.NotFound => NotFound(new { result.Errors }),
+
+                // 400 Bad Request fallback
+                _ => BadRequest(new { result.Errors })
+            };
+        }
+
+        [HttpGet("flagged-users")]
+        public async Task<IActionResult> GetAllFlaggedUsers()
+        {
+            var result = await _adminService.GetFlaggedUsers(User);
+
+            if (result.IsSuccess)
+                return Ok(result.Data);
+
+            return result.ErrorType switch
+            {
+                ErrorType.Unauthorized => Unauthorized(new { result.Errors }),
+                _ => BadRequest(new { result.Errors })
+            };
+        }
+
+        [HttpPatch("abuses/{id}/status")]
+        public async Task<IActionResult> ChangeAbuseStatus(int id, [FromBody] AbuseStatusRequestDto status)
+        {
+            var result = await _adminService.ChangeAbuseStatus(User, id, status);
+
+            // If successful, return 200 OK along with the user's data
+            if (result.IsSuccess)
+                return Ok(result.Data);
+
+            // Dispatch the response depending on the error code
+            return result.ErrorType switch
+            {
+                // 401 Unauthorized if the user isn't connected
+                ErrorType.Unauthorized => Unauthorized(new { result.Errors }),
+
+                // 404 Not Found if the user was deleted
+                ErrorType.NotFound => NotFound(new { result.Errors }),
+
+                // 400 Bad Request fallback
+                _ => BadRequest(new { result.Errors })
+            };
+        }
+
+        [HttpDelete("abuses/{id}")]
+        public async Task<IActionResult> DeleteFlag(int id)
+        {
+            var result = await _adminService.DeleteAbuse(User, id);
+
+            // If successful, return 200 OK along with the user's data
+            if (result.IsSuccess)
+                return Ok(result);
 
             // Dispatch the response depending on the error code
             return result.ErrorType switch

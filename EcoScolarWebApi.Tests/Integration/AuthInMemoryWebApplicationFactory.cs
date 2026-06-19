@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -16,64 +17,73 @@ namespace EcoScolarWebApi.Tests.Integration;
 /// </summary>
 public class AuthInMemoryWebApplicationFactory : WebApplicationFactory<global::Program>
 {
-	private readonly string _keysPath = Path.Combine(Path.GetTempPath(), "ecoscolar-auth-tests", Guid.NewGuid().ToString("N"));
-	private bool _seeded;
+    private readonly string _keysPath = Path.Combine(Path.GetTempPath(), "ecoscolar-auth-tests", Guid.NewGuid().ToString("N"));
+    private readonly string _databaseName = $"EcoScolarAuthTests_{Guid.NewGuid():N}";
+    private bool _seeded;
 
-	protected override void ConfigureWebHost(IWebHostBuilder builder)
-	{
-		builder.UseEnvironment("Testing");
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        builder.UseEnvironment("Testing");
 
-		builder.ConfigureLogging(logging => logging.ClearProviders());
+        builder.ConfigureAppConfiguration((context, configBuilder) =>
+        {
+            configBuilder.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                { "InMemoryDatabaseName", _databaseName }
+            });
+        });
 
-		builder.ConfigureTestServices(services =>
-		{
-			Directory.CreateDirectory(_keysPath);
+        builder.ConfigureLogging(logging => logging.ClearProviders());
 
-			services.AddDataProtection()
-				.PersistKeysToFileSystem(new DirectoryInfo(_keysPath))
-				.SetApplicationName("EcoScolarAuthTests");
+        builder.ConfigureTestServices(services =>
+        {
+            Directory.CreateDirectory(_keysPath);
 
-			services.Configure<IdentityOptions>(options =>
-			{
-				options.SignIn.RequireConfirmedAccount = false;
-				options.User.RequireUniqueEmail = true;
-			});
+            services.AddDataProtection()
+                .PersistKeysToFileSystem(new DirectoryInfo(_keysPath))
+                .SetApplicationName("EcoScolarAuthTests");
 
-			services.ConfigureApplicationCookie(options =>
-			{
-				options.Cookie.Name = "Ecoscolar.Auth.Session";
-				options.Cookie.HttpOnly = true;
-				options.Cookie.SecurePolicy = CookieSecurePolicy.None;
-				options.Cookie.SameSite = SameSiteMode.Lax;
-			});
-		});
-	}
+            services.Configure<IdentityOptions>(options =>
+            {
+                options.SignIn.RequireConfirmedAccount = false;
+                options.User.RequireUniqueEmail = true;
+            });
 
-	public void EnsureSeeded()
-	{
-		if (_seeded)
-			return;
+            services.ConfigureApplicationCookie(options =>
+            {
+                options.Cookie.Name = "Ecoscolar.Auth.Session";
+                options.Cookie.HttpOnly = true;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.None;
+                options.Cookie.SameSite = SameSiteMode.Lax;
+            });
+        });
+    }
 
-		using var scope = Services.CreateScope();
-		var db = scope.ServiceProvider.GetRequiredService<EcoscolarDbContext>();
-		db.Database.EnsureCreated();
-		IntegrationTestIdentityHelper.SeedLocations(db);
-		_seeded = true;
-	}
+    public void EnsureSeeded()
+    {
+        if (_seeded)
+            return;
 
-	public HttpClient CreateCookieClient()
-	{
-		EnsureSeeded();
-		return CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = true });
-	}
+        using var scope = Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<EcoscolarDbContext>();
+        db.Database.EnsureCreated();
+        IntegrationTestIdentityHelper.SeedLocations(db);
+        _seeded = true;
+    }
 
-	protected override void Dispose(bool disposing)
-	{
-		if (disposing && Directory.Exists(_keysPath))
-		{
-			try { Directory.Delete(_keysPath, recursive: true); } catch { /* best effort cleanup */ }
-		}
+    public HttpClient CreateCookieClient()
+    {
+        EnsureSeeded();
+        return CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = true });
+    }
 
-		base.Dispose(disposing);
-	}
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing && Directory.Exists(_keysPath))
+        {
+            try { Directory.Delete(_keysPath, recursive: true); } catch { /* best effort cleanup */ }
+        }
+
+        base.Dispose(disposing);
+    }
 }

@@ -17,21 +17,21 @@ namespace EcoScolarWebApi.DTOs.Cart
         public long AdvertId { get; set; }
 
         [Required]
-        public string Type { get; set; }
+        public string Type { get; set; } = string.Empty;
 
         [Required]
-        public string Title { get; set; }
+        public string Title { get; set; } = string.Empty;
 
         [Required]
         public decimal Price { get; set; }
 
         [Required]
-        public string SellerPseudo { get; set; }
+        public string SellerPseudo { get; set; } = string.Empty;
 
         [Required]
         public string? PrimaryImage { get; set; }
 
         [Required]
-        public string Status { get; set; }
+        public string Status { get; set; } = string.Empty;
     }
-}   
+}

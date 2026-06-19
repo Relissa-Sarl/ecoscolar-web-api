@@ -26,7 +26,9 @@ public record UserResponse(
     IEnumerable<SpokenLanguageDto> Languages,
     LocationReadDto? Location = null!,
     string? BirthdayDate = null!,
-    string[] Roles = null!
+    string[] Roles = null!,
+    int BadReviewsCount = 0,
+    bool AlerteTooBadReviews = false
 //double GlobalRating,
 //bool IsBanned,
 //int CurrentSchoolLevelId,
@@ -58,11 +60,11 @@ public record UserReadDto(
     /// <returns>A UserReadDto populated with data from the specified Seller entity.</returns>
     public static UserReadDto FromEntity(User entity) => new(
         Id: entity.Id,
-        Nickname: entity.Nickname ?? "",
-        FirstName: entity.FirstName,
-        LastName: entity.LastName,
-        Email: entity.Email ?? "",
-        BirthdayDate: entity.DateOfBirth,
+        Nickname: entity.Nickname ?? string.Empty,
+        FirstName: entity.FirstName ?? string.Empty,
+        LastName: entity.LastName ?? string.Empty,
+        Email: entity.Email ?? string.Empty,
+        BirthdayDate: entity.DateOfBirth ?? string.Empty,
         IsOnboarded: entity.IsOnboarded,
         Location: entity.Location != null ? LocationReadDto.FromEntity(entity.Location) : null,
         Languages: entity.Languages != null
@@ -102,7 +104,7 @@ public record UserPublicReadDto(
 //[Required] int GlobalRating
 )
 {
-    public static UserPublicReadDto FromEntity(User user) => new UserPublicReadDto(user.Id, user.Nickname);
+    public static UserPublicReadDto FromEntity(User user) => new UserPublicReadDto(user.Id, user.Nickname ?? string.Empty);
 }
 public record LocationReadDto(
 string PostalCode,

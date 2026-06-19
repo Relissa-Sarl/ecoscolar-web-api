@@ -26,7 +26,7 @@ namespace EcoScolarWebApi.Controllers
 
         // GET: api/v1/cart
         [HttpGet]
-        public async Task<IActionResult> GetCartItems() 
+        public async Task<IActionResult> GetCartItems()
         {
             var userId = _userManager.GetUserId(User);
             // If user is null or does not exist, then unauthorized
@@ -74,7 +74,7 @@ namespace EcoScolarWebApi.Controllers
 
         // DELETE: api/v1/cart/{advertId}
         [HttpDelete("{advertId}")]
-        public async Task<IActionResult> DeleteCartItem(long advertId) 
+        public async Task<IActionResult> DeleteCartItem(long advertId)
         {
             var userId = _userManager.GetUserId(User);
             // If user is null or does not exist, then unauthorized

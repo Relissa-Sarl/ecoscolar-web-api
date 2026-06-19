@@ -21,7 +21,7 @@ namespace EcoScolarWebApi.Services
         {
             var cartItems = await _context.CartItems
                 .Include(c => c.Advert)
-                    .ThenInclude(a => a.Seller)
+                    .ThenInclude(a => a.Seller!)
                 .Where(c => c.UserId == userId)
                 .ToListAsync();
 
@@ -35,8 +35,9 @@ namespace EcoScolarWebApi.Services
 
             var dtos = cartItems.Select(c =>
             {
-                var primaryImage = _context.Pictures.FirstOrDefault(p => p.PhysicalItemId == c.AdvertId)?.Label;
-                
+                var pic = _context.Pictures.Where(p => p.PhysicalItemId == c.AdvertId).OrderBy(p => p.SortOrder).FirstOrDefault();
+                var primaryImage = pic?.PublicUrl ?? pic?.Label;
+
                 string type = c.Advert switch
                 {
                     Book => "BOOK",
@@ -72,6 +73,11 @@ namespace EcoScolarWebApi.Services
                 return Result<CartItemDto>.Failure("L'annonce spécifiée n'existe pas.", ErrorType.NotFound);
             }
 
+            // Tutoring is sold via a dedicated reservation flow (hours + escrow), never through the cart.
+            if (advert is TutoringAdvert)
+            {
+                return Result<CartItemDto>.Failure("Les cours d'appui se réservent directement depuis l'annonce, pas via le panier.", ErrorType.Conflict);
+            }
             if (advert.Status == AdvertStatus.SOLD)
             {
                 return Result<CartItemDto>.Failure("Cet article a déjà été vendu.", ErrorType.Conflict);
@@ -103,10 +109,11 @@ namespace EcoScolarWebApi.Services
             await _context.SaveChangesAsync();
 
             // Get main picture of the advert
-            var primaryImage = await _context.Pictures
+            var primaryPic = await _context.Pictures
                 .Where(p => p.PhysicalItemId == dto.AdvertId)
-                .Select(p => p.Label)
+                .OrderBy(p => p.SortOrder)
                 .FirstOrDefaultAsync();
+            var primaryImage = primaryPic?.PublicUrl ?? primaryPic?.Label;
 
             string type = advert switch
             {

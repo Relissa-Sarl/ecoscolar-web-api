@@ -1,3 +1,4 @@
+using Xunit;
 using EcoScolarWebApi.Controllers;
 using EcoScolarWebApi.Data;
 using EcoScolarWebApi.DTOs.Adverts;
@@ -20,7 +21,7 @@ public class AdvertsControllerTests : IDisposable
 {
     private readonly EcoscolarDbContext _context;
     private readonly AdvertsController _controller;
-    private readonly IAdvertSearchService _searchService; 
+    private readonly IAdvertSearchService _searchService;
     private readonly IEmailSenderService _emailSenderServiceMock;
     private readonly UserManager<User> _userManagerMock;
     private readonly UsersController _usersController;
@@ -58,12 +59,12 @@ public class AdvertsControllerTests : IDisposable
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
         _context = new EcoscolarDbContext(options);
-		_userServiceMock = Substitute.For<IUserService>();
+        _userServiceMock = Substitute.For<IUserService>();
         _reviewMapper = Substitute.For<ReviewMapper>();
 
         // Simulate the dependency injection of context and store into the AdvertsController
         _usersController = new UsersController(_userServiceMock, _userManagerMock, _context, _reviewMapper, Substitute.For<IStripeConnectService>());
-		_controller = new AdvertsController(_context, _searchService, _emailSenderServiceMock);
+        _controller = new AdvertsController(_context, _searchService, _emailSenderServiceMock);
 
         var claims = new List<Claim>
         {
@@ -104,7 +105,7 @@ public class AdvertsControllerTests : IDisposable
 
         var adverts = new List<Advert>
         {
-            new Book 
+            new Book
             {
                 AdvertId = 1,
                 Title = "Book Title",
@@ -1321,17 +1322,24 @@ public class AdvertsControllerTests : IDisposable
     {
         // Arrange
         var query = new AdvertSearchQuery { Q = "Math" };
-        var expectedSummaries = new List<AdvertSummaryDto> { new AdvertSummaryDto { Id = 1 } };
+        var expectedPage = new CatalogSummaryPageDto
+        {
+            Items = new List<AdvertSummaryDto> { new AdvertSummaryDto { Id = 1 } },
+            Page = 1,
+            PageSize = 9,
+            TotalItems = 1,
+            TotalPages = 1
+        };
 
         _searchService.SearchSummariesAsync(query, Arg.Any<CancellationToken>())
-            .Returns(expectedSummaries);
+            .Returns(expectedPage);
 
         // Act
         var result = await _controller.GetSummaries(query, CancellationToken.None);
 
         // Assert
         var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
-        okResult.Value.Should().BeEquivalentTo(expectedSummaries);
+        okResult.Value.Should().BeEquivalentTo(expectedPage);
     }
     #endregion
 
@@ -1465,7 +1473,7 @@ public class AdvertsControllerTests : IDisposable
         var existingUser = new User { Id = "guid-123", UserName = "john_doe", FirstName = "John", LastName = "Doe" };
         _userManagerMock.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(existingUser);
 
-        var Category = new ProductCategory{ ProductCategoryId = 1, Name = "Guitare", NameFr = "Guitare", NameDe = "Gitarre", NameIt = "Chitarra", Description = "Guitares" };
+        var Category = new ProductCategory { ProductCategoryId = 1, Name = "Guitare", NameFr = "Guitare", NameDe = "Gitarre", NameIt = "Chitarra", Description = "Guitares" };
         _context.Set<ProductCategory>().Add(Category);
         await _context.SaveChangesAsync();
 
@@ -1552,12 +1560,14 @@ public class AdvertsControllerTests : IDisposable
         var serviceCreateDto = new ServiceCreateDto(
             Title: "New Service",
             Description: "Description of the new service",
-            Price: 20m,
+            PricePerHour: 20m,
             UserId: existingUser.Id,
             SubjectId: 1,
             SchoolGradeId: 1,
             TeachingLanguage: LanguageEnum.FR,
-            StudyLevel: "Diplôme en Mathématiques"
+            StudyLevel: "Diplôme en Mathématiques",
+            MinHours: 1,
+            MaxHours: 8
         );
 
         // Act
@@ -1590,12 +1600,14 @@ public class AdvertsControllerTests : IDisposable
         var serviceCreateDto = new ServiceCreateDto(
             Title: "", // Invalid
             Description: "Description of the new service",
-            Price: 20m,
+            PricePerHour: 20m,
             UserId: existingUser.Id,
             SubjectId: 1,
             SchoolGradeId: 1,
             TeachingLanguage: LanguageEnum.FR,
-            StudyLevel: "Diplôme en Mathématiques"
+            StudyLevel: "Diplôme en Mathématiques",
+            MinHours: 1,
+            MaxHours: 8
         );
 
         // FORCE VALIDATION ERROR
@@ -1971,13 +1983,14 @@ public class AdvertsControllerTests : IDisposable
         var serviceUpdateDto = new ServiceCreateDto(
             Title: "Lesson de français",
             Description: "Cours de français pour lycéens",
-            Price: 40m,
+            PricePerHour: 40m,
             UserId: existingUser.Id,
             SubjectId: 2,
             SchoolGradeId: 1,
             TeachingLanguage: LanguageEnum.FR,
-            StudyLevel: "Diplôme en Langue Française"
-
+            StudyLevel: "Diplôme en Langue Française",
+            MinHours: 1,
+            MaxHours: 8
         );
 
         // Act
@@ -2029,13 +2042,14 @@ public class AdvertsControllerTests : IDisposable
         var serviceUpdateDto = new ServiceCreateDto(
             Title: "", // Invalid
             Description: "Cours de français pour lycéens",
-            Price: 40m,
+            PricePerHour: 40m,
             UserId: existingUser.Id,
             SubjectId: 1,
             SchoolGradeId: 1,
             TeachingLanguage: LanguageEnum.FR,
-            StudyLevel: "Diplôme en Langue Française"
-
+            StudyLevel: "Diplôme en Langue Française",
+            MinHours: 1,
+            MaxHours: 8
         );
 
         _controller.ModelState.AddModelError("Title", "The Title field is required.");
@@ -2060,13 +2074,14 @@ public class AdvertsControllerTests : IDisposable
         var serviceUpdateDto = new ServiceCreateDto(
             Title: "Lesson de français",
             Description: "Cours de français pour lycéens",
-            Price: 40m,
+            PricePerHour: 40m,
             UserId: existingUser.Id,
             SubjectId: 1,
             SchoolGradeId: 1,
             TeachingLanguage: LanguageEnum.FR,
-            StudyLevel: "Diplôme en Langue Française"
-
+            StudyLevel: "Diplôme en Langue Française",
+            MinHours: 1,
+            MaxHours: 8
         );
 
         // Act
@@ -2130,14 +2145,69 @@ public class AdvertsControllerTests : IDisposable
     }
 
     [Fact]
-    public async Task UpdateAdvertStatus_SendsEmailToSeller_WhenStatusChangesToSold()
+    public async Task UpdateAdvertStatus_ReturnsNotFound_WhenAdvertDoesNotExist()
     {
         // Arrange
-        var sellerUser = new User { Id = "seller-123", UserName = "seller_bob", Email = "seller@example.com", Nickname = "Bob" };
-        MockUser(sellerUser.Id);
+        // None
+
+        // Act
+        var result = await _controller.UpdateAdvertStatus(999, AdvertStatus.SOLD); // Non-existing ID
+        // Assert
+        var notFoundResult = result as NotFoundResult;
+        notFoundResult.Should().NotBeNull("The controller did not return a NotFoundResult");
+    }
+
+    [Fact]
+    public async Task UpdateAdvertStatus_AllowsNonOwner_ToTransitionFromPausedToActive()
+    {
+        // Arrange
+        var sellerUser = new User { Id = "seller-123", UserName = "seller_bob", Email = "seller@example.com" };
         var advert = new Book
         {
-            AdvertId = 10,
+            AdvertId = 200,
+            Title = "Math Book",
+            Description = "A math book",
+            Price = 15,
+            SellerId = sellerUser.Id,
+            Seller = sellerUser,
+            Status = AdvertStatus.PAUSED,
+            CreatedAt = DateTime.UtcNow,
+            NotificationDate = DateTime.UtcNow,
+            Condition = PhysicalItemCondition.NEW,
+            ISBN = "11111",
+            Author = "Author",
+            Publisher = "Pub",
+            Edition = "1st",
+            WrittenLanguage = LanguageEnum.FR,
+            BookCategoryId = 1
+        };
+        _context.Users.Add(sellerUser);
+        _context.Adverts.Add(advert);
+        await _context.SaveChangesAsync();
+
+        // Log in as a non-owner/buyer
+        MockUser("buyer-123");
+
+        // Act
+        var result = await _controller.UpdateAdvertStatus(200, AdvertStatus.ACTIVE);
+
+        // Assert
+        var noContentResult = result as NoContentResult;
+        noContentResult.Should().NotBeNull("Non-owner should be allowed to revert from PAUSED to ACTIVE");
+
+        var updatedAdvert = await _context.Adverts.FindAsync(200L);
+        updatedAdvert.Should().NotBeNull();
+        updatedAdvert!.Status.Should().Be(AdvertStatus.ACTIVE);
+    }
+
+    [Fact]
+    public async Task UpdateAdvertStatus_ForbidsNonOwner_ToTransitionFromActiveToPaused()
+    {
+        // Arrange
+        var sellerUser = new User { Id = "seller-123", UserName = "seller_bob", Email = "seller@example.com" };
+        var advert = new Book
+        {
+            AdvertId = 201,
             Title = "Math Book",
             Description = "A math book",
             Price = 15,
@@ -2158,38 +2228,39 @@ public class AdvertsControllerTests : IDisposable
         _context.Adverts.Add(advert);
         await _context.SaveChangesAsync();
 
+        // Log in as a non-owner/buyer
+        MockUser("buyer-123");
+
         // Act
-        var result = await _controller.UpdateAdvertStatus(10, AdvertStatus.SOLD);
+        var result = await _controller.UpdateAdvertStatus(201, AdvertStatus.PAUSED);
 
         // Assert
-        var noContentResult = result as NoContentResult;
-        noContentResult.Should().NotBeNull();
-        
-        await _emailSenderServiceMock.Received(1).SendItemSoldEmailAsync(
-            Arg.Is<User>(u => u.Id == "seller-123" && u.Email == "seller@example.com"),
-            Arg.Is<Advert>(a => a.AdvertId == 10 && a.Title == "Math Book" && a.Price == 15)
-        );
+        var forbidResult = result as ForbidResult;
+        forbidResult.Should().NotBeNull("Non-owner should not be allowed to transition from ACTIVE to PAUSED");
+
+        var updatedAdvert = await _context.Adverts.FindAsync(201L);
+        updatedAdvert.Should().NotBeNull();
+        updatedAdvert!.Status.Should().Be(AdvertStatus.ACTIVE); // Should remain ACTIVE
     }
 
     [Fact]
-    public async Task UpdateAdvertStatus_DoesNotSendEmail_WhenStatusIsAlreadySold()
+    public async Task UpdateAdvertStatus_ForbidsNonOwner_ToTransitionFromPausedToSold()
     {
         // Arrange
-        var sellerUser = new User { Id = "seller-456", UserName = "seller_alice", Email = "alice@example.com" };
-        MockUser(sellerUser.Id);
+        var sellerUser = new User { Id = "seller-123", UserName = "seller_bob", Email = "seller@example.com" };
         var advert = new Book
         {
-            AdvertId = 11,
-            Title = "Science Book",
-            Description = "A science book",
-            Price = 20,
+            AdvertId = 202,
+            Title = "Math Book",
+            Description = "A math book",
+            Price = 15,
             SellerId = sellerUser.Id,
             Seller = sellerUser,
-            Status = AdvertStatus.SOLD,
+            Status = AdvertStatus.PAUSED,
             CreatedAt = DateTime.UtcNow,
             NotificationDate = DateTime.UtcNow,
             Condition = PhysicalItemCondition.NEW,
-            ISBN = "22222",
+            ISBN = "11111",
             Author = "Author",
             Publisher = "Pub",
             Edition = "1st",
@@ -2200,29 +2271,19 @@ public class AdvertsControllerTests : IDisposable
         _context.Adverts.Add(advert);
         await _context.SaveChangesAsync();
 
-        _emailSenderServiceMock.ClearReceivedCalls();
+        // Log in as a non-owner/buyer
+        MockUser("buyer-123");
 
         // Act
-        var result = await _controller.UpdateAdvertStatus(11, AdvertStatus.SOLD);
+        var result = await _controller.UpdateAdvertStatus(202, AdvertStatus.SOLD);
 
         // Assert
-        var noContentResult = result as NoContentResult;
-        noContentResult.Should().NotBeNull();
+        var forbidResult = result as ForbidResult;
+        forbidResult.Should().NotBeNull("Non-owner should not be allowed to transition from PAUSED to SOLD");
 
-        await _emailSenderServiceMock.DidNotReceiveWithAnyArgs().SendItemSoldEmailAsync(default!, default!);
-    }
-
-    [Fact]
-    public async Task UpdateAdvertStatus_ReturnsNotFound_WhenAdvertDoesNotExist()
-    {
-        // Arrange
-        // None
-
-        // Act
-        var result = await _controller.UpdateAdvertStatus(999, AdvertStatus.SOLD); // Non-existing ID
-        // Assert
-        var notFoundResult = result as NotFoundResult;
-        notFoundResult.Should().NotBeNull("The controller did not return a NotFoundResult");
+        var updatedAdvert = await _context.Adverts.FindAsync(202L);
+        updatedAdvert.Should().NotBeNull();
+        updatedAdvert!.Status.Should().Be(AdvertStatus.PAUSED); // Should remain PAUSED
     }
     #endregion
 

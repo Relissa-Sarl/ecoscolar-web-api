@@ -14,27 +14,29 @@ builder.Services.AddAuthAndIdentity();
 builder.Services.AddSwaggerAndVersioning();
 
 builder.Services.AddHostedService<EcoScolarWebApi.Services.AutoConfirmReceiptService>();
+builder.Services.AddHostedService<EcoScolarWebApi.Services.AdvertExpirationService>();
+builder.Services.AddHostedService<EcoScolarWebApi.Services.TutoringEscrowBackgroundService>();
 builder.Services.AddEcoScolarServices(builder.Configuration);
 builder.Services.AddMappersServices(builder.Configuration);
 
 builder.Services.AddControllers().AddJsonOptions(options =>
-	options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
+    options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
 
 builder.Services.AddHealthChecks();
 builder.Services.AddCors(options => options.AddPolicy("AllowFrontend", policy =>
-	policy.WithOrigins("http://localhost:3000").AllowAnyHeader().AllowAnyMethod().AllowCredentials()));
+    policy.WithOrigins("http://localhost:3000").AllowAnyHeader().AllowAnyMethod().AllowCredentials()));
 
 if (args.Contains("--seed-production", StringComparer.OrdinalIgnoreCase))
 {
-	var includeDemoData = args.Contains("--include-demo-data", StringComparer.OrdinalIgnoreCase);
-	using var seedApp = builder.Build();
-	using var scope = seedApp.Services.CreateScope();
-	var db = scope.ServiceProvider.GetRequiredService<EcoscolarDbContext>();
-	var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
-	var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    var includeDemoData = args.Contains("--include-demo-data", StringComparer.OrdinalIgnoreCase);
+    using var seedApp = builder.Build();
+    using var scope = seedApp.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<EcoscolarDbContext>();
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-	await ProductionDataSeeder.SeedAsync(db, userManager, roleManager, seedApp.Configuration, includeDemoData);
-	return;
+    await ProductionDataSeeder.SeedAsync(db, userManager, roleManager, seedApp.Configuration, includeDemoData);
+    return;
 }
 
 // App creation
@@ -56,13 +58,13 @@ app.UseCors("AllowFrontend");
 
 if (app.Environment.IsDevelopment())
 {
-	app.MapOpenApi();
-	app.UseSwagger();
-	app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "EcoScolar Web API V1"));
+    app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "EcoScolar Web API V1"));
 }
 
 if (!app.Environment.IsEnvironment("Testing"))
-	app.UseHttpsRedirection();
+    app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 

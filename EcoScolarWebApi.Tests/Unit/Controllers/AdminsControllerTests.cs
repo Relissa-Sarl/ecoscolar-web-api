@@ -1,3 +1,4 @@
+using Xunit;
 using EcoScolarWebApi.Commun;
 using EcoScolarWebApi.Controllers;
 using EcoScolarWebApi.Data;
@@ -141,7 +142,7 @@ public class AdminsControllerTests : IDisposable
     {
         // Arrange
         var advertId = 100L;
-        var response = new AdvertReadDto(advertId, "BOOK", "Blocked", 10m, DateTime.UtcNow, DateTime.UtcNow, AdvertStatus.BLOCKED, "seller-1", "Seller", null, "");
+        var response = new AdvertReadDto(advertId, "BOOK", "Blocked", 10m, DateTime.UtcNow, DateTime.UtcNow, AdvertStatus.BLOCKED, "seller-1", "Seller", null, "", 30);
         _adminServiceMock.BlockAdvert(Arg.Any<ClaimsPrincipal>(), advertId)
             .Returns(Result<AdvertReadDto>.Success(response));
 

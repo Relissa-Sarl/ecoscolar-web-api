@@ -2,13 +2,15 @@ namespace EcoScolarWebApi.DTOs.Adverts;
 
 public record AdvertSummaryDto
 {
-	public long Id { get; set; }
-	public string Title { get; set; } = string.Empty;
-	public decimal Price { get; set; }
-	public string Type { get; set; } = string.Empty;
-	public string? Isbn { get; set; } = null;
-	public string? Category { get; set; }
-	public string? Subjects { get; set; }
-	public string? Grade { get; set; }
-	public string? sellerId { get; set; }
+    public long Id { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public decimal Price { get; set; }
+    public string Type { get; set; } = string.Empty;
+    public string? Isbn { get; set; } = null;
+    public string? Category { get; set; }
+    public string? Subjects { get; set; }
+    public string? Grade { get; set; }
+    public string? ImageUrl { get; set; }
+    public string? sellerId { get; set; }
+    public int ExpiresInDays { get; set; }
 }

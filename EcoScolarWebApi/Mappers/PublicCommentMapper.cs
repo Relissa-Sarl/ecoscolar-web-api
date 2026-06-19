@@ -7,10 +7,10 @@ namespace EcoScolarWebApi.Mappers;
 [Mapper]
 public partial class PublicCommentMapper
 {
-	[MapProperty("Author.Nickname", nameof(QuestionResponseDTO.Author))]
-	public partial QuestionResponseDTO ToQuestionResponse(PublicComment comment);
+    [MapProperty("Author.Nickname", nameof(QuestionResponseDTO.Author))]
+    public partial QuestionResponseDTO ToQuestionResponse(PublicComment comment);
 
-	public partial AnswerResponseDTO ToAnswerResponse(PublicComment comment);
+    public partial AnswerResponseDTO ToAnswerResponse(PublicComment comment);
 
-	public partial IQueryable<QuestionResponseDTO> ProjectToQuestionResponses(IQueryable<PublicComment> query);
+    public partial IQueryable<QuestionResponseDTO> ProjectToQuestionResponses(IQueryable<PublicComment> query);
 }
